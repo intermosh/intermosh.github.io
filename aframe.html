@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
+  <!-- we import arjs version without NFT but with marker + location based support -->
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <script src="aframe-particle-system-component.min.js"></script>
+  <body style="margin : 0px; overflow: hidden;">
+    <a-scene embedded arjs>
+      <a-marker preset="hiro">
+        <a-entity position="0 0 0" particle-system="preset: snow; particleCount: 5000"></a-entity>
+        <!-- <a-text value="Hello, World!"></a-text> -->
+
+        <a-entity
+          position="0 2 0"
+          scale="1 1 1"
+          rotation="0 0 0" animation="property: rotation; to: 0 0 360; dur: 38000; easing: linear; loop: true"
+          gltf-model="jellyf.gltf"
+        ></a-entity>
+
+      </a-marker>
+      <a-entity light="type: point; color: white"></a-entity>
+      <a-entity camera></a-entity>
+    </a-scene>
+  </body>
+</html>
