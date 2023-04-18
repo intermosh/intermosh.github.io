@@ -1,25 +1,36 @@
 <!DOCTYPE html>
 <html>
-  <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
-  <!-- we import arjs version without NFT but with marker + location based support -->
-  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-  <script src="aframe-particle-system-component.min.js"></script>
-  <body style="margin : 0px; overflow: hidden;">
-    <a-scene embedded arjs>
-      <a-marker preset="kanji">
-        <a-entity position="0 0 0" particle-system="preset: snow; particleCount: 5000"></a-entity>
-        <!-- <a-text value="Hello, World!"></a-text> -->
+<script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
+<!-- we import arjs version without NFT but with marker + location based support -->
+<script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+<!-- <script src="https://jeromeetienne.github.io/AR.js/aframe/build/aframe-ar.js"></script>  -->
 
-        <a-entity
-          position="0 2 0"
-          scale="1 1 1"
-          rotation="0 0 0" animation="property: rotation; to: 0 0 360; dur: 38000; easing: linear; loop: true"
-          gltf-model="jellyf.gltf"
-        ></a-entity>
+<script src="aframe-particle-system-component.min.js"></script>
 
-      </a-marker>
-      <a-entity light="type: point; color: white"></a-entity>
-      <a-entity camera></a-entity>
-    </a-scene>
-  </body>
+<body style="margin : 0px; overflow: hidden;">
+  <a-scene embedded arjs>
+
+    <!-- Preload assets -->
+    <a-assets>
+      <a-asset-item id="jellyf" src="jellyf.gltf"></a-asset-item>
+    </a-assets>
+
+    <a-marker  type="pattern" url="pattern-jellyf.patt">
+      <a-entity id="river" geometry="primitive: plane" material="color: blue"
+      position="-10 0 0" sound="src: url(test.mp3); autoplay: true"></a-entity>
+      <!-- Particles -->
+      <a-entity position="0 0 0" particle-system="preset: snow; particleCount: 5000; color:#1f38d4"></a-entity>
+
+      <!-- 3D Model -->
+      <a-entity position="0 5 0" scale="1 1 1" rotation="0 0 0"
+        animation="property: rotation; to: 0 0 360; dur: 38000; easing: linear; loop: true"
+        gltf-model="#jellyf"></a-entity>
+
+    </a-marker>
+
+    <a-entity camera></a-entity>
+
+  </a-scene>
+</body>
+
 </html>
