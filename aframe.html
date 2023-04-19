@@ -5,42 +5,43 @@
 <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 <!-- <script src="https://jeromeetienne.github.io/AR.js/aframe/build/aframe-ar.js"></script>  -->
 
-<script src="aframe-particle-system-component.min.js"></script>
+<!-- <script src="aframe-particle-system-component.min.js"></script> -->
 
 <body style="margin : 0px; overflow: hidden;">
-  <a-scene embedded arjs renderer="precision: medium;
-  physicallyCorrectLights: true;">
-    
-    <a-entity light="type: ambient; color: #fff"></a-entity>
-    <a-entity light="type: spot; color: #FFF; intensity: 0.6" position="-0.5 1 1"></a-entity>
+  <a-scene embedded arjs> <!-- stats -->
+
 
     <!-- Preload assets -->
     <a-assets>
       <a-asset-item id="jellyf" src="jellyf.gltf"></a-asset-item>
     </a-assets>
 
+    <!-- Lights -->
+    <a-entity light="type: ambient; color: #fff"></a-entity>
+    <a-entity light="type: spot; color: #FFF; intensity: 0.6" 
+              position="-0.5 1 1"></a-entity>
+
+    <!-- Marker -->
     <a-marker  type="pattern" url="pattern-jellyf.patt">
 
-      <!-- <a-entity id="river" geometry="primitive: plane" material="color: blue"
-      position="-10 0 0" sound="src: url(test.mp3); autoplay: true"></a-entity> -->
+    <!-- Sound -->
+    <!-- <a-entity id="river" geometry="primitive: plane" material="color: blue"
+    position="-10 0 0" sound="src: url(test.mp3); autoplay: true"></a-entity> -->
 
-      <!-- Particles -->
-      <a-entity position="0 0 0" particle-system="preset: snow; particleCount: 5000; color:#d9d9d9"></a-entity>
+    <!-- Particles -->
+    <!-- <a-entity position="0 0 0" particle-system="preset: snow; particleCount: 1000; color:#d9d9d9"></a-entity> -->
 
-      <!-- 3D Model -->
+    <!-- 3D Model -->
       <a-entity 
         position="0 5 0" 
-        scale="1 1 1" 
-        rotation="0 0 0"
+        scale="1 1 1"
         animation="property: rotation; to: 0 0 360; dur: 38000; easing: linear; loop: true"
+        
         gltf-model="#jellyf"
-                        material='color: green'
-
         ></a-entity>
 
     </a-marker>
-        <!-- animation__2="property: position; from: 0 5 0;to: 0 0 5; dur: 8000; easing: easeInOutQuad; loop: true" -->
-
+        <!-- animation__2="property: position;to: 0 5 -3; dur: 8000; easing: easeInOutElastic; loop: true" -->
     <a-entity camera></a-entity>
 
   </a-scene>
