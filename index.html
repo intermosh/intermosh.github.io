@@ -1,36 +1,34 @@
 <!DOCTYPE html>
 <html>
+  <head>
+      <!-- <script src="aframe.min.js"></script> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interm0sh</title>
+    <script src="https://aframe.io/releases/1.1.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/n5ro/aframe-physics-system@v4.0.1/dist/aframe-physics-system.min.js"></script>
+<script src="ar-components.js"></script>
 
-<head>
-  <meta charset="UTF-8">
-  <title>Interm0sh</title>
-  <link href="style.css" rel="stylesheet" type="text/css" media="all">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-</head>
+  </head>
+  <body>
 
-<body>
-  <div id="main-container">
-  <h1>I N T E R M 0 S H</h1>
+    <a-scene webxr="optionalFeatures: hit-test;"  physics="debug: true">
+     
+     
+       <a-sphere id="ball" dynamic-body radius="0.1" color="orange" position="0.1 2.36 -1.5"></a-sphere>
 
-    hello<br>
-    this is the playground.<br><br>
-    
-    <a href="#" id="enter-btn">ENTER</a>
 
-</div>
-<h2>	&#10005;</h2>
 
-    <div id="options-container">
-      <ul>
-        <li><a href="aframe.html">AR PROJ#1</a></li>
-        <li>/dev/null</li>
-        <li>/text</li>
-        <!-- <li>The Secret Option</li> -->
-      </ul>
-    </div>
-    
-<!-- HOW AM I CODING? CALL 349-555-3848. -->
-</body>
+        <!-- floor -->
+       <a-plane
+       rotation="-90 0 0"
+       width="5"
+       height="5"
+       color="#43A367"
+       static-body
+       hide-in-ar-mode
+   ></a-plane>
 
+
+    </a-scene>
+  </body>
 </html>
-<script type="text/javascript" src="/script.js"></script>
