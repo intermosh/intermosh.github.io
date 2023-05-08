@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html>
-<script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
-<!-- we import arjs version without NFT but with marker + location based support -->
-<script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-<!-- <script src="https://jeromeetienne.github.io/AR.js/aframe/build/aframe-ar.js"></script>  -->
-
+<!-- <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
+<script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script> -->
+<script src="/1.0.4/aframe.min.js"></script>
+<script src="aframe-ar.js"></script>
 <!-- <script src="aframe-particle-system-component.min.js"></script> -->
 
 <body style="margin : 0px; overflow: hidden;">
-  <a-scene embedded arjs> <!-- stats -->
 
+  <a-scene embedded arjs='sourceType: webcam; sourceWidth:1280; sourceHeight:960; displayWidth: 1280; displayHeight: 960;'   
+  vr-mode-ui="enabled: false"> <!-- stats -->
 
     <!-- Preload assets -->
     <a-assets>
@@ -18,7 +18,7 @@
 
     <!-- Lights -->
     <a-entity light="type: ambient; color: #fff"></a-entity>
-    <a-entity light="type: spot; color: #FFF; intensity: 0.6" 
+    <a-entity light="type: directional; color: #FFF; intensity: 0.8" 
               position="-0.5 1 1"></a-entity>
 
     <!-- Marker -->
@@ -33,15 +33,16 @@
 
     <!-- 3D Model -->
       <a-entity 
-        position="0 5 0" 
+        position="0 2 0" 
         scale="1 1 1"
         animation="property: rotation; to: 0 0 360; dur: 38000; easing: linear; loop: true"
-        
+        animation__2="property: object3D.position.z; to: 2.2; dir: alternate; dur: 10000; loop: true;"
+
         gltf-model="#jellyf"
         ></a-entity>
 
     </a-marker>
-        <!-- animation__2="property: position;to: 0 5 -3; dur: 8000; easing: easeInOutElastic; loop: true" -->
+
     <a-entity camera></a-entity>
 
   </a-scene>
