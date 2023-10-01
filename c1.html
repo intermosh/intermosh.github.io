@@ -8,12 +8,15 @@
 
 <body style="margin : 0px; overflow: hidden;">
   <!-- ='sourceType: webcam; sourceWidth:1280; sourceHeight:960; displayWidth: 1280; displayHeight: 960;'  -->
-  <a-scene embedded arjs  
+  <a-scene embedded arjs     
   vr-mode-ui="enabled: false"> <!-- stats -->
 
     <!-- Preload assets -->
     <a-assets>
       <a-asset-item id="jellyf" src="logo.gltf"></a-asset-item>
+      <video id="fondo" autoplay loop="true" src="fondo.mp4"></video>
+      <video id="frente" autoplay loop="true" src="frente.mp4"></video>
+
       <!-- <a-asset-item id="logo" src="logo.obj"></a-asset-item> -->
       <!-- <a-asset-item id="tree-obj" src="logo.obj"></a-asset-item>
       <a-asset-item id="tree-mtl" src="logo.mtl"></a-asset-item> -->
@@ -34,8 +37,15 @@
     position="0 0 0" sound="src: url(cloop.mp3); autoplay: true"></a-entity> -->
 
     <!-- Particles -->
-     <a-entity position="0 0 0" particle-system="preset: snow; particleCount: 1000; color:#d9d9d9"></a-entity> 
-     
+     <!-- <a-entity position="0 0 0" particle-system="preset: snow; particleCount: 1000; color:#d9d9d9"></a-entity>  -->
+         <!-- video -->
+       <!-- Using the asset management system. -->
+  <a-video src="#fondo" width="3" height="3" position="-0.1 0.3 0.3"  rotation="90 -45 180" opacity="0.7"></a-video>
+  <a-video src="#frente" width="3" height="3" position="-0.1 0.6 0.3"  rotation="-90 -45 0" opacity="0.3"></a-video>
+
+  <!-- Defining the URL inline. Not recommended but more comfortable for web developers. -->
+  <!-- <a-video src="airbending.mp4"></a-video> -->
+
     <!-- 3D Model -->
     <!-- <a-entity 
               position="0 0 0" 
@@ -46,7 +56,6 @@
               scale="0.5 0.5 0.5"
               rotation="0 -45 0"
               animation="property: rotation; to: 0 -45 360; dur: 3800; easing: linear; loop: true"
-
       
               gltf-model="#jellyf"
               ></a-entity>
