@@ -7,7 +7,33 @@
 <!-- <script src="/1.0.4/aframe.min.js"></script>
 <script src="aframe-ar.js"></script> -->
 <!-- <script src="aframe-particle-system-component.min.js"></script> -->
+<script>
+    var userMediaConstraints = {
+    audio: false,
+    video: {
+      facingMode: 'environment',
+      width: {
+        ideal: _this.parameters.sourceWidth,
+        // min: 1024,
+        // max: 1920
+      },
+      height: {
+        ideal: _this.parameters.sourceHeight,
+        // min: 776,
+        // max: 1080
+      }
+    }
+  }
 
+// CUSTOM CODE START
+  var backCam2 = devices.filter(d => {
+    return d.label && d.label == "camera2 0, facing back";
+  })
+  if (backCam2.length) {
+    userMediaConstraints.video.deviceId = backCam2[0].deviceId
+  }
+// CUSTOM CODE END
+</script>
 <body style="margin : 0px; overflow: hidden;">
   <!-- ='sourceType: webcam; sourceWidth:1280; sourceHeight:960; displayWidth: 1280; displayHeight: 960;'  -->
   <a-scene embedded arjs     
