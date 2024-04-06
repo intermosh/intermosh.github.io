@@ -39,19 +39,16 @@
     </style>
 
     <script>
-  // component declaration
-  AFRAME.registerComponent("mylink", {
-    // define a url in the schema
-    schema: {
-      href: {}
-    },
-    init: function() {
-      // when clicked - change the location:
-      this.el.addEventListener("click", (e) => {
-        window.location = this.data.href;
-      })
-    }
-  })
+function startup() {
+  const el = document.getElementById("button1");
+  el.addEventListener("touchstart", handleStart);
+  el.addEventListener("touchend", handleEnd);
+  el.addEventListener("touchcancel", handleCancel);
+  el.addEventListener("touchmove", handleMove);
+  log("Initialized.");
+}
+
+document.addEventListener("DOMContentLoaded", startup);
 </script>
     
   </head>
@@ -94,7 +91,7 @@
               position="30 0 -110"
           >
           </a-entity>
-            <a-box id="orange-cube" position="0 3.5 -2" rotation="30 30 0" mylink="href: https://aframe.io/;"
+            <a-box id="orange-cube" position="0 3.5 -2" rotation="30 30 0" 
       width="20" depth="20" height="20" color="#F16745" id="button1"></a-box>
       </a-nft>
       <!-- static camera that moves according to the device movemenents -->
