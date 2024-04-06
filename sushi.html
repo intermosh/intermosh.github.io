@@ -65,7 +65,7 @@
     <!-- Lights -->
       <a-entity light="type: ambient; color: #fff"></a-entity>
       <a-entity light="type: directional; color: #FFF; intensity: 0.8" 
-              position="-0.5 5 -1"></a-entity>
+              position="-0.5 3 -1"></a-entity>
       <a-nft
         type="nft"
         url="/sushi"
@@ -81,22 +81,11 @@
           >
           </a-entity>
             <a-box id="orange-cube" position="0 3.5 -2" rotation="30 30 0" 
-      width="20" depth="20" height="20" color="#F16745" id="button1"></a-box>
+      width="20" depth="20" height="20" color="#F16745"></a-box>
       </a-nft>
       <!-- static camera that moves according to the device movemenents -->
       <a-entity camera></a-entity>
     </a-scene>
   </body>
-      <script>
-function startup() {
-  const el = document.getElementById("button1");
-  el.addEventListener("touchstart", handleStart);
-  el.addEventListener("touchend", handleEnd);
-  el.addEventListener("touchcancel", handleCancel);
-  el.addEventListener("touchmove", handleMove);
-  log("Initialized.");
-}
 
-document.addEventListener("DOMContentLoaded", startup);
-</script>
 </html>
