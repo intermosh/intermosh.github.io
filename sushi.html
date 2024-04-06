@@ -38,18 +38,7 @@
       }
     </style>
 
-    <script>
-function startup() {
-  const el = document.getElementById("button1");
-  el.addEventListener("touchstart", handleStart);
-  el.addEventListener("touchend", handleEnd);
-  el.addEventListener("touchcancel", handleCancel);
-  el.addEventListener("touchmove", handleMove);
-  log("Initialized.");
-}
 
-document.addEventListener("DOMContentLoaded", startup);
-</script>
     
   </head>
 
@@ -98,4 +87,16 @@ document.addEventListener("DOMContentLoaded", startup);
       <a-entity camera></a-entity>
     </a-scene>
   </body>
+      <script>
+function startup() {
+  const el = document.getElementById("button1");
+  el.addEventListener("touchstart", handleStart);
+  el.addEventListener("touchend", handleEnd);
+  el.addEventListener("touchcancel", handleCancel);
+  el.addEventListener("touchmove", handleMove);
+  log("Initialized.");
+}
+
+document.addEventListener("DOMContentLoaded", startup);
+</script>
 </html>
