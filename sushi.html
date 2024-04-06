@@ -57,7 +57,10 @@
           <a-assets>
             <a-asset-item id="sushi" src="sushi.gltf"></a-asset-item>
           </a-assets>
-
+    <!-- Lights -->
+    <a-entity light="type: ambient; color: #fff"></a-entity>
+    <a-entity light="type: directional; color: #FFF; intensity: 1" 
+              position="-0.5 1 1"></a-entity>
       <a-nft
         type="nft"
         url="/sushi"
@@ -69,7 +72,7 @@
           <a-entity
           gltf-model="#sushi"
               scale="250 250 250"
-              position="0 0 10"
+              position="0 0 50"
           >
           </a-entity>
       </a-nft>
