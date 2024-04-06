@@ -58,9 +58,9 @@
             <a-asset-item id="sushi" src="sushirolls.gltf"></a-asset-item>
           </a-assets>
     <!-- Lights -->
-   <!-- <a-entity light="type: ambient; color: #fff"></a-entity> -->
+      <a-entity light="type: ambient; color: #fff"></a-entity>
       <a-entity light="type: directional; color: #FFF; intensity: 0.8" 
-              position="-0.5 2 1"></a-entity>
+              position="-0.5 1 1"></a-entity>
       <a-nft
         type="nft"
         url="/sushi"
@@ -71,7 +71,7 @@
           <!-- as a child of the a-nft entity, you can define the content to show. here's a GLTF model entity -->
           <a-entity
           gltf-model="#sushi"
-              scale="1 1 1"
+              scale="2 2 2"
               position="50 0 -90"
           >
           </a-entity>
