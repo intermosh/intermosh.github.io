@@ -82,12 +82,23 @@
           >
           </a-entity>
             <a-box id="orange-cube" position="0 3.5 -2" rotation="30 30 0" 
-      width="20" depth="20" height="20" color="#fff"
-              href="https://github.com/gasolin/aframe-href-component"></a-box>
+      width="20" depth="20" height="20" color="#f4f4f4" 
+              link="http://cablecenter.org"
+              ></a-box>
       </a-nft>
       <!-- static camera that moves according to the device movemenents -->
       <a-entity camera></a-entity>
     </a-scene>
   </body>
+  <script>
+  AFRAME.registerComponent('link', {
+  schema: {default: ''},
 
+  init: function () {
+    var url = this.data;
+    this.el.addEventListener('click', function () {
+    window.location.href = url;
+ });
+}});
+  </script>
 </html>
