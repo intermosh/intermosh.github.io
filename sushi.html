@@ -6,9 +6,9 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>Sushi Bar AR Demo</title>
-    <!-- import aframe and then ar.js with image tracking / location based features -->
-    <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
-    <!-- <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script> -->
+    <!-- import aframe and then ar.js with image tracking / location based features 
+    <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script> -->
+     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script> 
     <!-- <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script> -->
     <!-- <script src="aframe-ar.js"></script> -->
     <!-- <script src="aframe-ar-nft.js"></script>  -->
@@ -60,7 +60,7 @@
     <!-- Lights -->
       <a-entity light="type: ambient; color: #fff"></a-entity>
       <a-entity light="type: directional; color: #FFF; intensity: 0.8" 
-              position="-0.5 1 1"></a-entity>
+              position="-0.5 2 1"></a-entity>
       <a-nft
         type="nft"
         url="/sushi"
@@ -71,7 +71,7 @@
           <!-- as a child of the a-nft entity, you can define the content to show. here's a GLTF model entity -->
           <a-entity
           gltf-model="#sushi"
-              scale="2 2 2"
+              scale="1.5 1.5 1.5"
               position="50 0 -90"
           >
           </a-entity>
