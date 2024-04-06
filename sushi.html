@@ -38,7 +38,17 @@
         color: white;
       }
     </style>
+  <script>
+  AFRAME.registerComponent('link', {
+  schema: {default: ''},
 
+  init: function () {
+    var url = this.data;
+    this.el.addEventListener('click', function () {
+    window.location.href = url;
+ });
+}});
+  </script>
 
     
   </head>
@@ -90,15 +100,5 @@
       <a-entity camera></a-entity>
     </a-scene>
   </body>
-  <script>
-  AFRAME.registerComponent('link', {
-  schema: {default: ''},
 
-  init: function () {
-    var url = this.data;
-    this.el.addEventListener('click', function () {
-    window.location.href = url;
- });
-}});
-  </script>
 </html>
