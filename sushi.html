@@ -44,11 +44,11 @@
     </div>
 
     <!-- a-frame scene -->
-    <a-scene
+    <a-scene physics="debug: true;"
       vr-mode-ui="enabled: false;"
       renderer="logarithmicDepthBuffer: true;"
       embedded
-      arjs="trackingMethod: best; sourceType: webcam;debugUIEnabled: false;">
+      arjs="trackingMethod: best; sourceType: webcam;debugUIEnabled: true;">
       <!-- a-nft is the anchor that defines an Image Tracking entity -->
       <!-- on 'url' use the path to the Image Descriptors created before. -->
       <!-- the path should end with the name without the extension e.g. if file is trex.fset' the path should end with trex -->
@@ -59,7 +59,7 @@
           </a-assets>
     <!-- Lights -->
    <!-- <a-entity light="type: ambient; color: #fff"></a-entity> -->
-      <a-entity light="type: directional; color: #FFF; intensity: 0.3" 
+      <a-entity light="type: directional; color: #FFF; intensity: 0.8" 
               position="-0.5 10 1"></a-entity>
       <a-nft
         type="nft"
