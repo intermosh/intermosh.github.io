@@ -10,11 +10,8 @@
  <!--     <script src="https://aframe.io/releases/0.2.0/aframe.min.js"></script>
   <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script> -->
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script> 
-  <!--     <script src="https://rawgit.com/gasolin/aframe-href-component/master/dist/aframe-href-component.min.js"></script> -->
-
   <!--   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script> -->
-    <!-- <script src="aframe-ar.js"></script> -->
-    <!-- <script src="aframe-ar-nft.js"></script>  -->
+
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
 
     <!-- style for the loader -->
@@ -38,9 +35,6 @@
         color: white;
       }
     </style>
-
-
-    
   </head>
 
   <body style="margin : 0px; overflow: hidden;">
@@ -55,18 +49,18 @@
       renderer="logarithmicDepthBuffer: true;"
       embedded
       arjs="trackingMethod: best; sourceType: webcam;debugUIEnabled: false;">
-      <!-- a-nft is the anchor that defines an Image Tracking entity -->
-      <!-- on 'url' use the path to the Image Descriptors created before. -->
-      <!-- the path should end with the name without the extension e.g. if file is trex.fset' the path should end with trex -->
 
-          <!-- Preload assets -->
-          <a-assets>
-            <a-asset-item id="sushi" src="sushirolls.gltf"></a-asset-item>
-          </a-assets>
+    <!-- Preload assets -->
+    <a-assets>
+    <a-asset-item id="sushi" src="sushirolls.gltf"></a-asset-item>
+    </a-assets>
+      
     <!-- Lights -->
-      <a-entity light="type: ambient; color: #fff"></a-entity>
-      <a-entity light="type: directional; color: #FFF; intensity: 0.8" 
-              position="30 3 -100"></a-entity>
+    <a-entity light="type: ambient; color: #fff"></a-entity>
+    <a-entity light="type: directional; color: #FFF; intensity: 0.8" 
+              position="30 0 -110"></a-entity>
+      
+      <!-- a-nft is the anchor that defines an Image Tracking entity -->
       <a-nft
         type="nft"
         url="/sushi"
@@ -74,17 +68,15 @@
         smoothCount="5"
         smoothTolerance=".01"
         smoothThreshold="5">
-          <!-- as a child of the a-nft entity, you can define the content to show. here's a GLTF model entity -->
+          <!-- content to show -->
           <a-entity
           gltf-model="#sushi"
               scale="2 2 2"
               position="30 0 -110"
           >
           </a-entity>
-            <a-box id="orange-cube" position="0 3.5 -2" rotation="30 30 0" 
-      width="20" depth="20" height="20" color="#000" ></a-box>
       </a-nft>
-      <!-- static camera that moves according to the device movemenents -->
+
       <a-entity camera></a-entity>
     </a-scene>
   </body>
