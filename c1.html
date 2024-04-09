@@ -26,7 +26,7 @@
     <a-assets>
        <a-asset-item id="cinematronic" src="logo.gltf"></a-asset-item> 
       <video id="fondo" autoplay loop="true" src="fondo.mp4"></video>
-      <!-- <video id="frente" autoplay loop="true" src="frente.mp4"></video> -->
+      <video id="frente" autoplay loop="true" src="frente.mp4"></video>
       <!-- <audio id="loop" src="cloop.mp3" loop="true"></audio> -->
       <!-- <audio id="headcrsh" src="headcrsh.mp3" loop="true"></audio> -->
     </a-assets>
@@ -45,7 +45,7 @@
          <!-- video -->
   <!-- <a-plane color="#fff" width="3" height="3"  rotation="-90 -45 0"></a-plane> -->
   <a-video src="#fondo" width="3.1" height="3.1" position="0 0 0"  rotation="90 -45 180" opacity="0.5"></a-video>
-  <!-- <a-video src="#frente" width="3.1" height="3.1" position="0 0.1 0"  rotation="-90 -45 0" opacity="0.2"></a-video>  -->
+  <a-video src="#frente" width="3.1" height="3.1" position="0 0.1 0"  rotation="-90 -45 0" opacity="0.2"></a-video>
 
   <!-- <a-entity position="-0.8 0.1 0.8" 
             scale="0.3 0.3 0.3"
@@ -53,7 +53,7 @@
             animation="property: rotation; to: 0 -45 360; dur: 6400; easing: linear; loop: true"
             gltf-model="#cinematronic"></a-entity> -->
                 
-    <a-entity geometry="primitive: box" opacity="0"
+    <!-- <a-entity geometry="primitive: box" opacity="0"
             id="yellow"
             position="0 -1 0" 
             scale="0.3 0.3 0.3" 
@@ -62,7 +62,7 @@
                     rollOffFactor: 1;
                     loop:true;"
             animation="property: position; to: 0 1 0; dur: 10000; easing: linear; loop:true;"
-    >
+    > -->
                               
     </a-entity>
                       <!-- <a-sphere color="yellow" position="-1 0 0"  play></a-sphere>
