@@ -1,43 +1,84 @@
 <!DOCTYPE html>
 <html>
-      <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-      <head>
-<script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
-<script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script> 
-</head>
-<body style="margin : 0px; overflow: hidden;">
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 
-  <a-scene embedded arjs
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Ibera Test Demo</title>
+    <!-- import aframe and then ar.js with image tracking / location based features -->
+ <!--     <script src="https://aframe.io/releases/0.2.0/aframe.min.js"></script>
+  <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script> -->
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script> 
+  <!--   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script> -->
 
-  vr-mode-ui="enabled: false"> <!-- stats -->
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+
+    <!-- style for the loader -->
+    <style>
+      .arjs-loader {
+        height: 100%;
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        background-color: rgba(0, 0, 0, 0.8);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .arjs-loader div {
+        text-align: center;
+        font-size: 1.25em;
+        color: white;
+      }
+    </style>
+  </head>
+
+  <body style="margin : 0px; overflow: hidden;">
+    <!-- minimal loader shown until image descriptors are loaded. Loading may take a while according to the device computational power -->
+    <div class="arjs-loader">
+      <div>Espere...</div>
+    </div>
+
+    <!-- a-frame scene -->
+    <a-scene physics="debug: false;"
+      vr-mode-ui="enabled: false;"
+      renderer="logarithmicDepthBuffer: true;"
+      embedded
+      arjs="trackingMethod: best; sourceType: webcam;debugUIEnabled: false;">
 
     <!-- Preload assets -->
     <a-assets>
-      <a-asset-item id="animal" src="/Jabiru.glb"></a-asset-item>
+    <a-asset-item id="jabiru" src="Jabiru.glb"></a-asset-item>
     </a-assets>
-
+      
     <!-- Lights -->
-    <a-entity light="type: ambient; color: #fff"></a-entity>
-    <a-entity light="type: directional; color: #FFF; intensity: 0.8"
-              position="-0.5 1 1"></a-entity>
+    <!-- <a-entity light="type: ambient; color: #fff"></a-entity>
+    <a-entity light="type: directional; color: #FFF; intensity: 0.8" 
+              position="30 0 -110"></a-entity> -->
+      
+      <!-- a-nft is the anchor that defines an Image Tracking entity -->
+      <a-nft
+        type="nft"
+        url="/jabiru"
+        smooth="true"
+        smoothCount="5"
+        smoothTolerance=".01"
+        smoothThreshold="5">
+          <!-- content to show -->
+          <a-entity
+          gltf-model="#jabiru"
+              scale="2 2 2"
+              position="0 0 0"
+          >
+          </a-entity>
+      </a-nft>
 
-    <!-- Marker -->
-    <a-marker  type="pattern" url="pattern-jellyf.patt">
-
-    <!-- 3D Model -->
-    <a-entity
-    position="0 0 0"
-    scale="0.2 0.2 0.2"
-    animation="property: rotation; to: 0 0 0; dur: 800; easing: linear; loop: true"
-
-    gltf-model="#animal"
-    ></a-entity>
-
-    </a-marker>
-
-    <a-entity camera></a-entity>
-
-  </a-scene>
-</body>
+      <a-entity camera></a-entity>
+    </a-scene>
+  </body>
 
 </html>
