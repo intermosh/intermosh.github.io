@@ -1,43 +1,48 @@
 <!DOCTYPE html>
 <html>
-      <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-      <head>
-<script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
-<script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script> 
-</head>
-<body style="margin : 0px; overflow: hidden;">
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  <head>
+    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script src="https://cdn.rawgit.com/donmccurdy/aframe-extras/master/dist/aframe-extras.min.js"></script>
+  </head>
+  <body style="margin: 0px; overflow: hidden;">
 
-  <a-scene embedded arjs
+    <a-scene embedded arjs vr-mode-ui="enabled: false">
 
-  vr-mode-ui="enabled: false"> <!-- stats -->
+      <!-- Preload assets -->
+      <a-assets>
+        <a-asset-item id="animal" src="/aguaraguazu.glb"></a-asset-item>
+        <audio id="loop" src="aguaraguazu.mp3" loop="true"></audio> 
+      </a-assets>
 
-    <!-- Preload assets -->
-    <a-assets>
-      <a-asset-item id="animal" src="/aguaraguazu.glb"></a-asset-item>
-    </a-assets>
+<!-- Sound -->
+    <a-entity id="loop" geometry="primitive: plane"
+    position="0 0 0" sound="src: url(aguaraguazu.mp3); autoplay: true"></a-entity>
 
-    <!-- Lights -->
-    <a-entity light="type: ambient; color: #fff"></a-entity>
-    <a-entity light="type: directional; color: #FFF; intensity: 0.8"
-              position="-0.5 1 1"></a-entity>
+      <!-- Lights -->
+      <!-- <a-entity light="type: ambient; color: #fff"></a-entity>
+      <a-entity light="type: directional; color: #FFF; intensity: 0.8" position="-0.5 1 1"></a-entity> -->
 
-    <!-- Marker -->
-    <a-marker  type="pattern" url="pattern-jellyf.patt">
+      <a-nft
+      type="nft"
+      url="/aguaraguazu"
+      smooth="true"
+      smoothCount="5"
+      smoothTolerance=".01"
+      smoothThreshold="5">
+        <!-- content to show -->
+        <a-entity
+        gltf-model="#aguaraguazu"
+            scale="2 2 2"
+            position="0 0 0"
+        >
+        </a-entity>
+    </a-nft>
 
-    <!-- 3D Model -->
-    <a-entity
-    position="0 0 0"
-    scale="0.5 0.5 0.5"
-    animation="property: rotation; to: 0 0 0; dur: 800; easing: linear; loop: true"
 
-    gltf-model="#animal"
-    ></a-entity>
+      <a-entity camera></a-entity>
 
-    </a-marker>
-
-    <a-entity camera></a-entity>
-
-  </a-scene>
-</body>
-
+    </a-scene>
+  </body>
 </html>
