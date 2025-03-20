@@ -6,48 +6,33 @@
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   </head>
   <body>
-    <a-scene mindar-image="imageTargetSrc: assets/jabiru.mind;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+    <a-scene mindar-image="imageTargetSrc: assets/jabiru.mind;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: true">
       <a-assets>
-        <!-- Modelo 3D -->
         <a-asset-item id="jabiru-model" src="assets/jabiru.glb"></a-asset-item>
-
-        <!-- Sonido -->
-        <audio id="jabiru-sound" src="assets/jabiru.mp3" preload="auto"></audio>
+        <audio id="jabiru-sound" src="assets/jabiru.mp3" loop="true"></audio>
       </a-assets>
 
+    <a-entity id="jabiru-sound" geometry="primitive: plane" position="0 0 0"
+      sound="src: url(assets/jabiru.mp3); autoplay: true"></a-entity>
+    
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
+
+
+
       <a-entity mindar-image-target="targetIndex: 0">
-        <!-- Modelo 3D -->
         <a-entity
           gltf-model="#jabiru-model"
-          scale="0.5 0.5 0.5"
-          position="0 0 -5"
+          scale="0.05 0.05 0.05"
+          position="0 0 0"
+          rotation="45 0 0" 
           animation-mixer="clip: run; loop: once"
         ></a-entity>
 
-        <!-- Reproductor de sonido -->
-        <a-sound
-          id="sound-player"
-          src="#jabiru-sound"
-          autoplay="false"
-          loop="false"
-        ></a-sound>
       </a-entity>
+
     </a-scene>
 
-    <script>
-      // Esperar a que el archivo de sonido termine de cargarse
-      document.querySelector('a-scene').addEventListener('loaded', () => {
-        const soundPlayer = document.querySelector('#sound-player');
-        const audioElement = document.querySelector('#jabiru-sound');
 
-        // Escuchar el evento 'canplaythrough' para asegurar que el sonido está listo
-        audioElement.addEventListener('canplaythrough', () => {
-          console.log('Sound is ready to play.');
-          soundPlayer.components.sound.playSound();
-        });
-      });
-    </script>
   </body>
 </html>
