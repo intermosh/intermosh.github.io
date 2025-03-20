@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    
+  </head>
+  <body>
+    <a-scene mindar-image="imageTargetSrc: /muitu.mind;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+     <a-assets>
+     
+      <video id="muitu" preload="auto" src="/muitu.webm" autoplay="true" loop="true" playsinline="" webkit-playsinline=""></video>
+      </a-assets>
+      
+       <a-camera position="0 -10 0" look-controls="enabled: false"></a-camera>
+           <a-entity mindar-image-target="targetIndex: 0" xr-mode-ui="XRMode: ar">
+  <a-video src="#muitu" width="16" height="9" position="0 -10 0"></a-video >
+
+  </a-entity>
+</a-scene>
+</body>
+</html>
