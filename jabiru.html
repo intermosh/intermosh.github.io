@@ -4,64 +4,84 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <style>
+      /* Ocultar botón inicialmente */
+      #sound-button {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        background: white;
+        border: 2px solid #ccc;
+        border-radius: 30px;
+        width: 50px;
+        height: 50px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        display: none; /* <-- Oculto por defecto */
+      }
+    </style>
   </head>
   <body>
-    <a-scene mindar-image="imageTargetSrc: assets/jabiru.mind;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: true">
-      <a-assets>
-        <!-- Modelo 3D -->
-        <a-asset-item id="jabiru-model" src="assets/jabiru.glb"></a-asset-item>
+    <!-- Botón de control de sonido -->
+    <button id="sound-button" onclick="toggleSound()">
+      🔊
+    </button>
 
-        <!-- Sonido -->
-        <audio id="jabiru-sound" src="assets/jabiru.mp3" preload="auto"></audio>
+    <a-scene 
+      mindar-image="imageTargetSrc: assets/jabiru.mind;" 
+      vr-mode-ui="enabled: false" 
+      device-orientation-permission-ui="enabled: true"
+      id="ar-scene" <!-- Identificador para acceder a la escena -->
+    >
+      <a-assets>
+        <a-asset-item id="jabiru-model" src="assets/jabiru.glb"></a-asset-item>
+        <audio id="jabiru-audio" src="assets/jabiru.mp3" loop></audio>
       </a-assets>
 
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
       <a-entity mindar-image-target="targetIndex: 0">
-        <!-- Modelo 3D con rotación -->
         <a-entity
           gltf-model="#jabiru-model"
           scale="0.05 0.05 0.05"
           position="0 0 0"
-          rotation="45 0 0"
+          rotation="45 0 0" 
           animation-mixer="clip: run; loop: once"
         ></a-entity>
-
-        <!-- Reproductor de sonido -->
-        <a-sound
-          id="sound-player"
-          src="#jabiru-sound"
-          autoplay="false"
-          loop="true"
-        ></a-sound>
       </a-entity>
+
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
     </a-scene>
 
     <script>
-      // Referencias a elementos
-      const soundPlayer = document.querySelector('#sound-player');
-      const audioElement = document.querySelector('#jabiru-sound');
+      let isPlaying = false;
+      const audio = document.getElementById('jabiru-audio');
+      const soundButton = document.getElementById('sound-button');
+      const arScene = document.getElementById('ar-scene');
 
-      // Evento para reproducir el sonido cuando se detecta el marcador
-      document.querySelector('a-scene').addEventListener('loaded', () => {
-        const targetEntity = document.querySelector('[mindar-image-target]');
-
-        // Cuando se detecta el marcador
-        targetEntity.addEventListener('targetFound', () => {
-          console.log('Marcador detectado. Reproduciendo sonido...');
-          if (audioElement.readyState >= 3) {
-            soundPlayer.components.sound.playSound(); // Reproducir el sonido
-          } else {
-            console.warn('El archivo de sonido aún no está listo.');
-          }
-        });
-
-        // Cuando el marcador deja de ser visible
-        targetEntity.addEventListener('targetLost', () => {
-          console.log('Marcador perdido. Deteniendo sonido...');
-          soundPlayer.components.sound.stopSound(); // Detener el sonido
-        });
+      // Mostrar/ocultar botón al detectar/pierder imagen
+      arScene.addEventListener('targetFound', (event) => {
+        soundButton.style.display = 'flex';
       });
+
+      arScene.addEventListener('targetLost', (event) => {
+        soundButton.style.display = 'none';
+        if (isPlaying) {
+          audio.pause();
+          isPlaying = false;
+        }
+      });
+
+      function toggleSound() {
+        if (isPlaying) {
+          audio.pause();
+        } else {
+          audio.play();
+        }
+        isPlaying = !isPlaying;
+      }
     </script>
   </body>
 </html>
