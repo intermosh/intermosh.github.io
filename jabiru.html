@@ -1,84 +1,53 @@
 <!DOCTYPE html>
 <html>
-  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-
   <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <title>Ibera Test Demo</title>
-    <!-- import aframe and then ar.js with image tracking / location based features -->
- <!--     <script src="https://aframe.io/releases/0.2.0/aframe.min.js"></script>
-  <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script> -->
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script> 
-  <!--   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script> -->
-
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
-
-    <!-- style for the loader -->
-    <style>
-      .arjs-loader {
-        height: 100%;
-        width: 100%;
-        position: absolute;
-        top: 0;
-        left: 0;
-        background-color: rgba(0, 0, 0, 0.8);
-        z-index: 9999;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-
-      .arjs-loader div {
-        text-align: center;
-        font-size: 1.25em;
-        color: white;
-      }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   </head>
+  <body>
+    <a-scene mindar-image="imageTargetSrc: assets/jabiru.mind;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+      <a-assets>
+        <!-- Modelo 3D -->
+        <a-asset-item id="jabiru-model" src="assets/jabiru.glb"></a-asset-item>
 
-  <body style="margin : 0px; overflow: hidden;">
-    <!-- minimal loader shown until image descriptors are loaded. Loading may take a while according to the device computational power -->
-    <div class="arjs-loader">
-      <div>Espere...</div>
-    </div>
+        <!-- Sonido -->
+        <audio id="jabiru-sound" src="assets/jabiru.mp3" preload="auto"></audio>
+      </a-assets>
 
-    <!-- a-frame scene -->
-    <a-scene physics="debug: false;"
-      vr-mode-ui="enabled: false;"
-      renderer="logarithmicDepthBuffer: true;"
-      embedded
-      arjs="trackingMethod: best; sourceType: webcam;debugUIEnabled: false;">
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <!-- Preload assets -->
-    <a-assets>
-    <a-asset-item id="jabiru" src="Jabiru.glb"></a-asset-item>
-    </a-assets>
-      
-    <!-- Lights -->
-    <a-entity light="type: ambient; color: #fff"></a-entity>
-    <a-entity light="type: directional; color: #FFF; intensity: 0.8" 
-              position="30 0 -110"></a-entity> 
-      
-      <!-- a-nft is the anchor that defines an Image Tracking entity -->
-      <a-nft
-        type="nft"
-        url="/jabiru"
-        smooth="true"
-        smoothCount="5"
-        smoothTolerance=".01"
-        smoothThreshold="5">
-          <!-- content to show -->
-          <a-entity
-          gltf-model="#jabiru"
-              scale="10 10 10"
-              position="0 0 0"
-          >
-          </a-entity>
-      </a-nft>
+      <a-entity mindar-image-target="targetIndex: 0">
+        <!-- Modelo 3D -->
+        <a-entity
+          gltf-model="#jabiru-model"
+          scale="0.5 0.5 0.5"
+          position="0 0 -5"
+          animation-mixer="clip: run; loop: once"
+        ></a-entity>
 
-      <a-entity camera></a-entity>
+        <!-- Reproductor de sonido -->
+        <a-sound
+          id="sound-player"
+          src="#jabiru-sound"
+          autoplay="false"
+          loop="false"
+        ></a-sound>
+      </a-entity>
     </a-scene>
-  </body>
 
+    <script>
+      // Esperar a que el archivo de sonido termine de cargarse
+      document.querySelector('a-scene').addEventListener('loaded', () => {
+        const soundPlayer = document.querySelector('#sound-player');
+        const audioElement = document.querySelector('#jabiru-sound');
+
+        // Escuchar el evento 'canplaythrough' para asegurar que el sonido está listo
+        audioElement.addEventListener('canplaythrough', () => {
+          console.log('Sound is ready to play.');
+          soundPlayer.components.sound.playSound();
+        });
+      });
+    </script>
+  </body>
 </html>
