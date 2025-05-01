@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<!-- HACK-FIX TO ZOOMED CAMERA ISSUE -->
+<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+<script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+<script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+
+<body style="margin : 0; overflow: hidden;">
+
+  <a-scene embedded arjs vr-mode-ui="enabled: false"> <!-- stats -->
+
+    <!-- Preload assets -->
+    <a-assets>
+      <a-asset-item id="cinematronic" src="assets/stickers/logo.gltf"></a-asset-item>
+      <video id="fondo" autoplay loop="true" src="assets/stickers/fondo.mp4"></video>
+      <video id="frente" autoplay loop="true" src="assets/stickers/frente.mp4"></video>
+      <!-- <audio id="loop" src="cloop.mp3" loop="true"></audio> -->
+      <!-- <audio id="headcrsh" src="headcrsh.mp3" loop="true"></audio> -->
+    </a-assets>
+
+    <!-- Lights -->
+    <!-- <a-entity light="type: ambient; color: #ff0094; intensity: 1"></a-entity> 
+    <a-entity light="type: directional; color: #fff; intensity: 0.8" position="-0.5 1 1"></a-entity> -->
+    <!-- <a-entity cursor position="0 0 0"></a-entity>    -->
+    <!-- Marker -->
+    <a-marker type="pattern" url="assets/stickers/pattern-qr-cinematronic.patt">
+
+      <!-- Sound -->
+      <!-- <a-entity id="loop" geometry="primitive: plane" material="color: blue"
+    position="0 0 0" sound="src: url(cloop.mp3); autoplay: true"></a-entity> -->
+
+      <!-- video -->
+      <!-- <a-plane color="#fff" width="3" height="3"  rotation="-90 -45 0"></a-plane> -->
+      <a-video src="#fondo" width="3.1" height="3.1" position="0 0 0" rotation="90 -45 180" opacity="0.5"></a-video>
+      <a-video src="#frente" width="3.1" height="3.1" position="0 0.1 0" rotation="-90 -45 0" opacity="0.2"></a-video>
+
+      <a-entity position="-0.8 0.1 0.8" scale="0.3 0.3 0.3" rotation="0 -45 0"
+        animation="property: rotation; to: 0 -45 360; dur: 6400; easing: linear; loop: true"
+        gltf-model="#cinematronic"></a-entity>
+      </a-entity>
+    </a-marker>
+
+
+    <a-entity camera zoom="1">
+    </a-entity>
+
+  </a-scene>
+</body>
+
+</html>
