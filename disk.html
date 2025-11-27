@@ -5,17 +5,106 @@
     <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   </head>
+     <script>
+      AFRAME.registerComponent('additive-shader', {
+        schema: {
+          targetIndex: { type: 'number', default: 0 }
+        },
+
+        init: function () {
+          // Obtener video correspondiente al índice
+          const video = document.getElementById(`video${this.data.targetIndex}`);
+          
+          const texture = new THREE.VideoTexture(video);
+
+          if (!video) {
+      console.error(`Video ${videoId} no encontrado`);
+      return;
+    }
+
+          // Optimización de textura
+          texture.minFilter = THREE.LinearFilter;
+          texture.magFilter = THREE.LinearFilter;
+          texture.format = THREE.RGBAFormat;
+
+          // Crear material con shader optimizado
+          const material = new THREE.ShaderMaterial({
+            uniforms: {
+              baseTexture: { value: texture },
+              threshold: { value: 0.2 } 
+            },
+            vertexShader: `
+              varying vec2 vUv;
+              void main() {
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+              }
+            `,
+            fragmentShader: `
+              uniform sampler2D baseTexture;
+              uniform float threshold;
+              varying vec2 vUv;
+
+              void main() {
+                vec4 color = texture2D(baseTexture, vUv);
+                // Cálculo de luminancia optimizado
+                float luminance = (color.r + color.g + color.b) * 0.333;
+                // Transparencia en lugar de discard
+                gl_FragColor = vec4(color.rgb, step(threshold, luminance));
+              }
+            `,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            depthTest: false,
+            uniformsNeedUpdate: true
+          });
+
+          this.el.getObject3D('mesh').material = material;
+        }
+      });
+
+      // Manejo mejorado de reproducción de videos
+      document.addEventListener('DOMContentLoaded', () => {
+        const videos = Array.from(document.querySelectorAll('video'));
+        
+//         const playAllVideos = async () => {
+//   try {
+//     await Promise.all(videos.map(video => {
+//       if (video.paused) {
+//         return video.play();
+//       }
+//     }));
+//   } catch (error) {
+//     console.log('Reintentando reproducción...');
+//     // setTimeout(playAllVideos, 500);
+//   }
+// };
+
+
+        // document.addEventListener('touchstart', playAllVideos, { once: true });
+        // document.addEventListener('click', playAllVideos, { once: true });
+      });
+    </script>
   <body>
     <a-scene mindar-image="imageTargetSrc: target.mind;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+
+
+ 
       <a-assets>
-        <img id="card" src="disk.gif" />
+        <video id="video0" preload="auto" autoplay loop playsinline muted 
+              src="disk.gif"  crossorigin="anonymous"></video>
       </a-assets>
 
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-      <a-entity mindar-image-target="targetIndex: 0">
-        <a-plane src="#card" position="0 0 0" height="0.552" width="1" rotation="0 0 0"></a-plane>
-   <!--     <a-gltf-model rotation="0 0 0 " position="0 0 0.1" scale="0.005 0.005 0.005" src="#avatarModel" animation="property: position; to: 0 0.1 0.1; dur: 1000; easing: easeInOutQuad; loop: true; dir: alternate">  -->
+
+
+
+       <a-entity mindar-image-target="targetIndex: 0">
+        <a-plane width="1" height="0.7" position="0 0 0" 
+                 additive-shader="targetIndex: 0"></a-plane>
       </a-entity>
+
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
     </a-scene>
   </body>
 </html>
