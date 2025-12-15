@@ -2,12 +2,10 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-    <style>      .a-enter-vr-button {
-      display: none; 
-    }</style>
-    <script>
+  </head>
+     <script>
       AFRAME.registerComponent('additive-shader', {
         schema: {
           targetIndex: { type: 'number', default: 0 }
@@ -87,79 +85,26 @@
         // document.addEventListener('click', playAllVideos, { once: true });
       });
     </script>
-  </head>
   <body>
-    <a-scene mindar-image="imageTargetSrc: target.mind;" 
-             vr-mode-ui="enabled: false" 
-             device-orientation-permission-ui="enabled: true"
-             renderer="antialias: false; highRefreshRate: true"
-             id="ar-scene"
-             loaded="console.log('Escena y assets cargados')">
-      
+    <a-scene mindar-image="imageTargetSrc: target.mind;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+
+
+ 
       <a-assets>
-        <!-- Videos optimizados (720p y VP9) -->
         <video id="video0" preload="auto" autoplay loop playsinline muted 
               src="disk.webm"  crossorigin="anonymous"></video>
-        <!-- <video id="video1" preload="auto" autoplay loop playsinline muted 
-              src="assets/chuna.webm"  crossorigin="anonymous"></video>
-        <video id="video2" preload="auto" autoplay loop playsinline muted 
-              src="assets/guacamayo.webm"  crossorigin="anonymous"></video>
-        <video id="video3" preload="auto" autoplay loop playsinline muted 
-              src="assets/muitu.webm"  crossorigin="anonymous"></video>
-        <video id="video4" preload="auto" autoplay loop playsinline muted 
-              src="assets/nutria.webm"  crossorigin="anonymous"></video>
-        <video id="video5" preload="auto" autoplay loop playsinline muted 
-              src="assets/ocelote.webm"  crossorigin="anonymous"></video>
-        <video id="video6" preload="auto" autoplay loop playsinline muted 
-              src="assets/tamandua.webm"  crossorigin="anonymous"></video>
-        <video id="video7" preload="auto" autoplay loop playsinline muted 
-              src="assets/venado.webm"  crossorigin="anonymous"></video>
-        <video id="video8" preload="auto" autoplay loop playsinline muted 
-              src="assets/yaguarete.webm" crossorigin="anonymous"></video> -->
       </a-assets>
 
 
-      <!-- Targets -->
-       <!-- 0: Aguara Guazu -->
+
 
        <a-entity mindar-image-target="targetIndex: 0">
         <a-plane width="1" height="0.7" position="0 0 0" 
                  additive-shader="targetIndex: 0"></a-plane>
       </a-entity>
 
-
-
-      <a-camera position="0 0 0" look-controls="enabled: true"></a-camera>
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
     </a-scene>
-    <script>
-
-  
-  
-    function initTargetListeners(targetEl) {
-      targetEl.addEventListener('targetFound', () => {
-        console.log('Target found:', targetEl.id);
-
-      });
-  
-      targetEl.addEventListener('targetLost', () => {
-        console.log('Target lost:', targetEl.id);
-
-      });
-    }
-  
-    const targets = document.querySelectorAll('[mindar-image-target]');
-    targets.forEach((targetEl) => {
-      initTargetListeners(targetEl);
-    });
-
-
-    document.querySelectorAll('video').forEach(video => {
-  video.addEventListener('error', (e) => {
-    console.error('Error en video:', e.target.error);
-  });
-});
-
-  </script> 
   </body>
 </html>
