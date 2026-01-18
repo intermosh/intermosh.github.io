@@ -97,42 +97,23 @@
              loaded="console.log('Escena y assets cargados')">
       
       <a-assets>
-        <!-- Videos optimizados (720p y VP9) -->
-        <video id="video0" preload="auto" autoplay loop playsinline muted 
-              src="disk.webm"  crossorigin="anonymous"></video>
-              <a-asset-item id="cinematronic" src="assets/stickers/logo.gltf"></a-asset-item>
-      <video id="fondo" autoplay loop="true" src="assets/stickers/fondo.mp4"></video>
-      <video id="frente" autoplay loop="true" src="assets/stickers/frente.mp4"></video>
-        <!-- <video id="video1" preload="auto" autoplay loop playsinline muted 
-              src="assets/chuna.webm"  crossorigin="anonymous"></video>
-        <video id="video2" preload="auto" autoplay loop playsinline muted 
-              src="assets/guacamayo.webm"  crossorigin="anonymous"></video>
-        <video id="video3" preload="auto" autoplay loop playsinline muted 
-              src="assets/muitu.webm"  crossorigin="anonymous"></video>
-        <video id="video4" preload="auto" autoplay loop playsinline muted 
-              src="assets/nutria.webm"  crossorigin="anonymous"></video>
-        <video id="video5" preload="auto" autoplay loop playsinline muted 
-              src="assets/ocelote.webm"  crossorigin="anonymous"></video>
-        <video id="video6" preload="auto" autoplay loop playsinline muted 
-              src="assets/tamandua.webm"  crossorigin="anonymous"></video>
-        <video id="video7" preload="auto" autoplay loop playsinline muted 
-              src="assets/venado.webm"  crossorigin="anonymous"></video>
-        <video id="video8" preload="auto" autoplay loop playsinline muted 
-              src="assets/yaguarete.webm" crossorigin="anonymous"></video> -->
+        <!-- Videos -->
+      <a-asset-item id="cinematronic" src="assets/stickers/logo.gltf"></a-asset-item>
+      <video id="fondo" preload="auto"  autoplay loop="true" src="assets/stickers/fondo.mp4"></video>
+      <video id="frente" preload="auto"  autoplay loop="true" src="assets/stickers/frente.mp4"></video>
+    
       </a-assets>
 
 
       <!-- Targets -->
-       <!-- 0: Aguara Guazu -->
-
        <a-entity mindar-image-target="targetIndex: 0">
      <!--   <a-plane width="1" height="0.7" position="0 0 0" 
                  additive-shader="targetIndex: 0"></a-plane> -->
          
       <!-- video -->
       <!-- <a-plane color="#fff" width="3" height="3"  rotation="-90 -45 0"></a-plane> -->
-      <a-video src="#fondo" width="3.1" height="3.1" position="0 0 0" rotation="0 0 0" opacity="0.5"></a-video>
-   <!--   <a-video src="#frente" width="3.1" height="3.1" position="0 0.1 0" rotation="-90 -45 0" opacity="0.2"></a-video> --!>
+          <a-video src="#fondo" width="3.1" height="3.1" position="0 0 0" rotation="0 0 0" opacity="0.5"></a-video>
+   <!--   <a-video src="#frente" width="3.1" height="3.1" position="0 0.1 0" rotation="-90 -45 0" opacity="0.2"></a-video> -->
 
       <a-entity position="-0.8 0.1 0.8" scale="0.3 0.3 0.3" rotation="0 -45 0"
         animation="property: rotation; to: 0 -45 360; dur: 6400; easing: linear; loop: true"
