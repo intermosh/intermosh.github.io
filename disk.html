@@ -68,23 +68,7 @@
       // Manejo mejorado de reproducción de videos
       document.addEventListener('DOMContentLoaded', () => {
         const videos = Array.from(document.querySelectorAll('video'));
-        
-//         const playAllVideos = async () => {
-//   try {
-//     await Promise.all(videos.map(video => {
-//       if (video.paused) {
-//         return video.play();
-//       }
-//     }));
-//   } catch (error) {
-//     console.log('Reintentando reproducción...');
-//     // setTimeout(playAllVideos, 500);
-//   }
-// };
 
-
-        // document.addEventListener('touchstart', playAllVideos, { once: true });
-        // document.addEventListener('click', playAllVideos, { once: true });
       });
     </script>
   </head>
@@ -110,16 +94,12 @@
      <!--   <a-plane width="1" height="0.7" position="0 0 0" 
                  additive-shader="targetIndex: 0"></a-plane> -->
          
-      <!-- video -->
-          <a-video src="#fondo" width="3.1" height="3.1" position="0 0 0" rotation="0 0 0" opacity="0.5"></a-video>
-          <a-video src="#frente" width="3.1" height="3.1" position="0 0.1 0" rotation="-90 -45 0" opacity="0.2"></a-video> 
+          <a-video src="#fondo" width="2.1" height="2.1" position="0 0 0" rotation="0 0 0" opacity="0.5"></a-video>
+          <a-video src="#frente" width="2.1" height="2.1" position="0 0.1 0" rotation="0 -45 0" opacity="0.2"></a-video> 
 
-      <a-entity position="-0.8 0.1 0.8" scale="0.1 0.1 0.1" rotation="0 -45 0"
-        gltf-model="#cinematronic"></a-entity>
+          <a-entity position="-0.8 0.1 0.8" scale="0.1 0.1 0.1" rotation="0 -45 0" gltf-model="#cinematronic"></a-entity>
       </a-entity>
       </a-entity>
-
-
 
       <a-camera position="0 0 0" look-controls="enabled: true"></a-camera>
 
