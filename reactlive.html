@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>ReactLive - Gesture Synthesizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        html,body{overflow:hidden;background:#000;font-family:'Segoe UI',system-ui,sans-serif;user-select:none;width:100%;height:100%}
+        #main-container{position:fixed;inset:0;overflow:hidden}
+        #video-input{position:absolute;width:100%;height:100%;object-fit:cover;z-index:0;opacity:0.5}
+        #output-canvas{position:absolute;inset:0;z-index:10}
+        #overlay{position:absolute;inset:0;background:rgba(0,0,0,0.94);display:flex;justify-content:center;align-items:center;z-index:100;color:#fff;transition:opacity 0.6s}
+        .intro-container{display:flex;align-items:center;gap:80px;max-width:1200px;padding:40px}
+        .intro-left{flex:1;text-align:left}
+        .intro-right{flex:1;display:flex;flex-direction:column;align-items:center}
+        #btn-start{background:linear-gradient(135deg,#3b82f6,#8b5cf6);border:none;color:#fff;padding:18px 50px;border-radius:30px;font-size:18px;font-weight:700;cursor:pointer;box-shadow:0 0 40px rgba(59,130,246,0.5);transition:transform 0.2s,box-shadow 0.2s}
+        #btn-start:hover{transform:scale(1.05);box-shadow:0 0 60px rgba(59,130,246,0.7)}
+        .instruction-item{display:flex;align-items:center;gap:16px;margin:12px 0}
+        .instruction-icon{width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:20px}
+        .objects-preview{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:30px;padding:20px;background:rgba(255,255,255,0.03);border-radius:16px}
+        .object-preview-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px;border-radius:8px;background:rgba(255,255,255,0.05)}
+        .object-preview-item i{font-size:16px}
+        .object-preview-item span{font-size:9px;opacity:0.7}
+        
+        /* Logo ReactLive estilo Reactable */
+        .logo-container{display:flex;align-items:center;gap:24px;margin-bottom:28px}
+        .logo-reactlive{position:relative;width:90px;height:90px}
+        .logo-ring{position:absolute;border-radius:50%;border:2px solid rgba(59,130,246,0.6);animation:logo-pulse 3s ease-in-out infinite}
+        .logo-ring-1{inset:0;border-color:rgba(59,130,246,0.8)}
+        .logo-ring-2{inset:10px;border-color:rgba(139,92,246,0.6);animation-delay:0.5s}
+        .logo-ring-3{inset:20px;border-color:rgba(59,130,246,0.4);animation-delay:1s}
+        .logo-core{position:absolute;inset:32px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:50%;display:flex;align-items:center;justify-content:center}
+        .logo-dot{width:12px;height:12px;background:#fff;border-radius:50%;box-shadow:0 0 20px rgba(255,255,255,0.8)}
+        @keyframes logo-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.05);opacity:0.7}}
+        
+        /* Mirror Toggle */
+        .mirror-toggle{display:flex;align-items:center;gap:12px;margin-top:20px;padding:12px 20px;background:rgba(255,255,255,0.05);border-radius:12px;cursor:pointer;transition:background 0.2s}
+        .mirror-toggle:hover{background:rgba(255,255,255,0.1)}
+        .mirror-switch{position:relative;width:48px;height:26px;background:rgba(255,255,255,0.2);border-radius:13px;transition:background 0.3s}
+        .mirror-switch.active{background:linear-gradient(135deg,#3b82f6,#8b5cf6)}
+        .mirror-switch::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform 0.3s}
+        .mirror-switch.active::after{transform:translateX(22px)}
+        .mirror-label{font-size:14px;color:#aaa}
+        .mirror-toggle:hover .mirror-label{color:#fff}
+        
+        /* Loading Screen */
+        #loading-screen{display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px}
+        #loading-screen.active{display:flex}
+        .loading-logo{position:relative;width:100px;height:100px;margin-bottom:30px}
+        .loading-ring{position:absolute;border-radius:50%;border:2px solid transparent;border-top-color:#3b82f6;animation:spin 1s linear infinite}
+        .loading-ring-1{inset:0}
+        .loading-ring-2{inset:12px;border-top-color:#8b5cf6;animation-direction:reverse;animation-duration:1.5s}
+        .loading-ring-3{inset:24px;border-top-color:#3b82f6;animation-duration:2s}
+        .loading-core{position:absolute;inset:36px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:50%}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .loading-title{font-size:28px;font-weight:700;margin-bottom:10px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .loading-status{color:#888;font-size:14px;margin-bottom:30px;min-height:20px}
+        .loading-steps{display:flex;flex-direction:column;gap:12px;width:300px}
+        .loading-step{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,0.03);border-radius:10px;transition:all 0.3s}
+        .loading-step.active{background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3)}
+        .loading-step.done{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3)}
+        .loading-step.done .step-icon{color:#22c55e}
+        .loading-step.active .step-icon{color:#3b82f6;animation:pulse 1s infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+        .step-icon{width:24px;text-align:center;color:#555}
+        .step-text{flex:1;text-align:left;font-size:13px;color:#aaa}
+        .loading-step.done .step-text{color:#22c55e}
+        .loading-step.active .step-text{color:#fff}
+        
+        @media(max-width:900px){
+            .intro-container{flex-direction:column;gap:30px;padding:20px;text-align:center}
+            .intro-left{text-align:center}
+            .instruction-item{justify-content:center}
+            .objects-preview{grid-template-columns:repeat(5,1fr)}
+        }
+    </style>
+</head>
+<body>
+<div id="main-container">
+    <video id="video-input" playsinline muted></video>
+    <canvas id="output-canvas"></canvas>
+    <div id="overlay">
+        <!-- Start Screen -->
+        <div id="start-content" class="intro-container">
+            <div class="intro-left">
+                <div class="logo-container">
+                    <div class="logo-reactlive">
+                        <div class="logo-ring logo-ring-1"></div>
+                        <div class="logo-ring logo-ring-2"></div>
+                        <div class="logo-ring logo-ring-3"></div>
+                        <div class="logo-core"><div class="logo-dot"></div></div>
+                    </div>
+                    <div>
+                        <h1 class="text-4xl font-bold mb-1" style="background:linear-gradient(135deg,#3b82f6,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent">ReactLive</h1>
+                        <p class="text-gray-400">Sintetizador gestual con tracking de manos</p>
+                    </div>
+                </div>
+                <div class="mt-8">
+                    <div class="instruction-item">
+                        <div class="instruction-icon"><i class="fas fa-hand-pointer text-blue-400"></i></div>
+                        <div><b>Gesto Pinza</b> (pulgar + índice)<p class="text-gray-400 text-sm">Junta los dedos para agarrar objetos</p></div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-icon"><i class="fas fa-arrows-up-down-left-right text-green-400"></i></div>
+                        <div><b>Arrastra al centro</b><p class="text-gray-400 text-sm">Mueve los objetos a la zona activa central</p></div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-icon"><i class="fas fa-rotate text-purple-400"></i></div>
+                        <div><b>Rota la mano</b><p class="text-gray-400 text-sm">Gira mientras sostienes para cambiar parámetros</p></div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-icon"><i class="fas fa-link text-orange-400"></i></div>
+                        <div><b>Conecta objetos</b><p class="text-gray-400 text-sm">Acerca los objetos entre sí para modular</p></div>
+                    </div>
+                </div>
+            </div>
+            <div class="intro-right">
+                <button id="btn-start"><i class="fas fa-play mr-3"></i> INICIAR EXPERIENCIA</button>
+                <p class="text-gray-500 mt-4 text-sm"><i class="fas fa-camera mr-2"></i>Requiere acceso a la cámara</p>
+                
+                <div id="mirror-toggle" class="mirror-toggle">
+                    <div id="mirror-switch" class="mirror-switch active"></div>
+                    <span class="mirror-label"><i class="fas fa-arrows-left-right mr-2"></i>Espejar cámara</span>
+                </div>
+                
+                <div class="objects-preview">
+                    <div class="object-preview-item"><i class="fas fa-wave-square text-blue-400"></i><span>SYNTH</span></div>
+                    <div class="object-preview-item"><i class="fas fa-wave-square text-green-400"></i><span>LFO</span></div>
+                    <div class="object-preview-item"><i class="fas fa-dice text-purple-400"></i><span>RANDOM</span></div>
+                    <div class="object-preview-item"><i class="fas fa-clock text-amber-400"></i><span>DELAY</span></div>
+                    <div class="object-preview-item"><i class="fas fa-water text-pink-400"></i><span>REVERB</span></div>
+                    <div class="object-preview-item"><i class="fas fa-bolt text-red-400"></i><span>DISTORT</span></div>
+                    <div class="object-preview-item"><i class="fas fa-wind text-cyan-400"></i><span>NOISE</span></div>
+                    <div class="object-preview-item"><i class="fas fa-shuffle text-rose-400"></i><span>GLITCH</span></div>
+                    <div class="object-preview-item"><i class="fas fa-satellite-dish text-indigo-400"></i><span>FM</span></div>
+                    <div class="object-preview-item"><i class="fas fa-atom text-teal-400"></i><span>GRAIN</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Loading Screen -->
+        <div id="loading-screen">
+            <div class="loading-logo">
+                <div class="loading-ring loading-ring-1"></div>
+                <div class="loading-ring loading-ring-2"></div>
+                <div class="loading-ring loading-ring-3"></div>
+                <div class="loading-core"></div>
+            </div>
+            <div class="loading-title">ReactLive</div>
+            <div id="loading-status" class="loading-status">Preparando...</div>
+            <div class="loading-steps">
+                <div id="step-audio" class="loading-step">
+                    <i class="fas fa-volume-up step-icon"></i>
+                    <span class="step-text">Inicializando motor de audio</span>
+                </div>
+                <div id="step-camera" class="loading-step">
+                    <i class="fas fa-camera step-icon"></i>
+                    <span class="step-text">Solicitando acceso a cámara</span>
+                </div>
+                <div id="step-ai" class="loading-step">
+                    <i class="fas fa-brain step-icon"></i>
+                    <span class="step-text">Cargando modelo de IA</span>
+                </div>
+                <div id="step-ready" class="loading-step">
+                    <i class="fas fa-check-circle step-icon"></i>
+                    <span class="step-text">¡Listo para comenzar!</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================
+// CONFIGURATION - Escalable
+// ============================================
+const CFG = {
+    pinchOn: 0.07,
+    pinchOff: 0.09,
+    zoneRadius: 0.42,
+    smooth: 0.45,
+    rotSmooth: 0.35,
+    connectDist: 0.24,
+    samples: 64,
+    camW: 1280,
+    camH: 720,
+    objRadius: 0.045
+};
+
+const TAU = Math.PI * 2;
+const HALF_PI = Math.PI / 2;
+
+// ============================================
+// AUDIO ENGINE - Optimizado
+// ============================================
+const audio = {
+    ctx: null,
+    master: null,
+    analyser: null,
+    reverb: null,
+    delay: null,
+    distortion: null,
+    ready: false,
+    
+    async init() {
+        if (this.ready) return;
+        const AC = window.AudioContext || window.webkitAudioContext;
+        this.ctx = new AC();
+        if (this.ctx.state === 'suspended') await this.ctx.resume();
+        
+        this.analyser = this.ctx.createAnalyser();
+        this.analyser.fftSize = 256;
+        
+        const comp = this.ctx.createDynamicsCompressor();
+        comp.threshold.value = -18;
+        comp.ratio.value = 6;
+        comp.connect(this.ctx.destination);
+        this.analyser.connect(comp);
+        
+        this.master = this.ctx.createGain();
+        this.master.gain.value = 0.7;
+        this.master.connect(this.analyser);
+        
+        this.reverb = this.ctx.createConvolver();
+        this.reverb.buffer = this.impulse(2, 2);
+        const rGain = this.ctx.createGain();
+        rGain.gain.value = 0.35;
+        this.reverb.connect(rGain);
+        rGain.connect(this.master);
+        
+        this.delay = this.ctx.createDelay(2);
+        this.delay.delayTime.value = 0.3;
+        const fb = this.ctx.createGain();
+        fb.gain.value = 0.4;
+        const dGain = this.ctx.createGain();
+        dGain.gain.value = 0.5;
+        this.delay.connect(fb);
+        fb.connect(this.delay);
+        this.delay.connect(dGain);
+        dGain.connect(this.master);
+        
+        this.distortion = this.ctx.createWaveShaper();
+        this.distortion.curve = this.distCurve(400);
+        this.distortion.oversample = '2x';
+        const distG = this.ctx.createGain();
+        distG.gain.value = 0.6;
+        this.distortion.connect(distG);
+        distG.connect(this.master);
+        
+        this.ready = true;
+    },
+    
+    impulse(dur, decay) {
+        const r = this.ctx.sampleRate, len = r * dur;
+        const buf = this.ctx.createBuffer(2, len, r);
+        for (let c = 0; c < 2; c++) {
+            const d = buf.getChannelData(c);
+            for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+        }
+        return buf;
+    },
+    
+    distCurve(k) {
+        const n = 22050, c = new Float32Array(n), deg = Math.PI / 180;
+        for (let i = 0; i < n; i++) {
+            const x = (i * 2) / n - 1;
+            c[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+        }
+        return c;
+    }
+};
+
+// ============================================
+// OBJECT DEFINITIONS - Escalable
+// ============================================
+const TYPES = {
+    synth:      { color: 'rgba(59,130,246,0.6)',  solid: '#3b82f6', icon: '\uf83e', shape: 'square' },
+    lfo:        { color: 'rgba(34,197,94,0.6)',   solid: '#22c55e', icon: '\uf83e', shape: 'circle' },
+    random:     { color: 'rgba(139,92,246,0.6)',  solid: '#8b5cf6', icon: '\uf522', shape: 'diamond' },
+    delay:      { color: 'rgba(245,158,11,0.6)',  solid: '#f59e0b', icon: '\uf017', shape: 'circle' },
+    reverb:     { color: 'rgba(236,72,153,0.6)',  solid: '#ec4899', icon: '\uf773', shape: 'circle' },
+    distortion: { color: 'rgba(239,68,68,0.6)',   solid: '#ef4444', icon: '\uf0e7', shape: 'circle' },
+    noise:      { color: 'rgba(6,182,212,0.6)',   solid: '#06b6d4', icon: '\uf72e', shape: 'triangle' },
+    glitch:     { color: 'rgba(244,63,94,0.6)',   solid: '#f43f5e', icon: '\uf074', shape: 'hexagon' },
+    fm:         { color: 'rgba(99,102,241,0.6)',  solid: '#6366f1', icon: '\uf7c0', shape: 'octagon' },
+    grain:      { color: 'rgba(20,184,166,0.6)',  solid: '#14b8a6', icon: '\uf5d2', shape: 'pentagon' }
+};
+
+// Factory de objetos de audio - Escalable
+const AudioFactory = {
+    synth(ctx) {
+        const node = ctx.createOscillator();
+        node.type = 'sawtooth';
+        node.frequency.value = 220;
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 1000;
+        filter.Q.value = 4;
+        const gain = ctx.createGain();
+        gain.gain.value = 0;
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = CFG.samples * 2;
+        node.connect(filter);
+        filter.connect(gain);
+        gain.connect(analyser);
+        analyser.connect(audio.master);
+        node.start();
+        return { node, filter, gain, analyser, modInput: filter.frequency };
+    },
+    
+    lfo(ctx) {
+        const node = ctx.createOscillator();
+        node.frequency.value = 4;
+        const gain = ctx.createGain();
+        gain.gain.value = 500;
+        node.connect(gain);
+        node.start();
+        return { node, gain };
+    },
+    
+    random(ctx) {
+        const node = ctx.createOscillator();
+        node.frequency.value = 2;
+        const gain = ctx.createGain();
+        gain.gain.value = 300;
+        node.connect(gain);
+        node.start();
+        return { node, gain };
+    },
+    
+    noise(ctx) {
+        const len = 2 * ctx.sampleRate;
+        const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+        const node = ctx.createBufferSource();
+        node.buffer = buf;
+        node.loop = true;
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 1000;
+        filter.Q.value = 1;
+        const gain = ctx.createGain();
+        gain.gain.value = 0;
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = CFG.samples * 2;
+        node.connect(filter);
+        filter.connect(gain);
+        gain.connect(analyser);
+        analyser.connect(audio.master);
+        node.start();
+        return { node, filter, gain, analyser, modInput: filter.frequency };
+    },
+    
+    glitch(ctx) {
+        const node = ctx.createOscillator();
+        node.type = 'square';
+        node.frequency.value = 80;
+        const modOsc = ctx.createOscillator();
+        modOsc.frequency.value = 30;
+        const modGain = ctx.createGain();
+        modGain.gain.value = 100;
+        modOsc.connect(modGain);
+        modGain.connect(node.frequency);
+        modOsc.start();
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.value = 200;
+        const gain = ctx.createGain();
+        gain.gain.value = 0;
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = CFG.samples * 2;
+        node.connect(filter);
+        filter.connect(gain);
+        gain.connect(analyser);
+        analyser.connect(audio.master);
+        node.start();
+        return { node, modOsc, modGain, filter, gain, analyser, modInput: node.frequency };
+    },
+    
+    fm(ctx) {
+        const carrier = ctx.createOscillator();
+        carrier.frequency.value = 200;
+        const modulator = ctx.createOscillator();
+        modulator.frequency.value = 100;
+        const modGain = ctx.createGain();
+        modGain.gain.value = 200;
+        modulator.connect(modGain);
+        modGain.connect(carrier.frequency);
+        modulator.start();
+        const gain = ctx.createGain();
+        gain.gain.value = 0;
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = CFG.samples * 2;
+        carrier.connect(gain);
+        gain.connect(analyser);
+        analyser.connect(audio.master);
+        carrier.start();
+        return { node: carrier, carrier, modulator, modGain, gain, analyser, modInput: carrier.frequency };
+    },
+    
+    grain(ctx) {
+        const oscs = [];
+        const gain = ctx.createGain();
+        gain.gain.value = 0;
+        for (let i = 0; i < 4; i++) {
+            const o = ctx.createOscillator();
+            o.type = 'sine';
+            o.frequency.value = 300 + i * 50 + Math.random() * 20;
+            o.detune.value = (Math.random() - 0.5) * 50;
+            o.connect(gain);
+            o.start();
+            oscs.push(o);
+        }
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = CFG.samples * 2;
+        gain.connect(analyser);
+        analyser.connect(audio.master);
+        return { node: oscs[0], oscs, gain, analyser, modInput: oscs[0].frequency };
+    }
+};
+
+// ============================================
+// TANGIBLE OBJECT CLASS - Escalable
+// ============================================
+class Obj {
+    constructor(type, x, y) {
+        this.type = type;
+        this.x = this.homeX = this.tX = x;
+        this.y = this.homeY = this.tY = y;
+        this.rot = this.tRot = 0;
+        this.initAngle = 0;
+        this.rotOff = 0;
+        this.held = false;
+        this.active = false;
+        this.holder = null;
+        this.r = CFG.objRadius;
+        this.audioNodes = null;
+        this.waveData = new Float32Array(CFG.samples);
+        this.conns = new Set();
+        this.randTimer = 0;
+        this.randTarget = 0;
+        this.randCurrent = 0;
+    }
+    
+    get def() { return TYPES[this.type]; }
+    get node() { return this.audioNodes?.node; }
+    get gain() { return this.audioNodes?.gain; }
+    get filter() { return this.audioNodes?.filter; }
+    get analyser() { return this.audioNodes?.analyser; }
+    get modInput() { return this.audioNodes?.modInput; }
+    
+    setup() {
+        if (!audio.ctx || this.audioNodes) return;
+        const factory = AudioFactory[this.type];
+        if (factory) this.audioNodes = factory(audio.ctx);
+    }
+    
+    getWave() {
+        if (this.analyser) this.analyser.getFloatTimeDomainData(this.waveData);
+        return this.waveData;
+    }
+    
+    grab(id, angle) {
+        this.held = true;
+        this.holder = id;
+        this.initAngle = angle;
+        this.rotOff = this.rot;
+    }
+    
+    release() {
+        this.held = false;
+        this.holder = null;
+    }
+    
+    update(hx, hy, angle, ar, dt) {
+        if (this.held) {
+            this.tX = hx;
+            this.tY = hy;
+            this.tRot = this.rotOff + (angle - this.initAngle);
+            this.active = true;
+        } else if (!this.active) {
+            this.tX = this.homeX;
+            this.tY = this.homeY;
+        }
+        
+        this.x += (this.tX - this.x) * CFG.smooth;
+        this.y += (this.tY - this.y) * CFG.smooth;
+        this.rot += (this.tRot - this.rot) * CFG.rotSmooth;
+        
+        if (!this.held) {
+            const d = Math.hypot(this.x - 0.5, (this.y - 0.5) * ar);
+            if (d > CFG.zoneRadius * 1.15) this.active = false;
+        }
+        
+        this.updateAudio(dt);
+    }
+    
+    updateAudio(dt) {
+        if (!audio.ctx) return;
+        if (!this.audioNodes) this.setup();
+        if (!this.audioNodes) return;
+        
+        const rotN = ((this.rot % TAU) + TAU) % TAU;
+        const rP = rotN / TAU;
+        const now = audio.ctx.currentTime;
+        
+        if (this.active) {
+            const d = Math.hypot(this.x - 0.5, this.y - 0.5);
+            const int = Math.max(0, 1 - d / CFG.zoneRadius);
+            const an = this.audioNodes;
+            
+            switch(this.type) {
+                case 'synth':
+                    an.node.frequency.setTargetAtTime(110 + rP * 330, now, 0.05);
+                    an.gain.gain.setTargetAtTime(int * 0.35, now, 0.05);
+                    an.filter.frequency.setTargetAtTime(300 + int * 4000, now, 0.05);
+                    break;
+                case 'lfo':
+                    an.node.frequency.setTargetAtTime(0.5 + rP * 14, now, 0.05);
+                    an.gain.gain.setTargetAtTime(300 + int * 700, now, 0.05);
+                    break;
+                case 'random':
+                    this.randTimer += dt;
+                    if (this.randTimer > 0.1 + rP * 0.5) {
+                        this.randTimer = 0;
+                        this.randTarget = Math.random();
+                    }
+                    this.randCurrent += (this.randTarget - this.randCurrent) * 0.3;
+                    an.gain.gain.setTargetAtTime(this.randCurrent * (200 + int * 800), now, 0.02);
+                    break;
+                case 'noise':
+                    an.filter.frequency.setTargetAtTime(200 + rP * 4000, now, 0.05);
+                    an.filter.Q.setTargetAtTime(1 + rP * 12, now, 0.05);
+                    an.gain.gain.setTargetAtTime(int * 0.2, now, 0.05);
+                    break;
+                case 'glitch':
+                    an.node.frequency.setTargetAtTime(40 + rP * 200, now, 0.05);
+                    an.modGain.gain.setTargetAtTime(50 + rP * 500, now, 0.05);
+                    an.modOsc.frequency.setTargetAtTime(5 + rP * 50, now, 0.05);
+                    an.gain.gain.setTargetAtTime(int * 0.25, now, 0.05);
+                    break;
+                case 'fm':
+                    const cf = 100 + rP * 400;
+                    an.carrier.frequency.setTargetAtTime(cf, now, 0.05);
+                    an.modulator.frequency.setTargetAtTime(cf * (0.5 + rP * 3), now, 0.05);
+                    an.modGain.gain.setTargetAtTime(100 + int * 500, now, 0.05);
+                    an.gain.gain.setTargetAtTime(int * 0.3, now, 0.05);
+                    break;
+                case 'grain':
+                    const base = 150 + rP * 400;
+                    an.oscs.forEach((o, i) => {
+                        o.frequency.setTargetAtTime(base + i * 30 + Math.sin(now * 2 + i) * 20, now, 0.05);
+                    });
+                    an.gain.gain.setTargetAtTime(int * 0.25, now, 0.05);
+                    break;
+            }
+        } else {
+            if (this.gain) this.gain.gain.setTargetAtTime(0, now, 0.1);
+        }
+    }
+}
+
+// ============================================
+// HAND STATE
+// ============================================
+class Hand {
+    constructor(id) {
+        this.id = id;
+        this.x = 0.5;
+        this.y = 0.5;
+        this.angle = 0;
+        this.dist = 1;
+        this.pinch = false;
+        this.wasPinch = false;
+        this.lm = null;
+    }
+    
+    update(landmarks, mirror) {
+        this.lm = landmarks;
+        this.wasPinch = this.pinch;
+        const t = landmarks[4], i = landmarks[8];
+        const tx = mirror ? 1 - t.x : t.x;
+        const ix = mirror ? 1 - i.x : i.x;
+        this.x = (tx + ix) / 2;
+        this.y = (t.y + i.y) / 2;
+        this.dist = Math.hypot(t.x - i.x, t.y - i.y);
+        this.angle = Math.atan2(i.y - t.y, ix - tx);
+        
+        if (!this.pinch && this.dist < CFG.pinchOn) this.pinch = true;
+        else if (this.pinch && this.dist > CFG.pinchOff) this.pinch = false;
+    }
+    
+    justPinched() { return this.pinch && !this.wasPinch; }
+    justReleased() { return !this.pinch && this.wasPinch; }
+}
+
+// ============================================
+// MAIN APP
+// ============================================
+const app = {
+    video: null,
+    canvas: null,
+    ctx: null,
+    objs: [],
+    hands: null,
+    cam: null,
+    handState: {},
+    ripples: [],
+    lastRipple: 0,
+    rippleInt: 2.5,
+    lastT: 0,
+    dt: 0,
+    w: 0,
+    h: 0,
+    mirror: true,
+    
+    init() {
+        this.video = document.getElementById('video-input');
+        this.canvas = document.getElementById('output-canvas');
+        this.ctx = this.canvas.getContext('2d', { alpha: false });
+        
+        // Objetos distribuidos en círculo - Escalable
+        const types = ['synth', 'synth', 'lfo', 'random', 'delay', 'reverb', 'distortion', 'noise', 'glitch', 'fm', 'grain'];
+        this.createObjects(types);
+        
+        // Event listeners
+        document.getElementById('btn-start').onclick = () => this.start();
+        document.getElementById('mirror-toggle').onclick = () => this.toggleMirror();
+        window.onresize = () => this.resize();
+        this.resize();
+    },
+    
+    // Método para crear objetos - Escalable
+    createObjects(types) {
+        const n = types.length;
+        const edgeRadius = CFG.zoneRadius + 0.12;
+        this.objs = types.map((t, i) => {
+            const angle = (i / n) * TAU - HALF_PI;
+            const x = 0.5 + Math.cos(angle) * edgeRadius;
+            const y = 0.5 + Math.sin(angle) * edgeRadius * 0.85;
+            return new Obj(t, x, y);
+        });
+    },
+    
+    // Método para agregar objetos dinámicamente
+    addObject(type) {
+        const types = this.objs.map(o => o.type);
+        types.push(type);
+        this.createObjects(types);
+        if (audio.ready) this.objs[this.objs.length - 1].setup();
+    },
+    
+    toggleMirror() {
+        this.mirror = !this.mirror;
+        document.getElementById('mirror-switch').classList.toggle('active', this.mirror);
+    },
+    
+    resize() {
+        const dpr = Math.min(devicePixelRatio || 1, 2);
+        this.w = innerWidth;
+        this.h = innerHeight;
+        this.canvas.width = this.w * dpr;
+        this.canvas.height = this.h * dpr;
+        this.canvas.style.width = this.w + 'px';
+        this.canvas.style.height = this.h + 'px';
+        this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    },
+    
+    setStep(step, status) {
+        document.getElementById('loading-status').textContent = status;
+        ['step-audio', 'step-camera', 'step-ai', 'step-ready'].forEach((s, i) => {
+            const el = document.getElementById(s);
+            el.classList.remove('active', 'done');
+            if (i < step) el.classList.add('done');
+            else if (i === step) el.classList.add('active');
+        });
+    },
+    
+    async start() {
+        document.getElementById('start-content').style.display = 'none';
+        document.getElementById('loading-screen').classList.add('active');
+        
+        try {
+            this.setStep(0, 'Inicializando audio...');
+            await audio.init();
+            this.objs.forEach(o => o.setup());
+            await new Promise(r => setTimeout(r, 300));
+            
+            this.setStep(1, 'Accediendo a la cámara...');
+            await new Promise(r => setTimeout(r, 200));
+            
+            this.setStep(2, 'Descargando modelo de IA...');
+            
+            this.hands = new Hands({
+                locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
+            });
+            
+            this.hands.setOptions({
+                maxNumHands: 2,
+                modelComplexity: 1,
+                minDetectionConfidence: 0.6,
+                minTrackingConfidence: 0.5
+            });
+            
+            this.hands.onResults(r => this.process(r));
+            await this.hands.initialize();
+            
+            this.cam = new Camera(this.video, {
+                onFrame: async () => await this.hands.send({ image: this.video }),
+                width: CFG.camW,
+                height: CFG.camH,
+                facingMode: 'user'
+            });
+            
+            await this.cam.start();
+            
+            this.setStep(3, '¡Todo listo!');
+            await new Promise(r => setTimeout(r, 500));
+            
+            const ov = document.getElementById('overlay');
+            ov.style.opacity = 0;
+            setTimeout(() => ov.style.display = 'none', 600);
+            
+        } catch (e) {
+            console.error(e);
+            alert('Error: ' + e.message);
+            document.getElementById('loading-screen').classList.remove('active');
+            document.getElementById('start-content').style.display = 'flex';
+        }
+    },
+    
+    process(results) {
+        const now = performance.now();
+        this.dt = (now - this.lastT) / 1000;
+        this.lastT = now;
+        
+        const { w, h, ctx, mirror } = this;
+        const ar = w / h;
+        
+        // Draw video
+        ctx.save();
+        if (mirror) {
+            ctx.translate(w, 0);
+            ctx.scale(-1, 1);
+        }
+        ctx.drawImage(results.image, 0, 0, w, h);
+        ctx.restore();
+        
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.fillRect(0, 0, w, h);
+        
+        this.drawCore();
+        
+        const activeIds = new Set();
+        if (results.multiHandLandmarks) {
+            results.multiHandLandmarks.forEach((lm, idx) => {
+                activeIds.add(idx);
+                if (!this.handState[idx]) this.handState[idx] = new Hand(idx);
+                this.handState[idx].update(lm, mirror);
+                this.processHand(this.handState[idx]);
+            });
+        }
+        
+        Object.keys(this.handState).forEach(id => {
+            if (!activeIds.has(+id)) {
+                this.objs.forEach(o => { if (o.holder === +id) o.release(); });
+                delete this.handState[id];
+            }
+        });
+        
+        Object.values(this.handState).forEach(hand => {
+            this.objs.forEach(o => {
+                if (o.holder === hand.id) o.update(hand.x, hand.y, hand.angle, ar, this.dt);
+            });
+        });
+        
+        this.objs.forEach(o => {
+            if (!o.held) o.update(o.x, o.y, o.rot, ar, this.dt);
+        });
+        
+        this.drawConnections();
+        this.drawObjs();
+        Object.values(this.handState).forEach(h => this.drawHand(h));
+    },
+    
+    processHand(hand) {
+        const ar = this.w / this.h;
+        
+        if (hand.justPinched()) {
+            let best = null, bestD = Infinity;
+            this.objs.forEach(o => {
+                if (o.held) return;
+                const d = Math.hypot(o.x - hand.x, (o.y - hand.y) * ar);
+                if (d < o.r * 2.5 && d < bestD) { best = o; bestD = d; }
+            });
+            if (best) best.grab(hand.id, hand.angle);
+        }
+        
+        if (hand.justReleased()) {
+            this.objs.forEach(o => { if (o.holder === hand.id) o.release(); });
+        }
+    },
+    
+    drawCore() {
+        const { w, h, ctx } = this;
+        const cx = w / 2, cy = h / 2;
+        const minD = Math.min(w, h);
+        const zR = minD * CFG.zoneRadius;
+        const now = performance.now() / 1000;
+        
+        ctx.beginPath();
+        ctx.arc(cx, cy, zR, 0, TAU);
+        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        
+        if (now - this.lastRipple > this.rippleInt) {
+            this.ripples.push({ t: now, dur: 3 });
+            this.lastRipple = now;
+        }
+        
+        this.ripples = this.ripples.filter(r => {
+            const p = (now - r.t) / r.dur;
+            if (p >= 1) return false;
+            const eased = 1 - Math.pow(1 - p, 3);
+            ctx.beginPath();
+            ctx.arc(cx, cy, eased * zR * 0.7, 0, TAU);
+            ctx.strokeStyle = `rgba(255,255,255,${(1 - p) * 0.35})`;
+            ctx.lineWidth = 1.5 * (1 - p * 0.5);
+            ctx.stroke();
+            return true;
+        });
+        
+        const breath = Math.sin(now * 1.5) * 2;
+        const coreR = 6 + breath;
+        
+        const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR * 4);
+        glow.addColorStop(0, 'rgba(255,255,255,0.18)');
+        glow.addColorStop(0.5, 'rgba(255,255,255,0.04)');
+        glow.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.beginPath();
+        ctx.arc(cx, cy, coreR * 4, 0, TAU);
+        ctx.fillStyle = glow;
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.arc(cx, cy, coreR, 0, TAU);
+        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+        ctx.fill();
+    },
+    
+    drawConnections() {
+        const { w, h, objs } = this;
+        const cx = w / 2, cy = h / 2;
+        const sources = ['synth', 'noise', 'glitch', 'fm', 'grain'];
+        
+        objs.forEach(o => o.conns.clear());
+        
+        objs.forEach(src => {
+            if (!src.active) return;
+            
+            if (sources.includes(src.type) && src.gain) {
+                this.drawWave(src.x * w, src.y * h, cx, cy, src.def.color, src.getWave());
+            }
+            
+            objs.forEach(tgt => {
+                if (src === tgt || !tgt.active) return;
+                const d = Math.hypot(src.x - tgt.x, src.y - tgt.y);
+                if (d < CFG.connectDist) {
+                    src.conns.add(tgt);
+                    this.applyConn(src, tgt);
+                    
+                    let wave = null;
+                    if (src.type === 'lfo') wave = this.genLFO(src);
+                    else if (src.type === 'random') wave = this.genRandom(src);
+                    else if (src.analyser) wave = src.getWave();
+                    
+                    if (wave) this.drawWave(src.x * w, src.y * h, tgt.x * w, tgt.y * h, src.def.color, wave, true);
+                    else this.drawLine(src.x * w, src.y * h, tgt.x * w, tgt.y * h, src.def.color);
+                }
+            });
+        });
+    },
+    
+    genLFO(lfo) {
+        const data = new Float32Array(CFG.samples);
+        const freq = lfo.node ? lfo.node.frequency.value : 4;
+        const phase = (performance.now() / 1000) * freq * TAU;
+        for (let i = 0; i < CFG.samples; i++) {
+            data[i] = Math.sin(phase + (i / CFG.samples) * Math.PI * 4) * 0.5;
+        }
+        return data;
+    },
+    
+    genRandom(rnd) {
+        const data = new Float32Array(CFG.samples);
+        const v = rnd.randCurrent || 0;
+        for (let i = 0; i < CFG.samples; i++) {
+            data[i] = (v - 0.5 + Math.sin(i * 0.5) * 0.2) * 0.8;
+        }
+        return data;
+    },
+    
+    drawWave(x1, y1, x2, y2, color, wave, isMod = false) {
+        const { ctx } = this;
+        const dx = x2 - x1, dy = y2 - y1;
+        const angle = Math.atan2(dy, dx);
+        const perp = angle + HALF_PI;
+        const amp = isMod ? 12 : 20;
+        
+        ctx.save();
+        ctx.globalAlpha = 0.5;
+        ctx.beginPath();
+        
+        for (let i = 0; i < wave.length; i++) {
+            const t = i / (wave.length - 1);
+            const wv = wave[i] * amp;
+            const px = x1 + dx * t + Math.cos(perp) * wv;
+            const py = y1 + dy * t + Math.sin(perp) * wv;
+            i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+        }
+        
+        const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+        grad.addColorStop(0, color);
+        grad.addColorStop(1, isMod ? color : 'rgba(255,255,255,0.25)');
+        
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = isMod ? 1.5 : 2.5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 8;
+        ctx.stroke();
+        ctx.restore();
+    },
+    
+    drawLine(x1, y1, x2, y2, color) {
+        const { ctx } = this;
+        ctx.save();
+        ctx.globalAlpha = 0.4;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([5, 5]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+    },
+    
+    applyConn(src, tgt) {
+        if (!audio.ctx) return;
+        try {
+            if ((src.type === 'lfo' || src.type === 'random') && tgt.modInput && src.gain) {
+                src.gain.connect(tgt.modInput);
+            }
+            const snds = ['synth', 'noise', 'glitch', 'fm', 'grain'];
+            if (src.type === 'reverb' && snds.includes(tgt.type) && tgt.gain) {
+                tgt.gain.connect(audio.reverb);
+            }
+            if (src.type === 'delay' && snds.includes(tgt.type) && tgt.gain) {
+                tgt.gain.connect(audio.delay);
+            }
+            if (src.type === 'distortion' && snds.includes(tgt.type) && tgt.gain) {
+                tgt.gain.connect(audio.distortion);
+            }
+        } catch(e) {}
+    },
+    
+    drawObjs() {
+        const { w, h, ctx, objs } = this;
+        const minD = Math.min(w, h);
+        
+        objs.forEach(o => {
+            const sx = o.x * w, sy = o.y * h;
+            const sr = o.r * minD;
+            const def = o.def;
+            
+            ctx.save();
+            ctx.translate(sx, sy);
+            ctx.globalAlpha = 0.7;
+            ctx.shadowBlur = o.active ? 25 : 12;
+            ctx.shadowColor = def.solid;
+            
+            if (o.active || o.held) {
+                ctx.save();
+                ctx.rotate(o.rot);
+                ctx.globalAlpha = 0.55;
+                ctx.beginPath();
+                ctx.arc(0, 0, sr + 10, -0.3, 0.3);
+                ctx.strokeStyle = def.solid;
+                ctx.lineWidth = 2;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+                ctx.restore();
+            }
+            
+            ctx.fillStyle = 'rgba(12,12,16,0.45)';
+            ctx.strokeStyle = def.color;
+            ctx.lineWidth = o.held ? 2.5 : 1.8;
+            
+            ctx.save();
+            ctx.rotate(o.rot);
+            this.drawShape(def.shape, sr);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+            
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 0.85;
+            ctx.fillStyle = def.solid;
+            ctx.font = '900 13px "Font Awesome 6 Free"';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(def.icon, 0, -5);
+            ctx.font = 'bold 8px Arial';
+            ctx.fillText(o.type.toUpperCase(), 0, 9);
+            
+            ctx.restore();
+        });
+    },
+    
+    drawShape(shape, r) {
+        const { ctx } = this;
+        ctx.beginPath();
+        switch(shape) {
+            case 'square':
+                ctx.roundRect(-r, -r, r * 2, r * 2, 5);
+                break;
+            case 'triangle':
+                for (let i = 0; i < 3; i++) {
+                    const a = (i / 3) * TAU - HALF_PI;
+                    i === 0 ? ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r) : ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+                }
+                ctx.closePath();
+                break;
+            case 'diamond':
+                ctx.moveTo(0, -r);
+                ctx.lineTo(r, 0);
+                ctx.lineTo(0, r);
+                ctx.lineTo(-r, 0);
+                ctx.closePath();
+                break;
+            case 'pentagon':
+            case 'hexagon':
+            case 'octagon':
+                const sides = shape === 'pentagon' ? 5 : shape === 'hexagon' ? 6 : 8;
+                for (let i = 0; i < sides; i++) {
+                    const a = (i / sides) * TAU - HALF_PI;
+                    i === 0 ? ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r) : ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+                }
+                ctx.closePath();
+                break;
+            default:
+                ctx.arc(0, 0, r, 0, TAU);
+        }
+    },
+    
+    drawHand(hand) {
+        if (!hand.lm) return;
+        const { w, h, ctx, mirror } = this;
+        const t = hand.lm[4], i = hand.lm[8];
+        const tx = (mirror ? 1 - t.x : t.x) * w, ty = t.y * h;
+        const ix = (mirror ? 1 - i.x : i.x) * w, iy = i.y * h;
+        const mx = (tx + ix) / 2, my = (ty + iy) / 2;
+        
+        ctx.save();
+        ctx.globalAlpha = 0.55;
+        ctx.shadowBlur = hand.pinch ? 12 : 6;
+        ctx.shadowColor = hand.pinch ? 'rgba(34,197,94,0.7)' : 'rgba(255,255,255,0.4)';
+        
+        ctx.beginPath();
+        ctx.moveTo(tx, ty);
+        ctx.lineTo(ix, iy);
+        ctx.strokeStyle = hand.pinch ? 'rgba(34,197,94,0.6)' : 'rgba(255,255,255,0.25)';
+        ctx.lineWidth = hand.pinch ? 2 : 1.5;
+        ctx.stroke();
+        
+        const tr = hand.pinch ? 7 : 4;
+        [{ x: tx, y: ty }, { x: ix, y: iy }].forEach(p => {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, tr, 0, TAU);
+            ctx.fillStyle = hand.pinch ? 'rgba(34,197,94,0.6)' : 'rgba(255,255,255,0.4)';
+            ctx.fill();
+        });
+        
+        ctx.beginPath();
+        ctx.arc(mx, my, hand.pinch ? 12 : 7, 0, TAU);
+        ctx.strokeStyle = hand.pinch ? 'rgba(34,197,94,0.6)' : 'rgba(255,255,255,0.4)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        
+        if (hand.pinch) {
+            ctx.beginPath();
+            ctx.arc(mx, my, 3, 0, TAU);
+            ctx.fillStyle = 'rgba(34,197,94,0.6)';
+            ctx.fill();
+            
+            ctx.save();
+            ctx.translate(mx, my);
+            ctx.rotate(hand.angle);
+            ctx.beginPath();
+            ctx.moveTo(16, 0);
+            ctx.lineTo(24, 0);
+            ctx.strokeStyle = 'rgba(34,197,94,0.6)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.restore();
+        }
+        
+        ctx.restore();
+    }
+};
+
+window.onload = () => app.init();
+</script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ciro - Developer Portfolio</title>
+    <meta name="description" content="Soy desarrollador y construyo soluciones digitales para humanos">
+    <link href="style.css" rel="stylesheet" type="text/css"/>  
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo"><b><</b> &#10084; <b>></b></div>
+            <input type="checkbox" id="menu-toggle">
+            <label for="menu-toggle" class="hamburger">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+            </label>
+            <ul class="menu">
+                <li><a href="#intro">Intro</a></li>
+                <li><a href="#projects">Proyectos</a></li>
+                <li><a href="#past-works">Trabajos</a></li>
+                <li><a href="#tools">Herramientas</a></li>
+                <li><a href="#skills">Formación</a></li>
+                <li><a href="#aboutme">About me</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section id="intro" class="fade-in-section">
+        <div class="intro-content">
+
+            <h1 class="intro-text">Hola, soy Ciro<br/>y este es mi Porfolio de Desarrollador</h1>
+        </div>
+        <a href="#projects" class="main-button">Linkedin</a>
+    </section>
+
+    <section id="projects" class="fade-in-section">
+        <h2>Proyectos</h2>
+        <div class="projects-grid">
+            <div class="project-card">
+                <img src="assets/portfolio/ar-project0.jpg" alt="Realidad Aumentada">
+                <h3>Realidad Aumentada</h3>
+                <p>Postas informativas extendidas en AR 3D para el museo Casa Iberá, Corrientes.</p>
+            </div>
+            <div class="project-card">
+                <img src="assets/portfolio/gaia.jpg" alt="Game Design">
+                <h3>Gaia Proximus</h3>
+                <p>Novela visual interactiva de aventura espacial con graficos text-art para JAM.</p>
+            </div>
+
+        </div>
+    </section>
+
+    <section id="past-works" class="fade-in-section">
+        <h2>Trabajos por encargo.</h2>
+        <div class="carousel">
+            <div class="carousel-container">
+                <!-- Elementos del carrusel -->
+                <div class="carousel-item">
+                    <div class="carousel-content">
+                        <div class="carousel-image-container">
+                            <img src="assets/portfolio/ituzaingo.jpg" alt="Watch 3" />
+                        </div>
+                        <div class="carousel-caption">
+                            <p><b>Ituzaingó Ciudad Paraíso.</b> App de información turística de la ciudad de Ituzaingó, Corrientes. </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="carousel-content">
+                        <div class="carousel-image-container">
+                            <img src="assets/portfolio/movilfest.jpg" alt="Watch 1" />
+                        </div>
+                        <div class="carousel-caption">
+                            <p><b>Festival Movil Fest 2020.</b> Web animada. Ciudad de Misiones.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="carousel-content">
+                        <div class="carousel-image-container">
+                            <img src="assets/portfolio/geely.jpg" alt="Watch 2" />
+                        </div>
+                        <div class="carousel-caption">
+                            <p><b>Geely Argentina.</b> Página web con catálogo de fotos en 360°. </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="carousel-content">
+                        <div class="carousel-image-container">
+                            <img src="assets/portfolio/somosn.jpg" alt="Watch 3" />
+                        </div>
+                        <div class="carousel-caption">
+                            <p><b>Somos Naturaleza.</b> Web Interactiva con contenido educativo. </p>
+                        </div>
+                    </div>
+                </div>
+              <div class="carousel-item">
+                    <div class="carousel-content">
+                        <div class="carousel-image-container">
+                            <img src="assets/portfolio/iac_parana.jpg" alt="Watch 3" />
+                        </div>
+                        <div class="carousel-caption">
+                            <p><b>IAC Paraná.</b> Página web informativa para instituto de informática.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Controles del carrusel en un contenedor separado -->
+        <div class="carousel-controls">
+            <button class="carousel-button prev">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36"><path d="M21.559,12.062 L15.618,17.984 L21.5221,23.944 C22.105,24.533 22.1021,25.482 21.5131,26.065 C21.2211,26.355 20.8391,26.4999987 20.4571,26.4999987 C20.0711,26.4999987 19.6851,26.352 19.3921,26.056 L12.4351,19.034 C11.8531,18.446 11.8551,17.4999987 12.4411,16.916 L19.4411,9.938 C20.0261,9.353 20.9781,9.354 21.5621,9.941 C22.1471,10.528 22.1451,11.478 21.5591,12.062 L21.559,12.062 Z"></path></svg></button>
+            <button class="carousel-button next"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36"><path d="M23.5587,16.916 C24.1447,17.4999987 24.1467,18.446 23.5647,19.034 L16.6077,26.056 C16.3147,26.352 15.9287,26.4999987 15.5427,26.4999987 C15.1607,26.4999987 14.7787,26.355 14.4867,26.065 C13.8977,25.482 13.8947,24.533 14.4777,23.944 L20.3818,17.984 L14.4408,12.062 C13.8548,11.478 13.8528,10.5279 14.4378,9.941 C15.0218,9.354 15.9738,9.353 16.5588,9.938 L23.5588,16.916 L23.5587,16.916 Z"></path></svg></button>
+        </div>
+    </section>
+
+    <section id="tools" class="fade-in-section">
+        <h2>Uso estas herramientas.</h2>
+        <div class="tools-grid">
+            <div class="tools-card">
+                <i class="fab fa-html5"></i>
+                <p>HTML5</p>
+            </div>
+            <div class="tools-card">
+                <i class="fab fa-css3-alt"></i>
+                <p>CSS3</p>
+            </div>
+            <div class="tools-card">
+                <i class="fab fa-js"></i>
+                <p>JavaScript</p>
+            </div>
+            <div class="tools-card">
+                <i class="fab fa-figma"></i>
+                <p>Figma</p>
+            </div>
+            <div class="tools-card">
+                <i class="fab fa-unity"></i>
+                <p>Unity</p>
+            </div>
+            <div class="tools-card">
+                <i class="fas fa-bolt"></i>
+                <p>Bolt</p>
+            </div>
+            <div class="tools-card">
+                <i class="fas fa-vr-cardboard"></i>
+                <p>MindAR</p>
+            </div>
+            <div class="tools-card">
+                <i class="fas fa-adobe">Ps</i>
+                <p>Photoshop</p>
+            </div>
+        </div>
+    </section>
+<section id="skills" class="fade-in-section">
+    <h2>Tecnologías y Formación</h2>
+    <p>Me formé en producción audiovisual, game design, audio y fundamentos de Inteligencia Artificial, con especial interés en la aplicación de Generative AI.
+    En el ámbito personal investigo tecnologías como realidad aumentada, realidad virtual y usos artísticos del game design. 
+    Mi experiencia laboral abarca la redacción, el diseño y la programación, con el objetivo de unir lo funcional con lo creativo.
+    <p>Más detalles en mi CV:</p>
+    <a href="assets/portfolio/CV_Ciro.pdf" download class="main-button">Descargar CV</a>
+</section>
+    <section id="aboutme" class="fade-in-section">
+        <h2>Sobre mi</h2>
+         <!--    <div id="profile-image-container">
+               <img src="assets/portfolio/profile.png" alt="Profile photo"> 
+            </div>   -->
+        <p>Tengo un proyecto de música con consolas de videojuegos 8bit y reutilización de tecnologías obsoletas.</p>
+
+        <p></p>
+        <!-- <a href="assets/portfolio/CV_Ciro.pdf" download class="download-button">Descargar CV</a> -->
+        <a href="#projects" class="main-button">Youtube</a>
+        <a href="#projects" class="main-button">Itch.io</a>
+    
+    </section>    
+    <script src="js/main.js"></script>
+    <script src="js/carousel.js"></script>
+</body>
+</html>
