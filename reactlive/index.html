@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ReactLive - Gesture Audio Synthesizer</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; overflow: hidden; background: #0a0a1a; font-family: 'Segoe UI', sans-serif; }
+        #mainCanvas, #video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        #video { opacity: 0.15; object-fit: cover; z-index: 0; }
+        #mainCanvas { z-index: 1; }
+        .screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; transition: opacity 0.5s; }
+        .hidden { opacity: 0; pointer-events: none; }
+        .pulse-ring { animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.1); opacity: 1; } }
+        .loading-step { transition: all 0.3s; }
+        .loading-step.active { color: #6366f1; }
+        .loading-step.done { color: #22c55e; }
+        .object-preview { width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+        .toggle-btn { transition: all 0.2s; }
+        .toggle-btn.active { background: #6366f1 !important; }
+    </style>
+</head>
+<body class="bg-gray-950 text-white">
+    <!-- START SCREEN -->
+    <div id="startScreen" class="screen bg-gradient-to-br from-gray-900 via-indigo-950 to-gray-900">
+        <div class="relative mb-8">
+            <div class="w-32 h-32 rounded-full border-4 border-indigo-500/30 pulse-ring absolute inset-0"></div>
+            <div class="w-32 h-32 rounded-full border-4 border-purple-500/50 pulse-ring absolute inset-0" style="animation-delay: 0.5s"></div>
+            <div class="w-32 h-32 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
+                <i class="fas fa-hand-sparkles text-4xl"></i>
+            </div>
+        </div>
+        <h1 class="text-4xl font-bold mb-2 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">ReactLive</h1>
+        <p class="text-gray-400 mb-6">Gesture-Controlled Audio Synthesizer</p>
+        
+        <div class="bg-gray-800/50 rounded-xl p-4 mb-6 max-w-sm">
+            <p class="text-sm text-gray-300 mb-2"><i class="fas fa-hand-pointer mr-2 text-indigo-400"></i>Pinch thumb + index to grab objects</p>
+            <p class="text-sm text-gray-300"><i class="fas fa-rotate mr-2 text-purple-400"></i>Rotate hand to control parameters</p>
+        </div>
+
+        <div class="flex items-center gap-3 mb-6">
+            <span class="text-sm text-gray-400">Mirror Mode</span>
+            <button id="mirrorToggle" class="toggle-btn active w-12 h-6 rounded-full bg-gray-700 relative">
+                <div class="absolute w-5 h-5 bg-white rounded-full top-0.5 transition-all left-6"></div>
+            </button>
+        </div>
+
+        <div class="mb-8">
+            <p class="text-xs text-gray-500 mb-3">AUDIO OBJECTS</p>
+            <div id="objectPreviews" class="flex flex-wrap gap-2 justify-center max-w-md"></div>
+        </div>
+
+        <button id="startBtn" class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full font-semibold hover:scale-105 transition-transform">
+            <i class="fas fa-play mr-2"></i>Start Experience
+        </button>
+        <p id="deviceInfo" class="text-xs text-gray-600 mt-4"></p>
+    </div>
+
+    <!-- LOADING SCREEN -->
+    <div id="loadingScreen" class="screen hidden bg-gray-950">
+        <div class="w-20 h-20 rounded-full border-4 border-indigo-500 border-t-transparent animate-spin mb-8"></div>
+        <div class="space-y-3 text-left">
+            <div id="stepAudio" class="loading-step flex items-center gap-3">
+                <i class="fas fa-music w-6"></i><span>Initializing Audio Engine...</span>
+            </div>
+            <div id="stepCamera" class="loading-step flex items-center gap-3 text-gray-500">
+                <i class="fas fa-camera w-6"></i><span>Accessing Camera...</span>
+            </div>
+            <div id="stepModel" class="loading-step flex items-center gap-3 text-gray-500">
+                <i class="fas fa-brain w-6"></i><span>Loading AI Model...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ERROR SCREEN -->
+    <div id="errorScreen" class="screen hidden bg-gray-950">
+        <i class="fas fa-exclamation-triangle text-6xl text-red-500 mb-4"></i>
+        <h2 class="text-2xl font-bold mb-2">Something went wrong</h2>
+        <p id="errorMessage" class="text-gray-400 mb-6 text-center max-w-sm"></p>
+        <button onclick="location.reload()" class="px-6 py-2 bg-indigo-600 rounded-lg">Try Again</button>
+    </div>
+
+    <!-- MAIN VIEW -->
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="mainCanvas"></canvas>
+    <div id="hud" class="fixed top-4 left-4 z-20 text-xs text-gray-500 hidden">
+        <span id="fpsCounter">60 FPS</span> | <span id="latencyDisplay">0ms</span>
+    </div>
+
+    <!-- MediaPipe Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <script>
+    // ============================================
+    // CONFIGURATION & DEVICE DETECTION
+    // ============================================
+    const CONFIG = {
+        // Default high-quality settings
+        highQuality: {
+            shadows: true,
+            samples: 128,
+            rippleInterval: 3,
+            camWidth: 1280,
+            camHeight: 720,
+            maxRipples: 10,
+            waveformSamples: 64
+        },
+        // Low-end device settings
+        lowQuality: {
+            shadows: false,
+            samples: 32,
+            rippleInterval: 5,
+            camWidth: 640,
+            camHeight: 480,
+            maxRipples: 5,
+            waveformSamples: 32
+        }
+    };
+
+    // OPTIMIZATION: Adaptive quality detection
+    function detectDeviceCapability() {
+        const isLowEnd = (navigator.deviceMemory && navigator.deviceMemory < 4) || 
+                         /Android|iPhone|iPad|iPod/.test(navigator.userAgent) ||
+                         (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4);
+        return isLowEnd ? CONFIG.lowQuality : CONFIG.highQuality;
+    }
+
+    const settings = detectDeviceCapability();
+    document.getElementById('deviceInfo').textContent = 
+        `Mode: ${settings === CONFIG.lowQuality ? 'Performance' : 'Quality'} | Cores: ${navigator.hardwareConcurrency || '?'} | RAM: ${navigator.deviceMemory || '?'}GB`;
+
+    // ============================================
+    // SPATIAL HASH GRID - O(1) neighbor lookup
+    // ============================================
+    class SpatialHashGrid {
+        constructor(cellSize) {
+            this.cellSize = cellSize;
+            this.grid = new Map();
+        }
+
+        _hash(x, y) {
+            const cx = Math.floor(x / this.cellSize);
+            const cy = Math.floor(y / this.cellSize);
+            return `${cx},${cy}`;
+        }
+
+        clear() {
+            this.grid.clear();
+        }
+
+        insert(obj) {
+            const key = this._hash(obj.x, obj.y);
+            if (!this.grid.has(key)) this.grid.set(key, []);
+            this.grid.get(key).push(obj);
+        }
+
+        // Only check adjacent cells - O(1) instead of O(n²)
+        getNearby(x, y) {
+            const nearby = [];
+            const cx = Math.floor(x / this.cellSize);
+            const cy = Math.floor(y / this.cellSize);
+            
+            for (let dx = -1; dx <= 1; dx++) {
+                for (let dy = -1; dy <= 1; dy++) {
+                    const key = `${cx + dx},${cy + dy}`;
+                    const cell = this.grid.get(key);
+                    if (cell) nearby.push(...cell);
+                }
+            }
+            return nearby;
+        }
+    }
+
+    // ============================================
+    // AUDIO NODE POOL - Max 15 nodes
+    // ============================================
+    class AudioNodePool {
+        constructor(audioCtx, maxNodes = 15) {
+            this.ctx = audioCtx;
+            this.maxNodes = maxNodes;
+            this.activeNodes = new Map();
+            this.nodeCount = 0;
+        }
+
+        acquire(id, type) {
+            if (this.activeNodes.has(id)) return this.activeNodes.get(id);
+            if (this.nodeCount >= this.maxNodes) {
+                console.warn('AudioNodePool: Max nodes reached');
+                return null;
+            }
+
+            const nodes = this._createNodes(type);
+            if (nodes) {
+                this.activeNodes.set(id, nodes);
+                this.nodeCount++;
+            }
+            return nodes;
+        }
+
+        release(id) {
+            const nodes = this.activeNodes.get(id);
+            if (!nodes) return;
+
+            // OPTIMIZATION: Disconnect ALL nodes properly
+            Object.values(nodes).forEach(node => {
+                if (node && node.disconnect) {
+                    try {
+                        node.disconnect();
+                        if (node.stop) node.stop();
+                    } catch(e) {}
+                }
+            });
+
+            this.activeNodes.delete(id);
+            this.nodeCount--;
+        }
+
+        _createNodes(type) {
+            const gain = this.ctx.createGain();
+            gain.gain.value = 0;
+            return { gain, type };
+        }
+    }
+
+    // ============================================
+    // CANVAS OPTIMIZATION UTILITIES
+    // ============================================
+    class CanvasCache {
+        constructor() {
+            this.gradients = new Map();
+            this.offscreenShapes = new Map();
+        }
+
+        // OPTIMIZATION: Cache gradients - don't recreate per frame
+        getGradient(ctx, key, createFn) {
+            if (!this.gradients.has(key)) {
+                this.gradients.set(key, createFn(ctx));
+            }
+            return this.gradients.get(key);
+        }
+
+        // OPTIMIZATION: Pre-render shapes to offscreen canvas
+        getShape(key, width, height, drawFn) {
+            if (!this.offscreenShapes.has(key)) {
+                const offscreen = document.createElement('canvas');
+                offscreen.width = width;
+                offscreen.height = height;
+                const octx = offscreen.getContext('2d');
+                drawFn(octx, width, height);
+                this.offscreenShapes.set(key, offscreen);
+            }
+            return this.offscreenShapes.get(key);
+        }
+
+        clearGradients() {
+            this.gradients.clear();
+        }
+    }
+
+    const canvasCache = new CanvasCache();
+
+    // ============================================
+    // AUDIO OBJECT DEFINITIONS
+    // ============================================
+    const AUDIO_OBJECTS = [
+        { id: 'synth', name: 'Synth', icon: 'fa-wave-square', color: '#6366f1', type: 'source' },
+        { id: 'lfo', name: 'LFO', icon: 'fa-circle-notch', color: '#8b5cf6', type: 'modulator' },
+        { id: 'random', name: 'Random', icon: 'fa-dice', color: '#a855f7', type: 'modulator' },
+        { id: 'delay', name: 'Delay', icon: 'fa-clock', color: '#3b82f6', type: 'effect' },
+        { id: 'reverb', name: 'Reverb', icon: 'fa-water', color: '#06b6d4', type: 'effect' },
+        { id: 'distort', name: 'Distortion', icon: 'fa-bolt', color: '#f59e0b', type: 'effect' },
+        { id: 'noise', name: 'Noise', icon: 'fa-wind', color: '#84cc16', type: 'source' },
+        { id: 'glitch', name: 'Glitch', icon: 'fa-bug', color: '#ef4444', type: 'effect' },
+        { id: 'fm', name: 'FM', icon: 'fa-broadcast-tower', color: '#ec4899', type: 'source' },
+        { id: 'grain', name: 'Grain', icon: 'fa-snowflake', color: '#14b8a6', type: 'source' }
+    ];
+
+    // ============================================
+    // MAIN APPLICATION STATE
+    // ============================================
+    let audioCtx = null;
+    let masterGain = null;
+    let compressor = null;
+    let sharedAnalyzer = null;
+    let analyzerData = null;
+    let nodePool = null;
+    let spatialGrid = null;
+
+    let canvas, ctx, video;
+    let width, height;
+    let mirrorMode = true;
+    let isRunning = false;
+
+    const CONNECT_DIST = 150;
+    const ZONE_RADIUS_RATIO = 0.35;
+
+    let objects = [];
+    let connections = [];
+    let ripples = [];
+    let handState = { landmarks: null, pinching: false, grabbed: null, lastRotation: 0 };
+
+    // OPTIMIZATION: Frame counters for budgeting
+    let frameCounter = 0;
+    let lastFpsTime = performance.now();
+    let fpsFrames = 0;
+    let currentFps = 60;
+
+    // OPTIMIZATION: Waveform cache (update at 15fps)
+    let waveformCache = new Float32Array(settings.waveformSamples);
+    let lastWaveformUpdate = 0;
+
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+    function init() {
+        canvas = document.getElementById('mainCanvas');
+        ctx = canvas.getContext('2d', { alpha: false });
+        video = document.getElementById('video');
+
+        resize();
+        window.addEventListener('resize', resize);
+
+        // Populate object previews
+        const previewContainer = document.getElementById('objectPreviews');
+        AUDIO_OBJECTS.forEach(obj => {
+            const div = document.createElement('div');
+            div.className = 'object-preview';
+            div.style.background = obj.color + '30';
+            div.innerHTML = `<i class="fas ${obj.icon}" style="color:${obj.color}"></i>`;
+            div.title = obj.name;
+            previewContainer.appendChild(div);
+        });
+
+        // Mirror toggle
+        const mirrorToggle = document.getElementById('mirrorToggle');
+        mirrorToggle.addEventListener('click', () => {
+            mirrorMode = !mirrorMode;
+            mirrorToggle.classList.toggle('active', mirrorMode);
+            mirrorToggle.querySelector('div').style.left = mirrorMode ? '1.5rem' : '0.125rem';
+        });
+
+        document.getElementById('startBtn').addEventListener('click', startExperience);
+    }
+
+    function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+        canvasCache.clearGradients(); // Invalidate cached gradients on resize
+        
+        if (objects.length > 0) {
+            positionObjects();
+        }
+    }
+
+    function positionObjects() {
+        const cx = width / 2;
+        const cy = height / 2;
+        const radius = Math.min(width, height) * 0.4;
+
+        objects.forEach((obj, i) => {
+            const angle = (i / AUDIO_OBJECTS.length) * Math.PI * 2 - Math.PI / 2;
+            obj.homeX = cx + Math.cos(angle) * radius;
+            obj.homeY = cy + Math.sin(angle) * radius;
+            if (!obj.grabbed) {
+                obj.x = obj.homeX;
+                obj.y = obj.homeY;
+            }
+        });
+    }
+
+    // ============================================
+    // AUDIO ENGINE SETUP
+    // ============================================
+    async function initAudio() {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Master chain: compressor → gain → destination
+        compressor = audioCtx.createDynamicsCompressor();
+        compressor.threshold.value = -24;
+        compressor.knee.value = 30;
+        compressor.ratio.value = 12;
+        compressor.attack.value = 0.003;
+        compressor.release.value = 0.25;
+
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = 0.7;
+
+        // OPTIMIZATION: Single shared analyzer for waveform caching
+        sharedAnalyzer = audioCtx.createAnalyser();
+        sharedAnalyzer.fftSize = settings.waveformSamples * 2;
+        analyzerData = new Float32Array(sharedAnalyzer.frequencyBinCount);
+
+        compressor.connect(sharedAnalyzer);
+        sharedAnalyzer.connect(masterGain);
+        masterGain.connect(audioCtx.destination);
+
+        nodePool = new AudioNodePool(audioCtx, 15);
+
+        // Resume audio context (required for autoplay policy)
+        if (audioCtx.state === 'suspended') {
+            await audioCtx.resume();
+        }
+    }
+
+    // Create oscillator for synth objects
+    function createSynthNode(obj) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = 'sawtooth';
+        osc.frequency.value = 220;
+        gain.gain.value = 0;
+        
+        osc.connect(gain);
+        gain.connect(compressor);
+        osc.start();
+        
+        return { osc, gain };
+    }
+
+    // Create noise generator
+    function createNoiseNode() {
+        const bufferSize = 2 * audioCtx.sampleRate;
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const output = buffer.getChannelData(0);
+        
+        for (let i = 0; i < bufferSize; i++) {
+            output[i] = Math.random() * 2 - 1;
+        }
+        
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+        noise.loop = true;
+        
+        const gain = audioCtx.createGain();
+        gain.gain.value = 0;
+        
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 2000;
+        
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(compressor);
+        noise.start();
+        
+        return { noise, gain, filter };
+    }
+
+    // ============================================
+    // CAMERA & HAND TRACKING SETUP
+    // ============================================
+    async function initCamera() {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                width: { ideal: settings.camWidth },
+                height: { ideal: settings.camHeight },
+                facingMode: 'user'
+            }
+        });
+        video.srcObject = stream;
+        await new Promise(resolve => video.onloadedmetadata = resolve);
+    }
+
+    async function initHandTracking() {
+        const hands = new Hands({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
+
+        hands.setOptions({
+            maxNumHands: 1, // OPTIMIZATION: Single hand reduces latency
+            modelComplexity: 1,
+            minDetectionConfidence: 0.7,
+            minTrackingConfidence: 0.5
+        });
+
+        hands.onResults(onHandResults);
+
+        // OPTIMIZATION: Frame skipping for hand tracking (15fps target)
+        let handFrameCounter = 0;
+        const camera = new Camera(video, {
+            onFrame: async () => {
+                handFrameCounter++;
+                if (handFrameCounter % 4 === 0) { // ~15fps hand tracking
+                    await hands.send({ image: video });
+                }
+            },
+            width: settings.camWidth,
+            height: settings.camHeight
+        });
+        await camera.start();
+    }
+
+    function onHandResults(results) {
+        if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+            let landmarks = results.multiHandLandmarks[0];
+            
+            // Apply mirroring
+            if (mirrorMode) {
+                landmarks = landmarks.map(l => ({ x: 1 - l.x, y: l.y, z: l.z }));
+            }
+            
+            handState.landmarks = landmarks;
+            processGestures(landmarks);
+        } else {
+            handState.landmarks = null;
+            if (handState.grabbed) {
+                releaseObject(handState.grabbed);
+            }
+            handState.pinching = false;
+            handState.grabbed = null;
+        }
+    }
+
+    function processGestures(landmarks) {
+        const thumb = landmarks[4];
+        const index = landmarks[8];
+        
+        // Convert to canvas coordinates
+        const thumbX = thumb.x * width;
+        const thumbY = thumb.y * height;
+        const indexX = index.x * width;
+        const indexY = index.y * height;
+        
+        const pinchX = (thumbX + indexX) / 2;
+        const pinchY = (thumbY + indexY) / 2;
+        const pinchDist = Math.hypot(thumbX - indexX, thumbY - indexY);
+        
+        const wasPinching = handState.pinching;
+        handState.pinching = pinchDist < 50;
+
+        if (handState.pinching && !wasPinching) {
+            // Start grab - check for nearby objects
+            for (const obj of objects) {
+                const dist = Math.hypot(obj.x - pinchX, obj.y - pinchY);
+                if (dist < 40) {
+                    handState.grabbed = obj;
+                    obj.grabbed = true;
+                    activateObject(obj);
+                    break;
+                }
+            }
+        } else if (!handState.pinching && wasPinching && handState.grabbed) {
+            releaseObject(handState.grabbed);
+            handState.grabbed = null;
+        }
+
+        if (handState.grabbed) {
+            handState.grabbed.x = pinchX;
+            handState.grabbed.y = pinchY;
+            
+            // Calculate rotation for parameter control
+            const wrist = landmarks[0];
+            const middleMcp = landmarks[9];
+            const rotation = Math.atan2(
+                (middleMcp.y - wrist.y),
+                (middleMcp.x - wrist.x)
+            );
+            
+            // Normalize rotation to 0-1
+            const normalizedParam = (rotation + Math.PI) / (Math.PI * 2);
+            handState.grabbed.param = Math.max(0, Math.min(1, normalizedParam));
+            updateObjectAudio(handState.grabbed);
+        }
+    }
+
+    function activateObject(obj) {
+        if (obj.active) return;
+        obj.active = true;
+
+        // Create appropriate audio nodes based on type
+        switch(obj.id) {
+            case 'synth':
+            case 'fm':
+                obj.nodes = createSynthNode(obj);
+                break;
+            case 'noise':
+                obj.nodes = createNoiseNode();
+                break;
+            // Other types would have their own node creation
+            default:
+                obj.nodes = { gain: audioCtx.createGain() };
+        }
+    }
+
+    function releaseObject(obj) {
+        // Check if in active zone
+        const cx = width / 2;
+        const cy = height / 2;
+        const zoneRadius = Math.min(width, height) * ZONE_RADIUS_RATIO;
+        const dist = Math.hypot(obj.x - cx, obj.y - cy);
+
+        if (dist > zoneRadius) {
+            // Return to home position
+            obj.x = obj.homeX;
+            obj.y = obj.homeY;
+            deactivateObject(obj);
+        }
+
+        obj.grabbed = false;
+        
+        // OPTIMIZATION: Clear connections for released object if outside zone
+        if (dist > zoneRadius) {
+            connections = connections.filter(c => c.from !== obj && c.to !== obj);
+        }
+    }
+
+    function deactivateObject(obj) {
+        if (!obj.active) return;
+        obj.active = false;
+
+        // OPTIMIZATION: Properly disconnect all audio nodes
+        if (obj.nodes) {
+            Object.values(obj.nodes).forEach(node => {
+                if (node && node.disconnect) {
+                    try {
+                        if (node.stop) node.stop();
+                        node.disconnect();
+                    } catch(e) {}
+                }
+            });
+            obj.nodes = null;
+        }
+    }
+
+    function updateObjectAudio(obj) {
+        if (!obj.nodes || !obj.active) return;
+
+        const param = obj.param || 0.5;
+
+        switch(obj.id) {
+            case 'synth':
+                if (obj.nodes.osc) {
+                    obj.nodes.osc.frequency.value = 110 + param * 880;
+                    obj.nodes.gain.gain.value = 0.3;
+                }
+                break;
+            case 'fm':
+                if (obj.nodes.osc) {
+                    obj.nodes.osc.frequency.value = 55 + param * 440;
+                    obj.nodes.osc.type = ['sine', 'triangle', 'square', 'sawtooth'][Math.floor(param * 4)];
+                    obj.nodes.gain.gain.value = 0.3;
+                }
+                break;
+            case 'noise':
+                if (obj.nodes.filter) {
+                    obj.nodes.filter.frequency.value = 200 + param * 8000;
+                    obj.nodes.gain.gain.value = 0.2;
+                }
+                break;
+        }
+    }
+
+    // ============================================
+    // CONNECTION MANAGEMENT WITH SPATIAL HASHING
+    // ============================================
+    function updateConnections() {
+        // OPTIMIZATION: Use spatial hash grid for O(1) neighbor lookup
+        spatialGrid.clear();
+        
+        const activeObjects = objects.filter(o => o.active);
+        activeObjects.forEach(obj => spatialGrid.insert(obj));
+
+        // Remove invalid connections
+        connections = connections.filter(conn => {
+            const dist = Math.hypot(conn.from.x - conn.to.x, conn.from.y - conn.to.y);
+            return dist <= CONNECT_DIST && conn.from.active && conn.to.active;
+        });
+
+        // Check for new connections using spatial hash
+        activeObjects.forEach(obj => {
+            const nearby = spatialGrid.getNearby(obj.x, obj.y);
+            nearby.forEach(other => {
+                if (obj === other) return;
+                const dist = Math.hypot(obj.x - other.x, obj.y - other.y);
+                
+                if (dist <= CONNECT_DIST) {
+                    const exists = connections.some(c => 
+                        (c.from === obj && c.to === other) || 
+                        (c.from === other && c.to === obj)
+                    );
+                    
+                    if (!exists && connections.length < 20) {
+                        const isModulation = obj.type === 'modulator' || other.type === 'modulator';
+                        connections.push({ from: obj, to: other, modulation: isModulation });
+                    }
+                }
+            });
+        });
+    }
+
+    // ============================================
+    // RENDERING
+    // ============================================
+    function render() {
+        if (!isRunning) return;
+
+        frameCounter++;
+        
+        // FPS calculation
+        fpsFrames++;
+        const now = performance.now();
+        if (now - lastFpsTime >= 1000) {
+            currentFps = fpsFrames;
+            fpsFrames = 0;
+            lastFpsTime = now;
+            document.getElementById('fpsCounter').textContent = `${currentFps} FPS`;
+        }
+
+        // OPTIMIZATION: Update waveform cache every 3rd frame (~20fps)
+        if (frameCounter % 3 === 0 && sharedAnalyzer) {
+            sharedAnalyzer.getFloatTimeDomainData(analyzerData);
+            waveformCache.set(analyzerData.subarray(0, settings.waveformSamples));
+            lastWaveformUpdate = now;
+        }
+
+        // Clear canvas
+        ctx.fillStyle = '#0a0a1a';
+        ctx.fillRect(0, 0, width, height);
+
+        // Update connections using spatial hash
+        updateConnections();
+
+        // Draw active zone
+        drawActiveZone();
+
+        // Draw ripples
+        drawRipples();
+
+        // Draw connections
+        drawConnections();
+
+        // Draw objects
+        drawObjects();
+
+        // Draw hand
+        if (handState.landmarks) {
+            drawHand();
+        }
+
+        requestAnimationFrame(render);
+    }
+
+    function drawActiveZone() {
+        const cx = width / 2;
+        const cy = height / 2;
+        const radius = Math.min(width, height) * ZONE_RADIUS_RATIO;
+
+        // OPTIMIZATION: Cache gradient
+        const gradient = canvasCache.getGradient(ctx, `zone-${Math.round(radius)}`, (c) => {
+            const g = c.createRadialGradient(cx, cy, 0, cx, cy, radius);
+            g.addColorStop(0, 'rgba(99, 102, 241, 0.1)');
+            g.addColorStop(0.7, 'rgba(99, 102, 241, 0.05)');
+            g.addColorStop(1, 'rgba(99, 102, 241, 0)');
+            return g;
+        });
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(99, 102, 241, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([10, 10]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
+    function drawRipples() {
+        // OPTIMIZATION: Limit ripples array
+        if (ripples.length > settings.maxRipples) {
+            ripples = ripples.slice(-settings.maxRipples);
+        }
+
+        ripples = ripples.filter(r => {
+            r.radius += 3;
+            r.opacity -= 0.02;
+            
+            if (r.opacity <= 0) return false;
+
+            ctx.beginPath();
+            ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(${r.color}, ${r.opacity})`;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            return true;
+        });
+
+        // Add ripples at interval
+        if (frameCounter % settings.rippleInterval === 0) {
+            objects.forEach(obj => {
+                if (obj.active && Math.random() < 0.3) {
+                    const hexToRgb = (hex) => {
+                        const r = parseInt(hex.slice(1, 3), 16);
+                        const g = parseInt(hex.slice(3, 5), 16);
+                        const b = parseInt(hex.slice(5, 7), 16);
+                        return `${r}, ${g}, ${b}`;
+                    };
+                    ripples.push({
+                        x: obj.x,
+                        y: obj.y,
+                        radius: 30,
+                        opacity: 0.5,
+                        color: hexToRgb(obj.color)
+                    });
+                }
+            });
+        }
+    }
+
+    function drawConnections() {
+        connections.forEach(conn => {
+            const { from, to, modulation } = conn;
+            
+            ctx.beginPath();
+            ctx.moveTo(from.x, from.y);
+            ctx.lineTo(to.x, to.y);
+            
+            if (modulation) {
+                // Dashed line for modulation
+                ctx.setLineDash([5, 5]);
+                ctx.strokeStyle = 'rgba(168, 85, 247, 0.5)';
+                ctx.lineWidth = 2;
+            } else {
+                // Waveform visual for audio connections
+                ctx.setLineDash([]);
+                ctx.strokeStyle = 'rgba(99, 102, 241, 0.6)';
+                ctx.lineWidth = 2;
+                
+                // Draw simple waveform along connection
+                const dx = to.x - from.x;
+                const dy = to.y - from.y;
+                const len = Math.hypot(dx, dy);
+                const steps = Math.min(20, Math.floor(len / 10));
+                
+                ctx.beginPath();
+                for (let i = 0; i <= steps; i++) {
+                    const t = i / steps;
+                    const x = from.x + dx * t;
+                    const y = from.y + dy * t;
+                    const waveIdx = Math.floor(t * (waveformCache.length - 1));
+                    const waveVal = waveformCache[waveIdx] || 0;
+                    const perpX = -dy / len * waveVal * 20;
+                    const perpY = dx / len * waveVal * 20;
+                    
+                    if (i === 0) ctx.moveTo(x + perpX, y + perpY);
+                    else ctx.lineTo(x + perpX, y + perpY);
+                }
+            }
+            
+            ctx.stroke();
+            ctx.setLineDash([]);
+        });
+    }
+
+    function drawObjects() {
+        objects.forEach(obj => {
+            const size = 35;
+            const isActive = obj.active;
+            const isGrabbed = obj.grabbed;
+
+            // OPTIMIZATION: Use setTransform instead of save/restore
+            ctx.setTransform(1, 0, 0, 1, obj.x, obj.y);
+
+            // Shadow only on high-quality mode
+            if (settings.shadows && isActive) {
+                ctx.shadowColor = obj.color;
+                ctx.shadowBlur = 20;
+            }
+
+            // Background circle
+            ctx.beginPath();
+            ctx.arc(0, 0, size, 0, Math.PI * 2);
+            ctx.fillStyle = isActive ? obj.color : obj.color + '60';
+            ctx.fill();
+
+            // Reset shadow
+            ctx.shadowBlur = 0;
+
+            // Border
+            if (isGrabbed) {
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            }
+
+            // Icon - simplified render
+            ctx.fillStyle = '#fff';
+            ctx.font = '16px FontAwesome';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Draw icon using text (FontAwesome)
+            const iconMap = {
+                'fa-wave-square': '\uf83e',
+                'fa-circle-notch': '\uf1ce',
+                'fa-dice': '\uf522',
+                'fa-clock': '\uf017',
+                'fa-water': '\uf773',
+                'fa-bolt': '\uf0e7',
+                'fa-wind': '\uf72e',
+                'fa-bug': '\uf188',
+                'fa-broadcast-tower': '\uf519',
+                'fa-snowflake': '\uf2dc'
+            };
+            ctx.fillText(iconMap[obj.icon] || '●', 0, 0);
+
+            // Parameter indicator
+            if (isActive && obj.param !== undefined) {
+                ctx.beginPath();
+                ctx.arc(0, 0, size + 8, -Math.PI/2, -Math.PI/2 + obj.param * Math.PI * 2);
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            }
+
+            // Reset transform
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+        });
+    }
+
+    function drawHand() {
+        if (!handState.landmarks) return;
+
+        const landmarks = handState.landmarks;
+        
+        // Draw key points
+        [4, 8].forEach(i => {
+            const x = landmarks[i].x * width;
+            const y = landmarks[i].y * height;
+            
+            ctx.beginPath();
+            ctx.arc(x, y, 8, 0, Math.PI * 2);
+            ctx.fillStyle = handState.pinching ? '#22c55e' : '#6366f1';
+            ctx.fill();
+        });
+
+        // Draw pinch line
+        const thumb = landmarks[4];
+        const index = landmarks[8];
+        ctx.beginPath();
+        ctx.moveTo(thumb.x * width, thumb.y * height);
+        ctx.lineTo(index.x * width, index.y * height);
+        ctx.strokeStyle = handState.pinching ? '#22c55e80' : '#6366f180';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+    }
+
+    // ============================================
+    // STARTUP SEQUENCE
+    // ============================================
+    async function startExperience() {
+        const startScreen = document.getElementById('startScreen');
+        const loadingScreen = document.getElementById('loadingScreen');
+        const errorScreen = document.getElementById('errorScreen');
+        const hud = document.getElementById('hud');
+
+        startScreen.classList.add('hidden');
+        loadingScreen.classList.remove('hidden');
+
+        const stepAudio = document.getElementById('stepAudio');
+        const stepCamera = document.getElementById('stepCamera');
+        const stepModel = document.getElementById('stepModel');
+
+        try {
+            // Step 1: Audio
+            stepAudio.classList.add('active');
+            await initAudio();
+            stepAudio.classList.remove('active');
+            stepAudio.classList.add('done');
+            stepAudio.querySelector('i').className = 'fas fa-check w-6';
+
+            // Step 2: Camera
+            stepCamera.classList.remove('text-gray-500');
+            stepCamera.classList.add('active');
+            await initCamera();
+            stepCamera.classList.remove('active');
+            stepCamera.classList.add('done');
+            stepCamera.querySelector('i').className = 'fas fa-check w-6';
+
+            // Step 3: Hand tracking
+            stepModel.classList.remove('text-gray-500');
+            stepModel.classList.add('active');
+            await initHandTracking();
+            stepModel.classList.remove('active');
+            stepModel.classList.add('done');
+            stepModel.querySelector('i').className = 'fas fa-check w-6';
+
+            // Initialize objects
+            objects = AUDIO_OBJECTS.map(def => ({
+                ...def,
+                x: 0, y: 0,
+                homeX: 0, homeY: 0,
+                active: false,
+                grabbed: false,
+                param: 0.5,
+                nodes: null
+            }));
+            positionObjects();
+
+            // Initialize spatial grid
+            spatialGrid = new SpatialHashGrid(CONNECT_DIST);
+
+            // Start rendering
+            await new Promise(r => setTimeout(r, 500));
+            loadingScreen.classList.add('hidden');
+            hud.classList.remove('hidden');
+            isRunning = true;
+            render();
+
+        } catch (error) {
+            console.error('Initialization error:', error);
+            loadingScreen.classList.add('hidden');
+            errorScreen.classList.remove('hidden');
+            
+            let message = 'An unexpected error occurred.';
+            if (error.name === 'NotAllowedError') {
+                message = 'Camera access was denied. Please allow camera access and try again.';
+            } else if (error.name === 'NotFoundError') {
+                message = 'No camera found. Please connect a camera and try again.';
+            } else if (error.message) {
+                message = error.message;
+            }
+            
+            document.getElementById('errorMessage').textContent = message;
+        }
+    }
+
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
