@@ -1,0 +1,344 @@
+/*
+ * GP_LIVE // SYS.CTRL
+ * Visual stylesheet
+ *
+ * Author  : KRANK
+ * Version : 0.1.0
+ * License : MIT
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+/* ── Design tokens ──────────────────────────────────────────────────── */
+
+:root {
+    --bg      : #090a0f;
+    --panel   : #12141d;
+    --fg      : #00ffcc;
+    --fg-dim  : #0088aa;
+    --accent  : #ff0055;
+    --border  : #334455;
+}
+
+/* ── Reset ──────────────────────────────────────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body, html {
+    margin      : 0;
+    padding     : 0;
+    width       : 100%;
+    height      : 100%;
+    background  : var(--bg);
+    color       : var(--fg);
+    font-family : 'Share Tech Mono', monospace;
+    overflow    : hidden;
+    user-select : none;
+}
+
+/* ── Backend shell ──────────────────────────────────────────────────── */
+
+#backend {
+    display        : flex;
+    flex-direction : column;
+    height         : 100%;
+    padding        : 15px;
+}
+
+.header {
+    display         : flex;
+    justify-content : space-between;
+    align-items     : center;
+    border-bottom   : 2px solid var(--border);
+    padding-bottom  : 15px;
+    margin-bottom   : 15px;
+}
+
+h1 {
+    margin      : 0;
+    font-size   : 1.5rem;
+    text-shadow : 0 0 10px var(--fg);
+}
+
+/* ── Buttons ────────────────────────────────────────────────────────── */
+
+.btn-group { display: flex; gap: 8px; }
+
+.btn-group button {
+    background     : rgba(0,255,204,.1);
+    color          : var(--fg);
+    border         : 1px solid var(--fg);
+    padding        : 8px 15px;
+    font-family    : inherit;
+    font-size      : 1rem;
+    cursor         : pointer;
+    text-transform : uppercase;
+    transition     : background .2s, color .2s;
+}
+
+.btn-group button:hover    { background: var(--fg); color: var(--bg); }
+.btn-group button:disabled {
+    border-color : var(--border);
+    color        : var(--border);
+    background   : transparent;
+    cursor       : not-allowed;
+}
+
+/* ── Dashboard grid ─────────────────────────────────────────────────── */
+
+.dashboard {
+    display               : grid;
+    grid-template-columns : 1fr 1fr 1fr;
+    grid-template-rows    : auto 1fr;
+    gap                   : 15px;
+    flex                  : 1;
+    min-height            : 0;
+}
+
+/* ── Panel ──────────────────────────────────────────────────────────── */
+
+.panel {
+    background     : var(--panel);
+    border         : 1px solid var(--border);
+    padding        : 15px;
+    border-radius  : 4px;
+    display        : flex;
+    flex-direction : column;
+}
+
+.panel h2 {
+    margin         : 0 0 10px;
+    font-size      : 1.1rem;
+    color          : var(--accent);
+    border-bottom  : 1px dashed var(--border);
+    padding-bottom : 5px;
+}
+
+/* ── Control grid (keyboard mapping panel) ──────────────────────────── */
+
+.controls-grid {
+    display               : grid;
+    grid-template-columns : repeat(4, 1fr);
+    gap                   : 10px;
+    flex                  : 1;
+}
+
+.control-block {
+    border     : 1px solid var(--border);
+    padding    : 10px;
+    background : rgba(0,0,0,.5);
+}
+
+.key-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+
+.key {
+    background    : #222;
+    color         : #888;
+    border        : 1px solid #444;
+    padding       : 2px 6px;
+    font-size     : .8rem;
+    border-radius : 3px;
+}
+
+.key.active {
+    background   : var(--accent);
+    color        : #fff;
+    border-color : #fff;
+    text-shadow  : 0 0 5px #fff;
+    box-shadow   : 0 0 10px var(--accent);
+}
+
+.key-desc {
+    font-size  : .75rem;
+    color      : var(--fg-dim);
+    display    : block;
+    margin-top : 5px;
+}
+
+/* ── Audio slider ───────────────────────────────────────────────────── */
+
+.slider-container {
+    display     : flex;
+    align-items : center;
+    gap         : 10px;
+    margin-top  : 15px;
+    background  : rgba(0,0,0,.5);
+    padding     : 10px;
+    border      : 1px solid var(--border);
+}
+
+input[type=range] { flex: 1; accent-color: var(--accent); cursor: pointer; }
+
+.val-display {
+    width       : 50px;
+    text-align  : right;
+    color       : var(--accent);
+    font-weight : bold;
+}
+
+/* ── Status bar ─────────────────────────────────────────────────────── */
+
+.status-bar {
+    margin-top      : 10px;
+    font-size       : .85rem;
+    display         : flex;
+    justify-content : space-between;
+    color           : var(--fg-dim);
+}
+
+.status-indicator {
+    padding       : 3px 8px;
+    background    : #333;
+    color         : #fff;
+    border-radius : 2px;
+}
+
+/* ── Projector window ───────────────────────────────────────────────── */
+
+#projector-container {
+    display    : none;
+    width      : 100%;
+    height     : 100%;
+    background : #000;
+    position   : relative;
+}
+
+canvas { display: block; width: 100%; height: 100%; }
+
+/* ── Preview panel ──────────────────────────────────────────────────── */
+
+#preview-canvas {
+    width           : 100%;
+    flex            : 1;
+    border          : 1px solid var(--border);
+    background      : #000;
+    image-rendering : pixelated;
+    display         : block;
+    min-height      : 0;
+}
+
+.preview-status {
+    display         : flex;
+    justify-content : space-between;
+    align-items     : center;
+    margin-top      : 6px;
+    font-size       : .72rem;
+    color           : var(--fg-dim);
+}
+
+.preview-dot {
+    display        : inline-block;
+    width          : 7px;
+    height         : 7px;
+    border-radius  : 50%;
+    background     : var(--border);
+    margin-right   : 5px;
+    vertical-align : middle;
+}
+
+.preview-dot.live { background: var(--fg);    box-shadow: 0 0 6px var(--fg); }
+.preview-dot.sync { background: #ffcc00;      box-shadow: 0 0 6px #ffcc00;  }
+
+/* ── Gamepad mapping grid ───────────────────────────────────────────── */
+
+.gp-grid {
+    display               : grid;
+    grid-template-columns : 1fr 1fr;
+    gap                   : 4px;
+    font-size             : .72rem;
+    color                 : var(--fg-dim);
+    margin-top            : 8px;
+}
+
+.gp-bind {
+    display         : flex;
+    justify-content : space-between;
+    padding         : 2px 4px;
+}
+
+.gp-bind .gp-key {
+    color         : var(--fg);
+    background    : rgba(0,255,204,.08);
+    border        : 1px solid var(--border);
+    padding       : 0 5px;
+    border-radius : 2px;
+    font-size     : .7rem;
+}
+
+.gp-bind .gp-key.active {
+    background : var(--accent);
+    border-color: var(--accent);
+    color      : #fff;
+    box-shadow : 0 0 6px var(--accent);
+}
+
+/* ── ROM loader ─────────────────────────────────────────────────────── */
+
+#rom-drop-zone {
+    border      : 1px dashed var(--border);
+    padding     : 10px 8px;
+    text-align  : center;
+    cursor      : pointer;
+    font-size   : .78rem;
+    color       : var(--fg-dim);
+    transition  : border-color .2s, color .2s;
+    position    : relative;
+    margin-top  : 8px;
+}
+
+#rom-drop-zone:hover,
+#rom-drop-zone.dragover { border-color: var(--fg); color: var(--fg); }
+
+#rom-drop-zone.loaded {
+    border-color : var(--fg);
+    color        : var(--fg);
+    background   : rgba(0,255,204,.05);
+}
+
+#rom-file-input { display: none; }
+
+#rom-tile-strip {
+    display         : block;
+    width           : 100%;
+    height          : 24px;
+    margin-top      : 6px;
+    image-rendering : pixelated;
+    background      : #000;
+    border          : 1px solid var(--border);
+}
+
+.rom-meta {
+    display         : flex;
+    justify-content : space-between;
+    font-size       : .68rem;
+    color           : var(--fg-dim);
+    margin-top      : 4px;
+}
+
+.rom-meta span { color: var(--fg); }
+
+/* ── Fullscreen projector button ────────────────────────────────────── */
+
+#btn-fullscreen {
+    position       : absolute;
+    top            : 15px;
+    right          : 15px;
+    z-index        : 10;
+    background     : rgba(0,0,0,.6);
+    color          : var(--fg);
+    border         : 1px solid var(--fg);
+    padding        : 8px 14px;
+    font-family    : 'Share Tech Mono', monospace;
+    font-size      : .9rem;
+    cursor         : pointer;
+    text-transform : uppercase;
+    letter-spacing : .06em;
+    transition     : background .2s, opacity .4s;
+    border-radius  : 3px;
+}
+
+#btn-fullscreen:hover { background: var(--fg); color: var(--bg); }
+
+#projector-container:fullscreen          #btn-fullscreen,
+#projector-container:-webkit-full-screen #btn-fullscreen,
+#projector-container:-moz-full-screen    #btn-fullscreen { display: none; }

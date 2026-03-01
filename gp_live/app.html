@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<!--
+    GP_LIVE // SYS.CTRL
+    Version : 0.1.0
+    Author  : KRANK
+    License : MIT
+
+    A live audio-reactive VJ system with Game Boy ROM tile rendering.
+    Open this file in a web server (not file://) to enable microphone access.
+    SharedArrayBuffer requires COOP/COEP headers for zero-latency sync.
+    See src/main.js for serving instructions.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author"   content="KRANK">
+    <meta name="version"  content="0.1.0">
+    <title>GP_LIVE // SYS.CTRL v0.1</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         BACKEND CONTROLLER UI
+         Visible in the controller window only.
+         Hidden via JS when ?mode=projector is detected.
+    ═══════════════════════════════════════════════════════════ -->
+    <div id="backend">
+
+        <div class="header">
+            <h1>GP_LIVE // SYS.CTRL <span style="font-size:.7rem; color:var(--fg-dim); margin-left:8px;">v0.1 · KRANK</span></h1>
+            <div class="btn-group">
+                <button id="btn-init">1. Init Audio Engine</button>
+                <button id="btn-projector" disabled>2. Open Projector</button>
+            </div>
+        </div>
+
+        <div class="dashboard">
+
+            <!-- Keyboard mapping panel (full width) -->
+            <div class="panel" style="grid-column: 1 / 4;">
+                <h2>KEYBOARD MAPPING (Live Interaction)</h2>
+                <div class="controls-grid">
+                    <div class="control-block">
+                        <span style="color:var(--fg);">PALETTES [1-0]</span>
+                        <div class="key-row" id="keys-palettes"></div>
+                        <span class="key-desc" id="desc-palette">Select Color Theme</span>
+                    </div>
+                    <div class="control-block">
+                        <span style="color:var(--fg);">PATTERNS [Q-P]</span>
+                        <div class="key-row" id="keys-patterns"></div>
+                        <span class="key-desc" id="desc-pattern">Select Visual Geometry</span>
+                    </div>
+                    <div class="control-block">
+                        <span style="color:var(--fg);">EFFECTS [A-L]</span>
+                        <div class="key-row" id="keys-effects"></div>
+                        <span class="key-desc" id="desc-effect">Apply Glitch/Distortion</span>
+                    </div>
+                    <div class="control-block">
+                        <span style="color:var(--fg);">LOOP/TIME [Z-M]</span>
+                        <div class="key-row" id="keys-loops"></div>
+                        <span class="key-desc" id="desc-loop">Adjust Time &amp; Speed</span>
+                    </div>
+                </div>
+                <div style="margin-top:10px; text-align:center;">
+                    <span class="key" id="key-space" style="font-size:1.2rem; padding:5px 20px;">
+                        [SPACEBAR / BTN-A] : LAUNCH ASCII BURST
+                    </span>
+                </div>
+            </div>
+
+            <!-- Audio + Gamepad panel -->
+            <div class="panel">
+                <h2>AUDIO INPUT GATING</h2>
+                <div class="slider-container">
+                    <span>MIC GAIN</span>
+                    <input type="range" id="audio-gain" min="0" max="300" value="100">
+                    <span class="val-display" id="gain-val">100%</span>
+                </div>
+                <div style="margin-top:8px; font-size:.75rem; color:var(--fg-dim);">L.STICK-Y → GAIN</div>
+                <div style="margin-top:12px; flex:1; display:flex; align-items:flex-end;">
+                    <div style="width:100%; height:20px; background:#222; position:relative;">
+                        <div id="vu-meter" style="width:0%; height:100%; background:var(--fg); transition:width .1s;"></div>
+                    </div>
+                </div>
+
+                <h2 style="margin-top:12px;">JOYSTICK MAPPING</h2>
+                <div class="gp-grid">
+                    <div class="gp-bind"><span>LB / RB</span>    <span class="gp-key" id="gp-lr">← PALETTE →</span></div>
+                    <div class="gp-bind"><span>LT / RT</span>    <span class="gp-key" id="gp-lr2">← PATTERN →</span></div>
+                    <div class="gp-bind"><span>D ◄ ►</span>      <span class="gp-key" id="gp-dpad-x">← EFFECT →</span></div>
+                    <div class="gp-bind"><span>D ▲ ▼</span>      <span class="gp-key" id="gp-dpad-y">← SPEED →</span></div>
+                    <div class="gp-bind"><span>L.STICK Y</span>  <span class="gp-key" id="gp-ly">MIC GAIN</span></div>
+                    <div class="gp-bind"><span>R.STICK X</span>  <span class="gp-key" id="gp-rx">PATTERN</span></div>
+                    <div class="gp-bind"><span>BTN A</span>      <span class="gp-key" id="gp-a">BURST</span></div>
+                    <div class="gp-bind"><span>START</span>       <span class="gp-key" id="gp-start">RESET</span></div>
+                </div>
+            </div>
+
+            <!-- Preview + ROM panel -->
+            <div class="panel" style="min-height:0;">
+                <h2>OUTPUT PREVIEW</h2>
+                <canvas id="preview-canvas" width="320" height="180"></canvas>
+                <div class="preview-status">
+                    <span>
+                        <span class="preview-dot" id="preview-dot"></span>
+                        <span id="preview-src">LOCAL · 15fps</span>
+                    </span>
+                    <span id="preview-state-label" style="color:var(--fg-dim);">PAL:0 PAT:0 EFX:0</span>
+                </div>
+
+                <!-- ROM loader -->
+                <h2 style="margin-top:10px;">GB ROM CARTRIDGE</h2>
+                <div id="rom-drop-zone">
+                    <input type="file" id="rom-file-input" accept=".gb,.gbc,.rom,.bin">
+                    <span id="rom-drop-label">▸ DRAG &amp; DROP .gb/.gbc OR CLICK TO LOAD</span>
+                </div>
+
+                <!-- Scan controls — hidden until a ROM is loaded -->
+                <div id="rom-scan-controls" style="display:none; margin-top:6px;">
+
+                    <div style="display:flex; gap:6px; align-items:center; margin-bottom:4px;">
+                        <span style="font-size:.72rem; color:var(--fg-dim); white-space:nowrap;">SCAN</span>
+                        <select id="rom-scan-mode" style="flex:1; background:#0a0c14; color:var(--fg); border:1px solid var(--border); font-family:inherit; font-size:.72rem; padding:2px 4px;">
+                            <option value="auto">AUTO (skip header)</option>
+                            <option value="bank">BANK SELECT</option>
+                            <option value="manual">MANUAL OFFSET</option>
+                        </select>
+                    </div>
+
+                    <div id="rom-bank-row" style="display:none; gap:6px; align-items:center; margin-bottom:4px;">
+                        <span style="font-size:.72rem; color:var(--fg-dim); white-space:nowrap;">BANK</span>
+                        <select id="rom-bank-sel" style="flex:1; background:#0a0c14; color:var(--fg); border:1px solid var(--border); font-family:inherit; font-size:.72rem; padding:2px 4px;"></select>
+                    </div>
+
+                    <div id="rom-manual-row" style="display:none; gap:4px; align-items:center; margin-bottom:4px; flex-wrap:wrap;">
+                        <span style="font-size:.7rem; color:var(--fg-dim);">FROM</span>
+                        <input id="rom-off-start" type="text" value="0x150" maxlength="8"
+                               style="width:64px; background:#0a0c14; color:var(--fg); border:1px solid var(--border); font-family:inherit; font-size:.7rem; padding:2px 4px; text-align:center;">
+                        <span style="font-size:.7rem; color:var(--fg-dim);">TO</span>
+                        <input id="rom-off-end" type="text" value="0x4000" maxlength="8"
+                               style="width:64px; background:#0a0c14; color:var(--fg); border:1px solid var(--border); font-family:inherit; font-size:.7rem; padding:2px 4px; text-align:center;">
+                    </div>
+
+                    <div style="display:flex; gap:6px; align-items:center; margin-bottom:4px;">
+                        <span style="font-size:.72rem; color:var(--fg-dim); white-space:nowrap;">QUALITY</span>
+                        <input type="range" id="rom-quality" min="0" max="80" value="35" style="flex:1;">
+                        <span id="rom-quality-val" style="font-size:.7rem; color:var(--fg); width:28px;">35%</span>
+                    </div>
+
+                    <button id="rom-rescan" style="width:100%; background:rgba(0,255,204,.1); color:var(--fg); border:1px solid var(--border); font-family:inherit; font-size:.72rem; padding:4px; cursor:pointer;">
+                        ↺ RESCAN ROM
+                    </button>
+                </div>
+
+                <canvas id="rom-tile-strip" width="512" height="8" style="display:none;"></canvas>
+
+                <div class="rom-meta" id="rom-meta" style="display:none;">
+                    <span>TILES: <span id="rom-tile-count">—</span></span>
+                    <span>CART: <span id="rom-cart-type">—</span></span>
+                    <span>BANKS: <span id="rom-bank-count">—</span></span>
+                </div>
+                <div class="rom-meta" id="rom-meta2" style="display:none; margin-top:2px;">
+                    <span>TITLE: <span id="rom-title">—</span></span>
+                    <span>SIZE: <span id="rom-size">—</span></span>
+                    <span id="rom-chk-status" style="color:var(--accent);">CHK: —</span>
+                </div>
+                <div id="rom-mode-label" style="display:none; margin-top:5px; font-size:.7rem; text-align:center; color:var(--accent);">
+                    ◈ ALL PATTERNS → ROM TILE MODE ACTIVE ◈
+                </div>
+            </div>
+
+            <!-- System log panel -->
+            <div class="panel">
+                <h2>SYSTEM DATA</h2>
+                <div id="sys-log" style="flex:1; overflow-y:auto; font-size:.8rem; line-height:1.4; color:var(--fg-dim); white-space:pre-wrap;">System Ready... Waiting for Init.</div>
+            </div>
+
+        </div><!-- /.dashboard -->
+
+        <div class="status-bar">
+            <span>GP_LIVE v0.1 · KRANK</span>
+            <span id="gp-status"  class="status-indicator">GAMEPAD: SCANNING</span>
+            <span id="sab-status" class="status-indicator">SAB: CHECKING</span>
+        </div>
+
+    </div><!-- /#backend -->
+
+    <!-- ═══════════════════════════════════════════════════════════
+         PROJECTOR OUTPUT
+         Hidden in the controller window; shown in the popup.
+    ═══════════════════════════════════════════════════════════ -->
+    <div id="projector-container">
+        <button id="btn-fullscreen">⛶ Fullscreen</button>
+        <canvas id="visualCanvas"></canvas>
+    </div>
+
+    <script type="module" src="src/main.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MANUAL DE OPERACIONES // GP_LIVE</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --bg: #050505;
+            --surface: #0f111a;
+            --accent: #00ffcc;
+            --danger: #ff0055;
+            --text: #e0e0e0;
+            --dim: #666;
+            --border: #2a2d3e;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Share Tech Mono', monospace;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .page {
+            max-width: 900px;
+            margin: 40px auto;
+            background: var(--surface);
+            padding: 60px;
+            border: 1px solid var(--border);
+            box-shadow: 0 0 50px rgba(0, 255, 204, 0.05);
+            position: relative;
+            min-height: 1200px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .page-number {
+            position: absolute;
+            bottom: 20px;
+            right: 40px;
+            color: var(--dim);
+            font-size: 0.8rem;
+        }
+
+        header {
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: var(--accent);
+            font-size: 2.2rem;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+        }
+
+        .subtitle {
+            color: var(--dim);
+            font-size: 0.9rem;
+        }
+
+        h2 {
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+            padding-left: 15px;
+            text-transform: uppercase;
+            margin-top: 40px;
+            font-size: 1.3rem;
+        }
+
+        .diagram-container {
+            background: #000;
+            border: 1px solid var(--border);
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        /* Keyboard Graphic */
+        .keyboard {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 5px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .k-key {
+            border: 1px solid var(--dim);
+            padding: 10px 5px;
+            font-size: 0.8rem;
+            color: var(--dim);
+        }
+
+        .k-active {
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: inset 0 0 5px var(--accent);
+        }
+
+        .k-special {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .feature-box {
+            border: 1px solid var(--border);
+            padding: 15px;
+            background: rgba(255,255,255,0.02);
+        }
+
+        .feature-box strong {
+            display: block;
+            color: var(--accent);
+            margin-bottom: 5px;
+        }
+
+        .code-block {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            font-size: 0.8rem;
+            border-radius: 3px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        ul li::before {
+            content: ">> ";
+            color: var(--accent);
+        }
+
+        .warning {
+            border: 1px solid var(--danger);
+            padding: 15px;
+            color: var(--danger);
+            font-size: 0.85rem;
+            margin-top: 20px;
+        }
+
+        footer {
+            margin-top: auto;
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+            font-size: 0.7rem;
+            color: var(--dim);
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PAGE 1: INTRODUCTION & CORE -->
+    <div class="page">
+        <header>
+            <h1>GP_LIVE // SYS.CTRL</h1>
+            <div class="subtitle">SISTEMA DE CONTROL VISUAL BASADO EN AUDIO Y DATOS ROM</div>
+        </header>
+
+        <h2>1.0 RESUMEN DEL SISTEMA</h2>
+        <p>
+            GP_LIVE es una estación de trabajo de V-Jing experimental que genera geometría visual reactiva al audio mediante el procesamiento de frecuencias en tiempo real. El sistema permite la inyección de datos desde cartuchos de GameBoy (ROMs) para generar patrones de glitching procedimentales.
+        </p>
+
+        <h2>1.1 FLUJO DE INICIALIZACIÓN</h2>
+        <div class="grid-3">
+            <div class="feature-box">
+                <strong>01. AUDIO ENGINE</strong>
+                Active el motor de audio para permitir que el sistema escuche el micrófono o la entrada de línea.
+            </div>
+            <div class="feature-box">
+                <strong>02. PROJECTOR</strong>
+                Abra la ventana de salida. Se recomienda usar una segunda pantalla o proyector.
+            </div>
+            <div class="feature-box">
+                <strong>03. ROM LOAD</strong>
+                (Opcional) Cargue un archivo .gb para activar el modo de generación de mosaicos (Tiles).
+            </div>
+        </div>
+
+        <h2>1.2 CONFIGURACIÓN DE AUDIO</h2>
+        <p>El sistema utiliza un Analizador de FFT de 64 bandas para transformar el sonido en impulsos geométricos.</p>
+        <ul>
+            <li><strong>MIC GAIN:</strong> Controla la sensibilidad del sistema (0% - 300%).</li>
+            <li><strong>VU-METER:</strong> Monitorice la saturación; evite niveles rojos constantes.</li>
+        </ul>
+
+        <div class="warning">
+            NOTA TÉCNICA: El sistema utiliza SharedArrayBuffer para comunicación de baja latencia entre el controlador y el proyector. Si no está disponible, se usará postMessage (mayor latencia).
+        </div>
+
+        <div class="page-number">GP_LIVE // P.01</div>
+    </div>
+
+    <!-- PAGE 2: CONTROLS & MAPPING -->
+    <div class="page">
+        <header>
+            <h1>CONTROL INTERFACE</h1>
+            <div class="subtitle">ESQUEMA DE MAPEADO DE TECLADO Y MANDOS</div>
+        </header>
+
+        <h2>2.1 DIAGRAMA DE TECLADO (QUERTY)</h2>
+        <div class="diagram-container">
+            <div class="keyboard">
+                <!-- Palettes -->
+                <div class="k-key k-active">1</div><div class="k-key k-active">2</div><div class="k-key k-active">3</div><div class="k-key k-active">4</div><div class="k-key k-active">5</div><div class="k-key k-active">6</div><div class="k-key k-active">7</div><div class="k-key k-active">8</div><div class="k-key k-active">9</div><div class="k-key k-active">0</div>
+                <!-- Patterns -->
+                <div class="k-key k-active">Q</div><div class="k-key k-active">W</div><div class="k-key k-active">E</div><div class="k-key k-active">R</div><div class="k-key k-active">T</div><div class="k-key k-active">Y</div><div class="k-key k-active">U</div><div class="k-key k-active">I</div><div class="k-key k-active">O</div><div class="k-key k-active">P</div>
+                <!-- Effects -->
+                <div class="k-key k-active">A</div><div class="k-key k-active">S</div><div class="k-key k-active">D</div><div class="k-key k-active">F</div><div class="k-key k-active">G</div><div class="k-key k-active">H</div><div class="k-key k-active">J</div><div class="k-key k-active">K</div><div class="k-key k-active">L</div><div class="k-key">;</div>
+                <!-- Loops -->
+                <div class="k-key k-active">Z</div><div class="k-key k-active">X</div><div class="k-key k-active">C</div><div class="k-key k-active">V</div><div class="k-key k-active">B</div><div class="k-key k-active">N</div><div class="k-key k-active">M</div><div class="k-key">,</div><div class="k-key">.</div><div class="k-key">/</div>
+            </div>
+            <p style="font-size:0.7rem; color:var(--accent); margin-top:20px;">[ ESPACIO ] : DISPARAR RÁFAGA ASCII (BURST)</p>
+        </div>
+
+        <div class="grid-3">
+            <div class="feature-box">
+                <strong>PALETAS [1-0]</strong>
+                Cambia el esquema de color global. 10 perfiles disponibles.
+            </div>
+            <div class="feature-box">
+                <strong>PATRONES [Q-P]</strong>
+                Cambia la geometría base (Círculos, Líneas, ROM Tiles, Glitch).
+            </div>
+            <div class="feature-box">
+                <strong>EFECTOS [A-L]</strong>
+                Modificadores de distorsión, retroalimentación (feedback) y aberración.
+            </div>
+        </div>
+
+        <h2>2.2 SOPORTE DE GAMEPAD (X-INPUT)</h2>
+        <p>GP_LIVE detecta automáticamente mandos compatibles. El mapeo está optimizado para performance en vivo:</p>
+        <div class="code-block">
+            LB / RB  : Ciclo de Paletas<br>
+            LT / RT  : Ciclo de Patrones<br>
+            D-PAD LR : Selección de Efecto<br>
+            D-PAD UD : Velocidad de Loop<br>
+            STICK-LY : Control de Ganancia Micro<br>
+            BOTÓN A  : Disparador de Ráfaga
+        </div>
+
+        <div class="page-number">GP_LIVE // P.02</div>
+    </div>
+
+    <!-- PAGE 3: ROM GLITCHING & ADVANCED -->
+    <div class="page">
+        <header>
+            <h1>ADVANCED DATA OPS</h1>
+            <div class="subtitle">EXTRACCIÓN DE ASSETS Y MANIPULACIÓN DE MEMORIA</div>
+        </header>
+
+        <h2>3.1 MÓDULO DE CARTUCHO GB</h2>
+        <p>
+            Al cargar una ROM (.gb / .gbc), el sistema escanea el binario buscando estructuras de datos de 8x8 píxeles (Tiles).
+        </p>
+        <div class="feature-box">
+            <strong>MODOS DE ESCANEO:</strong>
+            <ul>
+                <li><strong>AUTO:</strong> Omite la cabecera del sistema y busca datos visuales.</li>
+                <li><strong>BANK SELECT:</strong> Permite navegar por los bancos de memoria del cartucho.</li>
+                <li><strong>MANUAL:</strong> Define offsets hexadecimales específicos (ej. 0x150 - 0x4000).</li>
+            </ul>
+        </div>
+
+        <h2>3.2 MODO "ALL PATTERNS"</h2>
+        <p>
+            Cuando el modo de ROM está activo, los patrones visuales convencionales son reemplazados por la secuencia de mosaicos extraídos. El audio modula el <strong>ID de mosaico</strong> y la <strong>calidad de renderizado</strong>.
+        </p>
+
+        <h2>3.3 RESOLUCIÓN Y RENDIMIENTO</h2>
+        <div class="grid-3">
+            <div class="feature-box">
+                <strong>PREVIEW</strong>
+                320x180 @ 15fps<br>Optimizado para no consumir recursos de GPU del sistema de control.
+            </div>
+            <div class="feature-box">
+                <strong>OUTPUT</strong>
+                FHD+ Dynamic<br>Escalado por hardware en la ventana del proyector.
+            </div>
+            <div class="feature-box">
+                <strong>LATENCIA</strong>
+                &lt; 16ms<br>Sincronización de audio mediante FFT directa al buffer compartido.
+            </div>
+        </div>
+
+        <div class="warning">
+            PRO-TIP: Use el efecto 'L' (Glitch Hard) combinado con una ROM de RPG para obtener los patrones de color más complejos debido a la alta densidad de tiles.
+        </div>
+
+        <footer>
+            <span>SISTEMA: GP_LIVE // SYS.CTRL</span>
+            <span>VER: 2.5.0-STABLE</span>
+            <span>USER_AUTH: OPERATOR_LEVEL_1</span>
+        </footer>
+        <div class="page-number">GP_LIVE // P.03</div>
+    </div>
+
+</body>
+</html>
