@@ -1,0 +1,2230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GP_LIVE // SYS.CTRL</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --bg:      #090a0f;
+            --panel:   #12141d;
+            --fg:      #00ffcc;
+            --fg-dim:  #0088aa;
+            --accent:  #ff0055;
+            --border:  #334455;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            background: var(--bg);
+            color: var(--fg);
+            font-family: 'Share Tech Mono', monospace;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* ── BACKEND ── */
+        #backend {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 15px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+
+        h1 { margin: 0; font-size: 1.5rem; text-shadow: 0 0 10px var(--fg); }
+
+        .btn-group { display: flex; gap: 8px; }
+
+        .btn-group button {
+            background: rgba(0,255,204,.1);
+            color: var(--fg);
+            border: 1px solid var(--fg);
+            padding: 8px 15px;
+            font-family: inherit;
+            font-size: 1rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: background .2s, color .2s;
+        }
+        .btn-group button:hover  { background: var(--fg); color: var(--bg); }
+        .btn-group button:disabled {
+            border-color: var(--border);
+            color: var(--border);
+            background: transparent;
+            cursor: not-allowed;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 15px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel h2 {
+            margin: 0 0 10px;
+            font-size: 1.1rem;
+            color: var(--accent);
+            border-bottom: 1px dashed var(--border);
+            padding-bottom: 5px;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            flex: 1;
+        }
+
+        .control-block {
+            border: 1px solid var(--border);
+            padding: 10px;
+            background: rgba(0,0,0,.5);
+        }
+
+        .key-row  { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+
+        .key {
+            background: #222;
+            color: #888;
+            border: 1px solid #444;
+            padding: 2px 6px;
+            font-size: .8rem;
+            border-radius: 3px;
+        }
+        .key.active {
+            background: var(--accent);
+            color: #fff;
+            border-color: #fff;
+            text-shadow: 0 0 5px #fff;
+            box-shadow: 0 0 10px var(--accent);
+        }
+        .key-desc { font-size: .75rem; color: var(--fg-dim); display: block; margin-top: 5px; }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+            background: rgba(0,0,0,.5);
+            padding: 10px;
+            border: 1px solid var(--border);
+        }
+        input[type=range] { flex: 1; accent-color: var(--accent); cursor: pointer; }
+        .val-display { width: 50px; text-align: right; color: var(--accent); font-weight: bold; }
+
+        .status-bar {
+            margin-top: 10px;
+            font-size: .85rem;
+            display: flex;
+            justify-content: space-between;
+            color: var(--fg-dim);
+        }
+        .status-indicator { padding: 3px 8px; background: #333; color: #fff; border-radius: 2px; }
+
+        /* ── PROJECTOR ── */
+        #projector-container { display: none; width: 100%; height: 100%; background: #000; position: relative; }
+        canvas { display: block; width: 100%; height: 100%; }
+
+        /* ── PREVIEW PANEL ── */
+        #preview-canvas {
+            width: 100%;
+            flex: 1;
+            border: 1px solid var(--border);
+            background: #000;
+            image-rendering: pixelated;
+            display: block;
+            min-height: 0;
+        }
+        .preview-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 6px;
+            font-size: .72rem;
+            color: var(--fg-dim);
+        }
+        .preview-dot {
+            display: inline-block;
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: var(--border);
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+        .preview-dot.live { background: var(--fg); box-shadow: 0 0 6px var(--fg); }
+        .preview-dot.sync { background: #ffcc00; box-shadow: 0 0 6px #ffcc00; }
+
+        /* ── GAMEPAD ── */
+        .gp-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            font-size: .72rem;
+            color: var(--fg-dim);
+            margin-top: 8px;
+        }
+        .gp-bind { display: flex; justify-content: space-between; padding: 2px 4px; }
+        .gp-bind .gp-key {
+            color: var(--fg);
+            background: rgba(0,255,204,.08);
+            border: 1px solid var(--border);
+            padding: 0 5px;
+            border-radius: 2px;
+            font-size: .7rem;
+        }
+        .gp-bind .gp-key.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+            box-shadow: 0 0 6px var(--accent);
+        }
+
+        /* ── ROM LOADER ── */
+        #rom-drop-zone {
+            border: 1px dashed var(--border);
+            padding: 10px 8px;
+            text-align: center;
+            cursor: pointer;
+            font-size: .78rem;
+            color: var(--fg-dim);
+            transition: border-color .2s, color .2s;
+            position: relative;
+            margin-top: 8px;
+        }
+        #rom-drop-zone:hover, #rom-drop-zone.dragover {
+            border-color: var(--fg);
+            color: var(--fg);
+        }
+        #rom-drop-zone.loaded {
+            border-color: var(--fg);
+            color: var(--fg);
+            background: rgba(0,255,204,.05);
+        }
+        #rom-file-input { display: none; }
+        #rom-tile-strip {
+            display: block;
+            width: 100%;
+            height: 24px;
+            margin-top: 6px;
+            image-rendering: pixelated;
+            background: #000;
+            border: 1px solid var(--border);
+        }
+        .rom-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: .68rem;
+            color: var(--fg-dim);
+            margin-top: 4px;
+        }
+        .rom-meta span { color: var(--fg); }
+
+        /* ── FULLSCREEN BUTTON ── */
+        #btn-fullscreen {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 10;
+            background: rgba(0,255,204,.08);
+            color: var(--fg);
+            border: 1px solid var(--fg);
+            padding: 8px 14px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: .9rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            transition: background .2s, opacity .4s;
+            border-radius: 3px;
+        }
+        #btn-fullscreen:hover { background: var(--fg); color: var(--bg); }
+
+        /* Hide button in fullscreen */
+        #projector-container:fullscreen #btn-fullscreen,
+        #projector-container:-webkit-full-screen #btn-fullscreen,
+        #projector-container:-moz-full-screen #btn-fullscreen {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- BACKEND CONTROLLER UI -->
+    <div id="backend">
+        <div class="header">
+            <h1>GP_LIVE // SYS.CTRL</h1>
+            <div class="btn-group">
+                <button id="btn-init">1. Init Audio Engine</button>
+                <button id="btn-projector" disabled>2. Open Projector</button>
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <div class="panel" style="grid-column: 1 / 4;">
+                <h2>KEYBOARD MAPPING (Live Interaction)</h2>
+                <div class="controls-grid">
+                    <div class="control-block">
+                        <span style="color:var(--fg);">PALETTES [1-0]</span>
+                        <div class="key-row" id="keys-palettes"></div>
+                        <span class="key-desc" id="desc-palette">Select Color Theme</span>
+                    </div>
+                    <div class="control-block">
+                        <span style="color:var(--fg);">PATTERNS [Q-P]</span>
+                        <div class="key-row" id="keys-patterns"></div>
+                        <span class="key-desc" id="desc-pattern">Select Visual Geometry</span>
+                    </div>
+                    <div class="control-block">
+                        <span style="color:var(--fg);">EFFECTS [A-L]</span>
+                        <div class="key-row" id="keys-effects"></div>
+                        <span class="key-desc" id="desc-effect">Apply Glitch/Distortion</span>
+                    </div>
+                    <div class="control-block">
+                        <span style="color:var(--fg);">LOOP/TIME [Z-M]</span>
+                        <div class="key-row" id="keys-loops"></div>
+                        <span class="key-desc" id="desc-loop">Adjust Time & Speed</span>
+                    </div>
+                </div>
+                <div style="margin-top:10px; text-align:center;">
+                    <span class="key" id="key-space" style="font-size:1.2rem; padding:5px 20px;">[SPACEBAR / BTN-A] : LAUNCH ASCII BURST</span>
+                </div>
+            </div>
+
+            <!-- Audio -->
+            <div class="panel">
+                <h2>AUDIO INPUT GATING</h2>
+                <div class="slider-container">
+                    <span>MIC GAIN</span>
+                    <input type="range" id="audio-gain" min="0" max="300" value="100">
+                    <span class="val-display" id="gain-val">100%</span>
+                </div>
+                <div style="margin-top:8px; font-size:.75rem; color:var(--fg-dim);">L.STICK-Y → GAIN</div>
+                <div style="margin-top:12px; flex:1; display:flex; align-items:flex-end;">
+                    <div style="width:100%; height:20px; background:#222; position:relative;">
+                        <div id="vu-meter" style="width:0%; height:100%; background:var(--fg); transition:width .1s;"></div>
+                    </div>
+                </div>
+                <!-- Gamepad bindings -->
+                <h2 style="margin-top:12px;">JOYSTICK MAPPING</h2>
+                <div class="gp-grid">
+                    <div class="gp-bind"><span>LB / RB</span><span class="gp-key" id="gp-lr">← PALETTE →</span></div>
+                    <div class="gp-bind"><span>LT / RT</span><span class="gp-key" id="gp-lr2">← PATTERN →</span></div>
+                    <div class="gp-bind"><span>D ◄ ►</span><span class="gp-key" id="gp-dpad-x">← EFFECT →</span></div>
+                    <div class="gp-bind"><span>D ▲ ▼</span><span class="gp-key" id="gp-dpad-y">← SPEED →</span></div>
+                    <div class="gp-bind"><span>L.STICK Y</span><span class="gp-key" id="gp-ly">MIC GAIN</span></div>
+                    <div class="gp-bind"><span>R.STICK X</span><span class="gp-key" id="gp-rx">PATTERN</span></div>
+                    <div class="gp-bind"><span>BTN A</span><span class="gp-key" id="gp-a">BURST</span></div>
+                    <div class="gp-bind"><span>START</span><span class="gp-key" id="gp-start">RESET</span></div>
+                </div>
+            </div>
+
+            <!-- Preview -->
+            <div class="panel" style="min-height:0;">
+                <h2>OUTPUT PREVIEW</h2>
+                <canvas id="preview-canvas" width="320" height="180"></canvas>
+                <div class="preview-status">
+                    <span><span class="preview-dot" id="preview-dot"></span><span id="preview-src">LOCAL · 15fps</span></span>
+                    <span id="preview-state-label" style="color:var(--fg-dim);">PAL:0 PAT:0 EFX:0</span>
+                </div>
+
+                <h2 style="margin-top:10px;">GB ROM CARTRIDGE</h2>
+                <div id="rom-drop-zone">
+                    <input type="file" id="rom-file-input" accept=".gb,.gbc,.rom,.bin">
+                    <span id="rom-drop-label">▸ DRAG & DROP .gb/.gbc OR CLICK TO LOAD</span>
+                </div>
+
+                <!-- Scan controls — hidden until ROM is loaded -->
+                <div id="rom-scan-controls" style="display:none; margin-top:6px;">
+                    <div style="display:flex; gap:6px; align-items:center; margin-bottom:4px;">
+                        <span style="font-size:.72rem; color:var(--fg-dim); white-space:nowrap;">SCAN</span>
+                        <select id="rom-scan-mode" style="flex:1; background:#0a0c14; color:var(--fg); border:1px solid var(--border); font-family:inherit; font-size:.72rem; padding:2px 4px;">
+                            <option value="auto">AUTO (skip header)</option>
+                            <option value="bank">BANK SELECT</option>
+                            <option value="manual">MANUAL OFFSET</option>
+                        </select>
+                    </div>
+                    <!-- Bank mode -->
+                    <div id="rom-bank-row" style="display:none; gap:6px; align-items:center; margin-bottom:4px;">
+                        <span style="font-size:.72rem; color:var(--fg-dim); white-space:nowrap;">BANK</span>
+                        <select id="rom-bank-sel" style="flex:1; background:#0a0c14; color:var(--fg); border:1px solid var(--border); font-family:inherit; font-size:.72rem; padding:2px 4px;"></select>
+                    </div>
+                    <!-- Manual offset mode -->
+                    <div id="rom-manual-row" style="display:none; gap:4px; align-items:center; margin-bottom:4px; flex-wrap:wrap;">
+                        <span style="font-size:.7rem; color:var(--fg-dim);">FROM</span>
+                        <input id="rom-off-start" type="text" value="0x150" maxlength="8"
+                            style="width:64px; background:#0a0c14; color:var(--fg); border:1px solid var(--border); font-family:inherit; font-size:.7rem; padding:2px 4px; text-align:center;">
+                        <span style="font-size:.7rem; color:var(--fg-dim);">TO</span>
+                        <input id="rom-off-end" type="text" value="0x4000" maxlength="8"
+                            style="width:64px; background:#0a0c14; color:var(--fg); border:1px solid var(--border); font-family:inherit; font-size:.7rem; padding:2px 4px; text-align:center;">
+                    </div>
+                    <!-- Quality slider -->
+                    <div style="display:flex; gap:6px; align-items:center; margin-bottom:4px;">
+                        <span style="font-size:.72rem; color:var(--fg-dim); white-space:nowrap;">QUALITY</span>
+                        <input type="range" id="rom-quality" min="0" max="80" value="35" style="flex:1;">
+                        <span id="rom-quality-val" style="font-size:.7rem; color:var(--fg); width:28px;">35%</span>
+                    </div>
+                    <button id="rom-rescan" style="width:100%; background:rgba(0,255,204,.1); color:var(--fg); border:1px solid var(--border); font-family:inherit; font-size:.72rem; padding:4px; cursor:pointer;">
+                        ↺ RESCAN ROM
+                    </button>
+                </div>
+
+                <canvas id="rom-tile-strip" width="512" height="8" style="display:none;"></canvas>
+                <div class="rom-meta" id="rom-meta" style="display:none;">
+                    <span>TILES: <span id="rom-tile-count">—</span></span>
+                    <span>CART: <span id="rom-cart-type">—</span></span>
+                    <span>BANKS: <span id="rom-bank-count">—</span></span>
+                </div>
+                <div class="rom-meta" id="rom-meta2" style="display:none; margin-top:2px;">
+                    <span>TITLE: <span id="rom-title">—</span></span>
+                    <span>SIZE: <span id="rom-size">—</span></span>
+                    <span id="rom-chk-status" style="color:var(--accent);">CHK: —</span>
+                </div>
+                <div id="rom-mode-label" style="display:none; margin-top:5px; font-size:.7rem; text-align:center; color:var(--accent);">
+                    ◈ ALL PATTERNS → ROM TILE MODE ACTIVE ◈
+                </div>
+            </div>
+
+            <!-- Log -->
+            <div class="panel">
+                <h2>SYSTEM DATA</h2>
+                <div id="sys-log" style="flex:1; overflow-y:auto; font-size:.8rem; line-height:1.4; color:var(--fg-dim); white-space:pre-wrap;">
+System Ready... Waiting for Init.
+                </div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <span>MODE: CONTROLLER</span>
+            <span id="gp-status" class="status-indicator">GAMEPAD: SCANNING</span>
+            <span id="sab-status" class="status-indicator">SAB: CHECKING</span>
+        </div>
+    </div>
+
+    <!-- PROJECTOR UI -->
+    <div id="projector-container">
+        <button id="btn-fullscreen">⛶ Fullscreen</button>
+        <canvas id="visualCanvas"></canvas>
+    </div>
+
+
+<script type="module">
+// ══════════════════════════════════════════════
+//  SHARED CONFIG
+// ══════════════════════════════════════════════
+
+const IS_PROJECTOR = window.location.search.includes('mode=projector');
+
+const KEY_MAPS = {
+    palettes: ['1','2','3','4','5','6','7','8','9','0'],
+    patterns: ['Q','W','E','R','T','Y','U','I','O','P'],
+    effects:  ['A','S','D','F','G','H','J','K','L'],
+    loops:    ['Z','X','C','V','B','N','M'],
+};
+
+const SAB_FIELDS = { sync:0, vol:1, freqsStart:2, palette:18, pattern:19, effect:20, loop:21, spaceTrig:22 };
+const SAB_SIZE   = 64;
+
+const createState = () => ({
+    sync: 0, vol: 0,
+    freqs: new Array(16).fill(0),
+    palette: 0, pattern: 0, effect: 0, loop: 3,
+    spaceTrig: 0, gain: 1.0,
+});
+
+// ══════════════════════════════════════════════
+//  SAB TRANSPORT
+// ══════════════════════════════════════════════
+
+class SabTransport {
+    constructor() {
+        this.active = false;
+        this.buffer = null;
+        this.view   = null;
+    }
+
+    init() {
+        if (typeof SharedArrayBuffer === 'undefined') return false;
+        this.buffer = new SharedArrayBuffer(SAB_SIZE);
+        this.view   = new Uint8Array(this.buffer);
+        this.active = true;
+        return true;
+    }
+
+    attach(sab) {
+        this.buffer = sab;
+        this.view   = new Uint8Array(sab);
+        this.active = true;
+    }
+
+    write(state, syncCounter) {
+        if (!this.active) return;
+        const v = this.view;
+        v[SAB_FIELDS.sync]      = syncCounter % 255;
+        v[SAB_FIELDS.vol]       = state.vol;
+        state.freqs.forEach((f, i) => { v[SAB_FIELDS.freqsStart + i] = f; });
+        v[SAB_FIELDS.palette]   = state.palette;
+        v[SAB_FIELDS.pattern]   = state.pattern;
+        v[SAB_FIELDS.effect]    = state.effect;
+        v[SAB_FIELDS.loop]      = state.loop;
+        v[SAB_FIELDS.spaceTrig] = state.spaceTrig;
+    }
+
+    read(state) {
+        if (!this.active) return;
+        const v = this.view;
+        state.vol       = v[SAB_FIELDS.vol];
+        state.palette   = v[SAB_FIELDS.palette];
+        state.pattern   = v[SAB_FIELDS.pattern];
+        state.effect    = v[SAB_FIELDS.effect];
+        state.loop      = v[SAB_FIELDS.loop];
+        state.spaceTrig = v[SAB_FIELDS.spaceTrig];
+        for (let i = 0; i < 16; i++) state.freqs[i] = v[SAB_FIELDS.freqsStart + i];
+    }
+}
+
+// ══════════════════════════════════════════════
+//  AUDIO ENGINE
+// ══════════════════════════════════════════════
+
+class AudioEngine {
+    constructor() {
+        this.ctx      = null;
+        this.analyser = null;
+        this.data     = null;
+        this.ready    = false;
+    }
+
+    async init() {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        this.ctx      = new (window.AudioContext || window.webkitAudioContext)();
+        this.analyser = this.ctx.createAnalyser();
+        this.analyser.fftSize = 64;
+        this.analyser.smoothingTimeConstant = 0.7;
+        this.ctx.createMediaStreamSource(stream).connect(this.analyser);
+        this.data  = new Uint8Array(this.analyser.frequencyBinCount);
+        this.ready = true;
+    }
+
+    read(gain) {
+        if (!this.ready) return { vol: 0, freqs: new Array(16).fill(0) };
+        this.analyser.getByteFrequencyData(this.data);
+
+        const freqs = Array.from({ length: 16 }, (_, i) =>
+            Math.min(255, this.data[i] * gain)
+        );
+        const vol = Math.min(255, Math.floor(freqs.reduce((a, b) => a + b, 0) / 16));
+        return { vol, freqs };
+    }
+}
+
+// ══════════════════════════════════════════════
+//  KEYBOARD HANDLER
+// ══════════════════════════════════════════════
+
+class KeyboardHandler {
+    constructor(state, onUpdate) {
+        this._state    = state;
+        this._onUpdate = onUpdate;
+        window.addEventListener('keydown', this._handle.bind(this));
+    }
+
+    _handle(e) {
+        if (e.repeat) return;
+        const key = e.key.toUpperCase();
+
+        const tryMap = (group) => {
+            const idx = KEY_MAPS[group].indexOf(key);
+            if (idx === -1) return false;
+            this._state[group.replace('palettes','palette').replace('patterns','pattern').replace('effects','effect').replace('loops','loop')] = idx;
+            // Normalize key name to state field
+            const fieldMap = { palettes:'palette', patterns:'pattern', effects:'effect', loops:'loop' };
+            this._state[fieldMap[group]] = idx;
+            this._onUpdate(group, key);
+            return true;
+        };
+
+        tryMap('palettes') || tryMap('patterns') || tryMap('effects') || tryMap('loops');
+
+        if (e.code === 'Space') {
+            this._state.spaceTrig = (this._state.spaceTrig + 1) % 255;
+            this._onUpdate('space', ' ');
+        }
+    }
+}
+
+// ══════════════════════════════════════════════
+//  BACKEND UI
+// ══════════════════════════════════════════════
+
+class BackendUI {
+    constructor() {
+        this._sysLog = document.getElementById('sys-log');
+        this._vuMeter = document.getElementById('vu-meter');
+        this._sabStatus = document.getElementById('sab-status');
+        this._buildKeys();
+    }
+
+    _buildKeys() {
+        const build = (containerId, keys, defaultActive) => {
+            const container = document.getElementById(containerId);
+            keys.forEach(k => {
+                const el = Object.assign(document.createElement('div'), { className: 'key', id: `ui-key-${k}`, innerText: k });
+                container.appendChild(el);
+            });
+            document.getElementById(`ui-key-${defaultActive}`)?.classList.add('active');
+        };
+
+        build('keys-palettes', KEY_MAPS.palettes, '1');
+        build('keys-patterns', KEY_MAPS.patterns, 'Q');
+        build('keys-effects',  KEY_MAPS.effects,  'A');
+        build('keys-loops',    KEY_MAPS.loops,    'V');
+    }
+
+    updateKeyGroup(group, activeKey) {
+        KEY_MAPS[group]?.forEach(k => {
+            document.getElementById(`ui-key-${k}`)?.classList.toggle('active', k === activeKey);
+        });
+    }
+
+    flashSpace() {
+        const el = document.getElementById('key-space');
+        el.classList.add('active');
+        setTimeout(() => el.classList.remove('active'), 100);
+    }
+
+    updateVU(vol) {
+        this._vuMeter.style.width = `${(vol / 255) * 100}%`;
+        this._vuMeter.style.background = vol > 200 ? 'var(--accent)' : 'var(--fg)';
+    }
+
+    setSabStatus(active) {
+        this._sabStatus.innerText = active ? 'SAB: ACTIVE' : 'SAB: FALLBACK (postMessage)';
+        this._sabStatus.style.background = active ? 'var(--fg)' : 'var(--accent)';
+        if (active) this._sabStatus.style.color = 'var(--bg)';
+    }
+
+    setGamepadStatus(connected, label = '') {
+        const el = document.getElementById('gp-status');
+        if (!el) return;
+        el.innerText = connected ? `GAMEPAD: ${label.slice(0, 20)}` : 'GAMEPAD: DISCONNECTED';
+        el.style.background = connected ? 'var(--fg)' : '#333';
+        el.style.color = connected ? 'var(--bg)' : '#fff';
+    }
+
+    flashGamepadBtn(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.add('active');
+        setTimeout(() => el.classList.remove('active'), 130);
+    }
+
+    syncGainSlider(gain) {
+        const pct = Math.round(gain * 100);
+        const slider = document.getElementById('audio-gain');
+        const label  = document.getElementById('gain-val');
+        if (slider) slider.value = pct;
+        if (label)  label.innerText = `${pct}%`;
+    }
+
+    log(msg) {
+        const time = new Date().toTimeString().split(' ')[0];
+        this._sysLog.innerHTML = `[${time}] ${msg}\n` + this._sysLog.innerHTML;
+    }
+}
+
+// ══════════════════════════════════════════════
+//  GAMEPAD HANDLER
+// ══════════════════════════════════════════════
+
+class GamepadHandler {
+    // All polling happens inside the existing rAF loop — zero extra overhead.
+    // Buttons use per-index debounce so a held button fires only once per press.
+
+    static DEADZONE = 0.15;
+    static AXIS_THRESHOLD = 0.55;  // stick must cross this to trigger discrete change
+
+    constructor(state, onUpdate) {
+        this._state      = state;
+        this._onUpdate   = onUpdate;     // same signature as KeyboardHandler
+        this._connected  = false;
+        this._gpIndex    = -1;
+        this._btnPrev    = new Uint8Array(32);
+        this._axisPrev   = new Float32Array(8);
+
+        // Throttle for analog stick discrete changes (prevent rapid-fire)
+        this._axisDebounce = { lx: 0, ly: 0, rx: 0, ry: 0 };
+
+        window.addEventListener('gamepadconnected',    this._onConnect.bind(this));
+        window.addEventListener('gamepaddisconnected', this._onDisconnect.bind(this));
+    }
+
+    _onConnect(e) {
+        this._connected = true;
+        this._gpIndex   = e.gamepad.index;
+        this._onUpdate('_gpconnect', e.gamepad.id);
+    }
+
+    _onDisconnect(e) {
+        if (e.gamepad.index === this._gpIndex) {
+            this._connected = false;
+            this._gpIndex   = -1;
+            this._onUpdate('_gpdisconnect', '');
+        }
+    }
+
+    get connected() { return this._connected; }
+
+    // Called once per rAF frame from BackendController._loop()
+    poll() {
+        if (!this._connected) return;
+        const gamepads = navigator.getGamepads();
+        const gp = gamepads[this._gpIndex];
+        if (!gp) return;
+
+        const { state: s, _onUpdate: upd } = this;
+        const st = this._state;
+        const now = performance.now();
+
+        // ── Digital buttons (debounced) ───────────────────────────────────
+        const btn = (idx) => gp.buttons[idx]?.pressed ?? false;
+        const fell = (idx) => {  // edge: just pressed this frame
+            const cur = btn(idx) ? 1 : 0;
+            const prev = this._btnPrev[idx];
+            this._btnPrev[idx] = cur;
+            return cur && !prev;
+        };
+
+        // LB (4) → prev palette
+        if (fell(4)) { st.palette = (st.palette - 1 + 10) % 10; this._onUpdate('palettes', KEY_MAPS.palettes[st.palette]); }
+        // RB (5) → next palette
+        if (fell(5)) { st.palette = (st.palette + 1) % 10;      this._onUpdate('palettes', KEY_MAPS.palettes[st.palette]); }
+        // LT (6) → prev pattern
+        if (fell(6)) { st.pattern = (st.pattern - 1 + 10) % 10; this._onUpdate('patterns', KEY_MAPS.patterns[st.pattern]); }
+        // RT (7) → next pattern
+        if (fell(7)) { st.pattern = (st.pattern + 1) % 10;      this._onUpdate('patterns', KEY_MAPS.patterns[st.pattern]); }
+
+        // D-pad Left/Right (14/15) → effect
+        if (fell(14)) { st.effect = (st.effect - 1 + 9) % 9; this._onUpdate('effects', KEY_MAPS.effects[st.effect]); }
+        if (fell(15)) { st.effect = (st.effect + 1) % 9;     this._onUpdate('effects', KEY_MAPS.effects[st.effect]); }
+        // D-pad Up/Down (12/13) → loop speed
+        if (fell(12)) { st.loop = Math.min(6, st.loop + 1); this._onUpdate('loops', KEY_MAPS.loops[st.loop]); }
+        if (fell(13)) { st.loop = Math.max(0, st.loop - 1); this._onUpdate('loops', KEY_MAPS.loops[st.loop]); }
+
+        // A (0) → burst
+        if (fell(0)) { st.spaceTrig = (st.spaceTrig + 1) % 255; this._onUpdate('space', ' '); }
+        // B (1) → also burst (alternate)
+        if (fell(1)) { st.spaceTrig = (st.spaceTrig + 1) % 255; this._onUpdate('space', ' '); }
+
+        // Start (9) → reset to defaults
+        if (fell(9)) {
+            st.palette = 0; st.pattern = 0; st.effect = 0; st.loop = 3;
+            this._onUpdate('palettes', '1');
+            this._onUpdate('patterns', 'Q');
+            this._onUpdate('effects',  'A');
+            this._onUpdate('loops',    'V');
+            this._onUpdate('_gpreset', '');
+        }
+
+        // ── Analog: Left stick Y → mic gain ──────────────────────────────
+        const lyRaw = gp.axes[1] ?? 0;
+        const ly    = Math.abs(lyRaw) < GamepadHandler.DEADZONE ? 0 : lyRaw;
+        if (ly !== 0) {
+            st.gain = Math.max(0, Math.min(3.0, st.gain - ly * 0.015));
+            this._onUpdate('_gpgain', st.gain);
+        }
+
+        // ── Analog: Right stick X → discrete pattern (threshold snap) ────
+        const rxRaw = gp.axes[2] ?? 0;
+        const rx    = Math.abs(rxRaw) < GamepadHandler.DEADZONE ? 0 : rxRaw;
+        const adR   = this._axisDebounce;
+        if (rx > GamepadHandler.AXIS_THRESHOLD && !adR.rx_pos && now - (adR.rx_t ?? 0) > 200) {
+            st.pattern = (st.pattern + 1) % 10;
+            this._onUpdate('patterns', KEY_MAPS.patterns[st.pattern]);
+            adR.rx_pos = true; adR.rx_t = now;
+        } else if (rx < -GamepadHandler.AXIS_THRESHOLD && !adR.rx_neg && now - (adR.rx_t ?? 0) > 200) {
+            st.pattern = (st.pattern - 1 + 10) % 10;
+            this._onUpdate('patterns', KEY_MAPS.patterns[st.pattern]);
+            adR.rx_neg = true; adR.rx_t = now;
+        } else if (Math.abs(rx) < GamepadHandler.DEADZONE) {
+            adR.rx_pos = adR.rx_neg = false;
+        }
+    }
+
+    get state() { return this._state; }
+}
+
+// ══════════════════════════════════════════════
+//  PREVIEW PANEL
+// ══════════════════════════════════════════════
+
+class PreviewPanel {
+    // Renders a thumbnail of the current state at 320×180 @ 15fps.
+    // Runs inside the same rAF loop but skips frames via timestamp gate —
+    // no second loop, no extra thread, ~1/40th the canvas area of 1080p.
+    //
+    // When the projector is open and sends back ImageBitmaps (every 6 frames),
+    // we display those instead — the local renderer then pauses automatically.
+
+    static W = 320;
+    static H = 180;
+    static INTERVAL_MS = 66;   // ~15fps
+
+    constructor(stateRef) {
+        this._state     = stateRef;
+        this._canvas    = document.getElementById('preview-canvas');
+        this._ctx       = this._canvas.getContext('2d');
+        this._renderer  = new Renderer(this._canvas);
+        this._lastRender = 0;
+        this._fromBitmap = false;  // true when receiving projector frames
+        this._dot       = document.getElementById('preview-dot');
+        this._srcLabel  = document.getElementById('preview-src');
+        this._stLabel   = document.getElementById('preview-state-label');
+    }
+
+    // Called from BackendController._loop() every rAF
+    tick(now) {
+        if (this._fromBitmap) return;  // projector is feeding us — skip local render
+        if (now - this._lastRender < PreviewPanel.INTERVAL_MS) return;
+        this._lastRender = now;
+        this._renderer.render(this._state);
+        this._updateLabels();
+    }
+
+    // Called when a transferable ImageBitmap arrives from the projector
+    receiveBitmap(bitmap) {
+        this._fromBitmap = true;
+        this._ctx.drawImage(bitmap, 0, 0, PreviewPanel.W, PreviewPanel.H);
+        bitmap.close();
+        this._dot.className = 'preview-dot sync';
+        this._srcLabel.textContent = 'PROJECTOR SYNC · 10fps';
+        this._updateLabels();
+    }
+
+    fallbackToLocal() {
+        this._fromBitmap = false;
+        this._dot.className = 'preview-dot live';
+        this._srcLabel.textContent = 'LOCAL · 15fps';
+    }
+
+    _updateLabels() {
+        const { palette: p, pattern: pat, effect: e } = this._state;
+        this._stLabel.textContent = `PAL:${p} PAT:${pat} EFX:${e}`;
+        if (!this._fromBitmap) this._dot.className = 'preview-dot live';
+    }
+}
+
+// ══════════════════════════════════════════════
+//  BACKEND CONTROLLER
+// ══════════════════════════════════════════════
+
+class BackendController {
+    constructor() {
+        this._state    = createState();
+        this._sab      = new SabTransport();
+        this._audio    = new AudioEngine();
+        this._ui       = new BackendUI();
+        this._preview  = new PreviewPanel(this._state);
+        this._gamepad  = new GamepadHandler(this._state, this._onInputUpdate.bind(this));
+        this._projWin  = null;
+        this._counter  = 0;
+        this._romAtlas = null;   // RomAtlas | null — shared state for preview + projector
+
+        this._bindButtons();
+        this._bindRomLoader();
+        this._ui.setGamepadStatus(false);
+    }
+
+    // Unified input callback for both keyboard and gamepad
+    _onInputUpdate(group, key) {
+        switch (group) {
+            case 'space':
+                this._ui.flashSpace();
+                this._ui.flashGamepadBtn('gp-a');
+                break;
+            case 'palettes': this._ui.updateKeyGroup('palettes', key); this._ui.flashGamepadBtn('gp-lr');  break;
+            case 'patterns': this._ui.updateKeyGroup('patterns', key); this._ui.flashGamepadBtn('gp-lr2'); break;
+            case 'effects':  this._ui.updateKeyGroup('effects',  key); this._ui.flashGamepadBtn('gp-dpad-x'); break;
+            case 'loops':    this._ui.updateKeyGroup('loops',    key); this._ui.flashGamepadBtn('gp-dpad-y'); break;
+            case '_gpconnect':
+                this._ui.setGamepadStatus(true, key);
+                this._ui.log(`Gamepad connected: ${key}`);
+                break;
+            case '_gpdisconnect':
+                this._ui.setGamepadStatus(false);
+                this._ui.log('Gamepad disconnected.');
+                break;
+            case '_gpreset':
+                this._ui.log('Gamepad: state reset to defaults.');
+                this._ui.flashGamepadBtn('gp-start');
+                break;
+            case '_gpgain':
+                this._ui.syncGainSlider(key);
+                break;
+        }
+    }
+
+    _bindRomLoader() {
+        const zone  = document.getElementById('rom-drop-zone');
+        const input = document.getElementById('rom-file-input');
+
+        // State for rescan
+        let _buf    = null;
+        let _header = null;
+        let _banks  = [];
+
+        const ui = {
+            label:      document.getElementById('rom-drop-label'),
+            strip:      document.getElementById('rom-tile-strip'),
+            meta:       document.getElementById('rom-meta'),
+            meta2:      document.getElementById('rom-meta2'),
+            modeLabel:  document.getElementById('rom-mode-label'),
+            scanCtrl:   document.getElementById('rom-scan-controls'),
+            scanMode:   document.getElementById('rom-scan-mode'),
+            bankRow:    document.getElementById('rom-bank-row'),
+            bankSel:    document.getElementById('rom-bank-sel'),
+            manualRow:  document.getElementById('rom-manual-row'),
+            offStart:   document.getElementById('rom-off-start'),
+            offEnd:     document.getElementById('rom-off-end'),
+            qualSlider: document.getElementById('rom-quality'),
+            qualVal:    document.getElementById('rom-quality-val'),
+            rescanBtn:  document.getElementById('rom-rescan'),
+        };
+
+        // Scan mode UI toggle
+        ui.scanMode.addEventListener('change', () => {
+            ui.bankRow.style.display   = ui.scanMode.value === 'bank'   ? 'flex' : 'none';
+            ui.manualRow.style.display = ui.scanMode.value === 'manual' ? 'flex' : 'none';
+        });
+
+        // Quality slider label
+        ui.qualSlider.addEventListener('input', () => {
+            ui.qualVal.textContent = `${ui.qualSlider.value}%`;
+        });
+
+        // Apply tile results from a RomAtlas
+        const applyAtlas = (atlas, colors) => {
+            this._romAtlas = atlas;
+            this._preview._renderer.setRom(atlas);
+
+            ui.strip.style.display = 'block';
+            atlas.renderStrip(ui.strip, colors.c1, colors.c2);
+
+            document.getElementById('rom-tile-count').textContent = atlas.tileCount;
+            ui.meta.style.display    = 'flex';
+            ui.modeLabel.style.display = 'block';
+            this._sendRomToProjector();
+        };
+
+        // Build scan options from current UI state
+        const buildOpts = () => {
+            const minScore = parseInt(ui.qualSlider.value) / 100;
+            const mode     = ui.scanMode.value;
+
+            if (mode === 'auto') {
+                return { start: 0x150, end: _buf.byteLength, minScore };
+            }
+            if (mode === 'bank') {
+                const bank = _banks[parseInt(ui.bankSel.value)] ?? _banks[0];
+                return { start: bank?.start ?? 0x150, end: bank?.end ?? _buf.byteLength, minScore };
+            }
+            // manual
+            const parseHex = (s, fallback) => {
+                const n = parseInt(s.trim(), s.trim().startsWith('0x') ? 16 : 10);
+                return isNaN(n) ? fallback : n;
+            };
+            return {
+                start:    parseHex(ui.offStart.value, 0x150),
+                end:      parseHex(ui.offEnd.value,   _buf.byteLength),
+                minScore,
+            };
+        };
+
+        // Run parse and update UI
+        const scan = (opts) => {
+            if (!_buf) return;
+            const atlas  = RomParser.parse(_buf, opts);
+            const colors = { c1: '#00ffcc', c2: '#ff0055' };
+            applyAtlas(atlas, colors);
+            this._ui.log(`Scan [0x${(opts.start??0x150).toString(16)}–0x${(opts.end??_buf.byteLength).toString(16)}] → ${atlas.tileCount} tiles (quality≥${Math.round((opts.minScore??0.35)*100)}%)`);
+            return atlas;
+        };
+
+        // Rescan button
+        ui.rescanBtn.addEventListener('click', () => scan(buildOpts()));
+
+        // ── File load ───────────────────────────────────────────────────────
+        const load = async (file) => {
+            if (!file) return;
+            const MAX_MB = 8;
+            if (file.size > MAX_MB * 1024 * 1024) {
+                this._ui.log(`ROM too large (${(file.size/1048576).toFixed(1)}MB > ${MAX_MB}MB)`);
+                return;
+            }
+            this._ui.log(`Loading: ${file.name} (${(file.size/1024).toFixed(0)} KB)…`);
+            zone.classList.remove('loaded');
+            ui.label.textContent = '⟳ PARSING…';
+
+            try {
+                _buf    = await file.arrayBuffer();
+                _header = RomParser.parseHeader(_buf);
+                _banks  = _header ? RomParser.getBanks(_buf, _header) : [];
+
+                // Populate bank dropdown
+                ui.bankSel.innerHTML = '';
+                _banks.forEach((b, i) => {
+                    const opt = document.createElement('option');
+                    opt.value = i;
+                    opt.textContent = b.label;
+                    ui.bankSel.appendChild(opt);
+                });
+
+                // Update header meta
+                if (_header) {
+                    document.getElementById('rom-title').textContent     = _header.title;
+                    document.getElementById('rom-size').textContent      = `${(file.size/1024).toFixed(0)}KB`;
+                    document.getElementById('rom-cart-type').textContent = _header.cartType;
+                    document.getElementById('rom-bank-count').textContent= _header.bankCount;
+                    const chkEl = document.getElementById('rom-chk-status');
+                    chkEl.textContent = `CHK: ${_header.checksumOk ? 'OK ✓' : 'FAIL ✗'}`;
+                    chkEl.style.color = _header.checksumOk ? 'var(--fg)' : 'var(--accent)';
+                    ui.meta2.style.display = 'flex';
+
+                    this._ui.log(`Header: "${_header.title}" | ${_header.cartType} | ${_header.bankCount} banks | CGB:${_header.isCGB?'YES':'NO'} | CHK:${_header.checksumOk?'OK':'FAIL'}`);
+
+                    // Auto-update manual end offset to full ROM
+                    ui.offEnd.value = `0x${_buf.byteLength.toString(16)}`;
+                } else {
+                    this._ui.log('No valid GB header found — scanning entire file.');
+                    document.getElementById('rom-title').textContent = 'NO HEADER';
+                    ui.meta2.style.display = 'flex';
+                }
+
+                // Show scan controls
+                ui.scanCtrl.style.display = 'block';
+
+                // Run initial scan
+                const atlas = scan(buildOpts());
+                if (atlas?.tileCount === 0) {
+                    this._ui.log('No tiles found at this quality. Try lowering the QUALITY slider or changing scan range.');
+                }
+
+                zone.classList.add('loaded');
+                ui.label.textContent = `◈ ${_header?.title ?? file.name} LOADED`;
+
+            } catch (err) {
+                this._ui.log(`ROM error: ${err.message}`);
+                ui.label.textContent = '▸ DRAG & DROP .gb/.gbc OR CLICK TO LOAD';
+            }
+        };
+
+        zone.addEventListener('click',  () => input.click());
+        input.addEventListener('change', (e) => load(e.target.files[0]));
+        zone.addEventListener('dragover',  (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+        zone.addEventListener('dragleave', ()  => zone.classList.remove('dragover'));
+        zone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            zone.classList.remove('dragover');
+            load(e.dataTransfer.files[0]);
+        });
+    }
+
+    // Serialize tile shade data and send to projector (≤32KB)
+    _sendRomToProjector() {
+        if (!this._romAtlas || !this._projWin || this._projWin.closed) return;
+        // Each tile: Uint8Array(64). Serialize as flat Uint8Array, then transfer.
+        const count = this._romAtlas.tileCount;
+        const flat  = new Uint8Array(count * 64);
+        for (let i = 0; i < count; i++) {
+            flat.set(this._romAtlas._tiles[i], i * 64);
+        }
+        // Clone (not transfer) so we keep the local copy
+        const copy = new Uint8Array(flat);
+        this._projWin.postMessage({ type: 'ROM_DATA', tileCount: count, tiles: copy }, '*', [copy.buffer]);
+    }
+
+    _bindButtons() {
+        document.getElementById('btn-init').addEventListener('click', async (e) => {
+            try {
+                await this._audio.init();
+
+                const sabOk = this._sab.init();
+                this._ui.setSabStatus(sabOk);
+                this._ui.log(sabOk
+                    ? 'Audio pipeline active. SAB buffer allocated.'
+                    : 'Audio pipeline active. SAB unavailable — using postMessage fallback.');
+
+                new KeyboardHandler(this._state, this._onInputUpdate.bind(this));
+
+                document.getElementById('audio-gain').addEventListener('input', ({ target }) => {
+                    this._state.gain = target.value / 100;
+                    document.getElementById('gain-val').innerText = `${target.value}%`;
+                });
+
+                e.target.disabled = true;
+                e.target.innerText = 'ENGINE ONLINE';
+                document.getElementById('btn-projector').disabled = false;
+                requestAnimationFrame(this._loop.bind(this));
+            } catch (err) {
+                this._ui.log(`ERROR: ${err.message}`);
+                alert('Mic access needed!');
+            }
+        });
+
+        document.getElementById('btn-projector').addEventListener('click', () => {
+            const url = `${window.location.href.split('?')[0]}?mode=projector`;
+            this._projWin = window.open(url, 'Projector', 'width=1280,height=720,menubar=no,toolbar=no,location=no');
+            this._ui.log('Launching display window...');
+
+            window.addEventListener('message', (e) => {
+                if (e.data === 'PROJECTOR_READY') {
+                    this._ui.log('Display sync established.');
+                    this._projWin.postMessage({
+                        type: 'INIT',
+                        useSab: this._sab.active,
+                        sab: this._sab.active ? this._sab.buffer : null,
+                    }, '*');
+                    // If ROM already loaded, send it to the new projector window
+                    if (this._romAtlas) {
+                        setTimeout(() => this._sendRomToProjector(), 200);
+                    }
+                }
+                // Receive bitmap frame from projector
+                if (e.data?.type === 'PREVIEW_FRAME' && e.data.bitmap) {
+                    this._preview.receiveBitmap(e.data.bitmap);
+                }
+            });
+        });
+    }
+
+    _loop(now) {
+        // Audio
+        const { vol, freqs } = this._audio.read(this._state.gain);
+        Object.assign(this._state, { vol, freqs });
+        this._ui.updateVU(vol);
+
+        // Gamepad — polls inside existing rAF, zero overhead
+        this._gamepad.poll();
+
+        // Sync state to projector
+        if (this._sab.active) {
+            this._sab.write(this._state, this._counter++);
+        } else if (this._projWin && !this._projWin.closed) {
+            this._projWin.postMessage({ type: 'STATE_UPDATE', state: this._state }, '*');
+        }
+
+        // If projector closed, fall back to local preview
+        if (this._projWin?.closed) {
+            this._projWin = null;
+            this._preview.fallbackToLocal();
+        }
+
+        // Thumbnail preview — throttled internally to 15fps
+        this._preview.tick(now);
+
+        requestAnimationFrame(this._loop.bind(this));
+    }
+}
+
+// ══════════════════════════════════════════════
+//  ROM PARSER  (Game Boy 2bpp tile extraction)
+// ══════════════════════════════════════════════
+
+// ══════════════════════════════════════════════
+//  ROM PARSER  (Game Boy — header-aware 2bpp tile extraction)
+// ══════════════════════════════════════════════
+
+class RomParser {
+    static MAX_TILES  = 512;
+    static TILE_BYTES = 16;   // 8×8 px, 2bpp = 16 bytes
+
+    // ── Header parsing ──────────────────────────────────────────────────
+
+    // Parse the GB cartridge header into a metadata object.
+    // Returns null if the buffer is too small or the checksum fails.
+    static parseHeader(buffer) {
+        if (buffer.byteLength < 0x150) return null;
+        const d = new Uint8Array(buffer);
+
+        // Validate header checksum (0x014D) — sum of 0x134..0x14C, subtract, subtract 1
+        let chk = 0;
+        for (let i = 0x134; i <= 0x14C; i++) chk = (chk - d[i] - 1) & 0xFF;
+        const checksumOk = chk === d[0x14D];
+
+        // Title: 0x134-0x143 (older DMG ROMs), but 0x143 is CGB flag in newer ones
+        const cgbFlag   = d[0x143];
+        const isCGB     = cgbFlag === 0x80 || cgbFlag === 0xC0;
+        const titleLen  = isCGB ? 11 : 16;
+        let title = '';
+        for (let i = 0; i < titleLen; i++) {
+            const c = d[0x134 + i];
+            if (c === 0) break;
+            if (c >= 0x20 && c < 0x80) title += String.fromCharCode(c);
+        }
+
+        const cartTypeCode = d[0x147];
+        const romSizeCode  = d[0x148];
+        const ramSizeCode  = d[0x149];
+
+        // ROM size in bytes from header code
+        const ROM_SIZES = {
+            0x00: 32768,   0x01: 65536,   0x02: 131072,
+            0x03: 262144,  0x04: 524288,  0x05: 1048576,
+            0x06: 2097152, 0x07: 4194304, 0x08: 8388608,
+        };
+        const headerRomBytes = ROM_SIZES[romSizeCode] ?? buffer.byteLength;
+        const bankCount      = Math.max(2, Math.ceil(headerRomBytes / 16384));
+
+        // Cartridge type name
+        const CART_TYPES = {
+            0x00:'ROM ONLY', 0x01:'MBC1',       0x02:'MBC1+RAM',  0x03:'MBC1+RAM+BAT',
+            0x05:'MBC2',     0x06:'MBC2+BAT',   0x08:'ROM+RAM',   0x09:'ROM+RAM+BAT',
+            0x0B:'MMM01',    0x0F:'MBC3+TIM+BAT',0x10:'MBC3+TIM+RAM+BAT',
+            0x11:'MBC3',     0x12:'MBC3+RAM',   0x13:'MBC3+RAM+BAT',
+            0x19:'MBC5',     0x1A:'MBC5+RAM',   0x1B:'MBC5+RAM+BAT',
+            0x1C:'MBC5+RUM', 0x20:'MBC6',       0x22:'MBC7',
+        };
+
+        return {
+            title:        title.trim() || 'UNKNOWN',
+            isCGB,
+            cartType:     CART_TYPES[cartTypeCode] ?? `0x${cartTypeCode.toString(16).toUpperCase()}`,
+            cartTypeCode,
+            romSizeCode,
+            ramSizeCode,
+            bankCount,
+            headerRomBytes,
+            checksumOk,
+        };
+    }
+
+    // ── Tile quality scoring ────────────────────────────────────────────
+
+    // Score a decoded 8×8 shade tile (64 bytes, values 0-3) for "graphicness".
+    // Returns 0..1. Higher = more likely to be a real graphic tile.
+    //
+    // Key signals:
+    //   Structural coherence: adjacent pixels share shade → smooth shapes
+    //   Row-pair consistency: consecutive rows similar → horizontal strokes
+    //   Anti-noise: high-entropy byte pairs decode to random pixels → code
+    static scoreTile(shade) {
+        let sameH = 0, sameV = 0;
+        let rowVarSum = 0;
+        const hist = [0, 0, 0, 0];
+
+        for (let r = 0; r < 8; r++) {
+            let rowMin = 3, rowMax = 0;
+            for (let c = 0; c < 8; c++) {
+                const px  = shade[r * 8 + c];
+                hist[px]++;
+                if (c < 7 && shade[r * 8 + c] === shade[r * 8 + c + 1]) sameH++;
+                if (r < 7 && shade[r * 8 + c] === shade[(r + 1) * 8 + c]) sameV++;
+                if (px < rowMin) rowMin = px;
+                if (px > rowMax) rowMax = px;
+            }
+            rowVarSum += rowMax - rowMin;    // 0=flat row, 3=max variation
+        }
+
+        // Coherence: fraction of pixel pairs that share a shade value
+        const coherence = (sameH + sameV) / (7 * 8 + 8 * 7);  // 0..1
+
+        // Row variety: tiles with some row variation are interesting;
+        // all-flat or all-max-variation tiles are boring/noisy
+        const rowVar = rowVarSum / (8 * 3);   // 0..1
+        const rowScore = 1 - Math.abs(rowVar - 0.5) * 2;   // peak at 0.5
+
+        // Color variety: using 2-3 of the 4 shades is typical for GB art
+        const usedColors = hist.filter(x => x > 0).length;
+        const colorScore = usedColors >= 2 ? (usedColors === 2 ? 0.8 : usedColors === 3 ? 1.0 : 0.6) : 0;
+
+        // Global fill: how many pixels are non-zero
+        const filled = hist[1] + hist[2] + hist[3];
+        const fillRatio = filled / 64;
+        // Penalize nearly empty (<6%) or nearly solid (>95%)
+        const fillScore = fillRatio < 0.06 || fillRatio > 0.95 ? 0
+                        : 1 - Math.abs(fillRatio - 0.5);
+
+        return (coherence * 0.40 + rowScore * 0.25 + colorScore * 0.20 + fillScore * 0.15);
+    }
+
+    // ── Main parse method ───────────────────────────────────────────────
+
+    // scan options: { start: byteOffset, end: byteOffset, minScore: 0..1 }
+    static parse(buffer, opts = {}) {
+        const data  = new Uint8Array(buffer);
+        const start = opts.start ?? 0x150;     // skip header by default
+        const end   = Math.min(opts.end ?? data.length, data.length);
+        const minQ  = opts.minScore ?? 0.35;   // quality gate
+
+        // Align start to 16-byte boundary
+        const scanStart = Math.ceil(start / 16) * 16;
+        const all       = [];
+
+        for (let off = scanStart; off + 16 <= end; off += 16) {
+            // Quick reject: skip 16-byte blocks where every byte is identical
+            // (padding / NOP sleds / empty VRAM)
+            const b0 = data[off];
+            let allSame = true;
+            for (let i = 1; i < 16; i++) {
+                if (data[off + i] !== b0) { allSame = false; break; }
+            }
+            if (allSame) continue;
+
+            // Decode 2bpp → shade
+            const shade = new Uint8Array(64);
+            for (let row = 0; row < 8; row++) {
+                const lo = data[off + row * 2];
+                const hi = data[off + row * 2 + 1];
+                for (let bit = 7; bit >= 0; bit--) {
+                    shade[row * 8 + (7 - bit)] = ((hi >> bit) & 1) << 1 | ((lo >> bit) & 1);
+                }
+            }
+
+            const score = RomParser.scoreTile(shade);
+            if (score < minQ) continue;
+
+            // Hash for dedup
+            let h = 0;
+            for (let p = 0; p < 64; p++) h = (Math.imul(h, 31) + shade[p]) >>> 0;
+
+            all.push({ shade, score, hash: h, offset: off });
+        }
+
+        // Deduplicate by hash, keep higher-score copy
+        const seen = new Map();
+        for (const t of all) {
+            const prev = seen.get(t.hash);
+            if (!prev || t.score > prev.score) seen.set(t.hash, t);
+        }
+
+        // Sort by score descending, take top MAX_TILES
+        const sorted = [...seen.values()]
+            .sort((a, b) => b.score - a.score)
+            .slice(0, RomParser.MAX_TILES);
+
+        return new RomAtlas(sorted.map(t => t.shade), sorted.map(t => t.score));
+    }
+
+    // Legacy title helper (kept for compatibility)
+    static getTitle(buffer) {
+        return RomParser.parseHeader(buffer)?.title ?? 'UNKNOWN';
+    }
+
+    // ── Bank scan helpers ───────────────────────────────────────────────
+
+    // Return an array of {bank, start, end, label} for a ROM
+    static getBanks(buffer, header) {
+        const banks = [];
+        const fileSize = buffer.byteLength;
+
+        // Bank 0: 0x0150 (after header) to 0x4000
+        if (fileSize > 0x150) {
+            banks.push({ bank: 0, start: 0x150,  end: Math.min(0x4000, fileSize), label: 'BANK 0 (header+code)' });
+        }
+        // Banks 1..N: each 16KB starting at 0x4000
+        const nBanks = header ? header.bankCount : Math.ceil(fileSize / 16384);
+        for (let b = 1; b < nBanks && b * 16384 < fileSize; b++) {
+            const s = b * 16384;
+            const e = Math.min(s + 16384, fileSize);
+            banks.push({ bank: b, start: s, end: e, label: `BANK ${b} (0x${s.toString(16).toUpperCase()})` });
+        }
+        return banks;
+    }
+}
+
+// ══════════════════════════════════════════════
+//  ROM ATLAS  — Sprite Sheet renderer
+//
+//  Architecture:
+//    Load time  : decode shade[] → bake all tiles into one OffscreenCanvas
+//                 sprite sheet (N tiles × 8px in a grid).  Cost: O(N).
+//    Run time   : drawImage(sheet, sx,sy,8,8, dx,dy,sz,sz)
+//                 → single GPU blit, zero CPU pixel work per frame.
+//
+//  Palette caching:
+//    Each (c1,c2) pair gets its own sheet, stored in a Map.
+//    Sheets are built lazily on first use and reused on subsequent frames.
+//    Max 10 cached sheets (covers all palettes without thrashing).
+// ══════════════════════════════════════════════
+
+class RomAtlas {
+    // Tiles per row in the sprite sheet grid
+    static COLS = 32;
+
+    constructor(shadeArrays, scores = null) {
+        this._tiles  = shadeArrays;  // Uint8Array(64)[] — shade 0-3 per pixel
+        this._scores = scores;       // float[] quality scores (optional)
+        this._count  = shadeArrays.length;
+
+        // Sprite sheet cache: `${c1},${c2}` → OffscreenCanvas
+        this._sheets = new Map();
+
+        // Grid dimensions for the sprite sheet
+        this._cols = RomAtlas.COLS;
+        this._rows = Math.ceil(this._count / RomAtlas.COLS);
+    }
+
+    get tileCount() { return this._count; }
+
+    // ── Sprite sheet builder ────────────────────────────────────────────
+    // Called ONCE per palette change, not per frame.
+    // Writes all tile pixels into a single OffscreenCanvas using putImageData,
+    // then subsequent draws use only drawImage (GPU path, no CPU pixel work).
+
+    _buildSheet(c1Hex, c2Hex) {
+        const key = `${c1Hex},${c2Hex}`;
+        const cached = this._sheets.get(key);
+        if (cached) return cached;
+
+        const cols  = this._cols;
+        const rows  = this._rows;
+        const sheet = new OffscreenCanvas(cols * 8, Math.max(1, rows) * 8);
+        const sCtx  = sheet.getContext('2d');
+
+        // Parse palette colors once
+        const c1 = RomAtlas._hex2rgb(c1Hex);
+        const c2 = RomAtlas._hex2rgb(c2Hex);
+
+        // Shared ImageData for each 8×8 tile
+        const img = new ImageData(8, 8);
+        const d   = img.data;
+
+        for (let i = 0; i < this._count; i++) {
+            const tile = this._tiles[i];
+
+            // Encode shade → RGBA (shade 0 = fully transparent)
+            for (let p = 0; p < 64; p++) {
+                const sh  = tile[p];
+                const idx = p << 2;   // p * 4
+                if (sh === 0) {
+                    d[idx]=0; d[idx+1]=0; d[idx+2]=0; d[idx+3]=0;
+                } else if (sh === 1) {
+                    // dim c2 — 40% brightness, full opacity
+                    d[idx]=c2.r>>2; d[idx+1]=c2.g>>2; d[idx+2]=c2.b>>2; d[idx+3]=180;
+                } else if (sh === 2) {
+                    // full c2
+                    d[idx]=c2.r; d[idx+1]=c2.g; d[idx+2]=c2.b; d[idx+3]=230;
+                } else {
+                    // full c1 (dominant)
+                    d[idx]=c1.r; d[idx+1]=c1.g; d[idx+2]=c1.b; d[idx+3]=255;
+                }
+            }
+
+            // Place tile into sheet grid
+            sCtx.putImageData(img, (i % cols) * 8, Math.floor(i / cols) * 8);
+        }
+
+        // Evict oldest entry when cache is full (keeps memory bounded)
+        if (this._sheets.size >= 10) {
+            this._sheets.delete(this._sheets.keys().next().value);
+        }
+        this._sheets.set(key, sheet);
+        return sheet;
+    }
+
+    // ── Runtime draw — zero CPU pixel work ─────────────────────────────
+    // Single drawImage call per tile. alpha is applied via ctx.globalAlpha
+    // (set by the _cell helper in Renderer, not here).
+
+    draw(ctx, idx, x, y, size, c1Hex, c2Hex, alpha = 1) {
+        if (this._count === 0) return;
+        const i  = ((idx % this._count) + this._count) % this._count;
+        const sh = this._buildSheet(c1Hex, c2Hex);   // cached on second+ call
+        ctx.globalAlpha = alpha;
+        ctx.drawImage(sh,
+            (i % this._cols) * 8,          // sx
+            Math.floor(i / this._cols) * 8, // sy
+            8, 8,                           // sWidth, sHeight
+            x, y, size, size               // dx, dy, dWidth, dHeight
+        );
+    }
+
+    // ── Sequence helper ─────────────────────────────────────────────────
+    // Returns 5 tile indices spread evenly across the atlas, unique per pattern.
+
+    getSeq(patternIdx, count = 5) {
+        if (this._count === 0) return [];
+        const step   = Math.max(1, Math.floor(this._count / count));
+        const offset = Math.floor((patternIdx / 10) * this._count) % this._count;
+        const seq    = [];
+        for (let i = 0; i < count; i++) seq.push((offset + i * step) % this._count);
+        return seq;
+    }
+
+    // ── Strip preview ───────────────────────────────────────────────────
+    // Renders all tiles as a single horizontal row onto an HTMLCanvasElement.
+    // Uses the sprite sheet: one drawImage call per tile (fast).
+
+    renderStrip(canvas, c1Hex, c2Hex) {
+        const n   = this._count;
+        const sh  = this._buildSheet(c1Hex, c2Hex);
+        canvas.width  = n * 8;
+        canvas.height = 8;
+        const sc  = canvas.getContext('2d');
+        sc.clearRect(0, 0, n * 8, 8);
+        for (let i = 0; i < n; i++) {
+            sc.drawImage(sh,
+                (i % this._cols) * 8, Math.floor(i / this._cols) * 8, 8, 8,
+                i * 8, 0, 8, 8
+            );
+        }
+    }
+
+    // ── Palette invalidation ────────────────────────────────────────────
+    // Call this to drop cached sheets when palette colors are known to change
+    // (optional — sheets are also built lazily on first draw with a new palette).
+    clearSheets() { this._sheets.clear(); }
+
+    // ── Internal helpers ────────────────────────────────────────────────
+    static _hex2rgb(hex) {
+        const n = parseInt(hex.replace('#', ''), 16);
+        return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+    }
+}
+
+
+// ══════════════════════════════════════════════
+//  VISUAL PALETTES & CONSTANTS
+// ══════════════════════════════════════════════
+
+const PALETTES = [
+    { bg: '#050505', c1: '#00ffcc', c2: '#ff0055' },  // 1 Cyberpunk
+    { bg: '#000000', c1: '#00ff00', c2: '#ffffff' },  // 2 Matrix
+    { bg: '#110022', c1: '#ff00ff', c2: '#00ffff' },  // 3 Vaporwave
+    { bg: '#1a0505', c1: '#ff3300', c2: '#ffcc00' },  // 4 Meltdown
+    { bg: '#eeeeee', c1: '#000000', c2: '#ff0000' },  // 5 Mirror's Edge
+    { bg: '#0a0a0a', c1: '#ffffff', c2: '#555555' },  // 6 Noir
+    { bg: '#001a33', c1: '#00ccff', c2: '#ffffff' },  // 7 Tron
+    { bg: '#222200', c1: '#ffff00', c2: '#ff8800' },  // 8 Hazard
+    { bg: '#050011', c1: '#aa00ff', c2: '#0055ff' },  // 9 Deep Space
+    { bg: '#050505', c1: '#ff0055', c2: '#ff0055' },  // 0 Panic
+];
+
+const SPEED_MAP = [0, 0.2, 0.5, 1, 2, 4, -1];
+
+// ══════════════════════════════════════════════
+//  RENDERER
+// ══════════════════════════════════════════════
+
+class Renderer {
+    constructor(canvas) {
+        this._canvas  = canvas;
+        this._ctx     = canvas.getContext('2d');
+        this._t       = 0;
+        this._vectors = [];
+        this._lastSpaceTrig = 0;
+        this._rom     = null;   // RomAtlas | null
+        this._resize();
+        window.addEventListener('resize', this._resize.bind(this));
+    }
+
+    // Called from BackendController / ProjectorController when ROM is loaded
+    setRom(atlas) {
+        this._rom = atlas;
+    }
+
+    // ── ROM cell helper ───────────────────────────────────────────────────
+    // Draws one tile from `seq` at position `i % seq.length`.
+    // `seq` = rom.getSeq(pattern, 5) or null when no ROM is loaded.
+    // Returns true if a tile was drawn (caller can skip its own draw).
+    // Note: RomAtlas.draw() sets ctx.globalAlpha internally — no need to set it here.
+    _cell(ctx, seq, i, x, y, size, alpha, colors) {
+        if (!seq) return false;
+        // draw() sets globalAlpha = alpha and does a single GPU drawImage crop — no putImageData
+        this._rom.draw(ctx, seq[((i % seq.length) + seq.length) % seq.length],
+            x, y, size, colors.c1, colors.c2, alpha);
+        return true;
+    }
+
+    _resize() {
+        this._canvas.width  = window.innerWidth;
+        this._canvas.height = window.innerHeight;
+    }
+
+    get _cw() { return this._canvas.width;  }
+    get _ch() { return this._canvas.height; }
+    get _cx() { return this._cw / 2; }
+    get _cy() { return this._ch / 2; }
+
+    render(state) {
+        this._t += 0.02 * (SPEED_MAP[state.loop] ?? 1);
+
+        const colors = PALETTES[state.palette] ?? PALETTES[0];
+        const { ctx, _t: t, _cw: cw, _ch: ch, _cx: cx, _cy: cy } = this;
+        const { vol, freqs, effect } = state;
+
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = effect === 0 ? colors.bg : `${colors.bg}dd`;
+        ctx.fillRect(0, 0, cw, ch);
+        ctx.lineWidth = 2 + (vol / 50);
+
+        this._drawPattern(state, colors);
+        this._handleGlyphBursts(state, colors);
+        this._applyEffect(state, colors);
+    }
+
+    get ctx() { return this._ctx; }
+
+    // ── Patterns ──────────────────────────────
+
+    _drawPattern(state, colors) {
+        const { ctx, _t: t, _cw: cw, _ch: ch, _cx: cx, _cy: cy } = this;
+        const { vol, freqs, pattern } = state;
+
+        // ── ROM sequence: 5 tiles sampled from ROM, unique per pattern ──────
+        // When null → all cases fall back to their original drawing code exactly.
+        const seq = this._rom ? this._rom.getSeq(pattern, 5) : null;
+
+        switch (pattern) {
+
+            case 0: { // Q: Dot Matrix
+                const spacing = seq ? 20 : 20;
+                ctx.fillStyle = colors.c1;
+                let n = 0;
+                for (let x = 0; x < cw; x += spacing) {
+                    const freqVal = (freqs[Math.floor((x / cw) * 16)] ?? 0) / 255;
+                    for (let y = 0; y < ch; y += spacing) {
+                        const w1 = Math.sin(x * 0.05 + t * (1 + freqVal));
+                        const w2 = Math.cos(y * 0.05 - t);
+                        if (w1 * w2 > (0.1 - (vol / 1000))) {
+                            if (!this._cell(ctx, seq, n++, x - 8, y - 8, 16, 0.9, colors)) {
+                                ctx.fillRect(
+                                    Math.floor((x + Math.round(w1) * spacing) / spacing) * spacing,
+                                    Math.floor((y + Math.round(w2) * spacing) / spacing) * spacing,
+                                    6, 6
+                                );
+                            }
+                        }
+                    }
+                }
+                ctx.globalAlpha = 1;
+                break;
+            }
+
+            case 1: { // W: Circular Audio Scope
+                if (seq) {
+                    // ROM mode: tiles placed at sample points along the scope curve
+                    let n = 0;
+                    for (let i = 0; i <= Math.PI * 2; i += 0.25) {
+                        const fIdx = Math.floor((i / (Math.PI * 2)) * 15);
+                        const r = 100 + freqs[fIdx] + (vol * Math.sin(t * 5));
+                        const x = cx + Math.cos(i + t) * r;
+                        const y = cy + Math.sin(i + t) * r;
+                        this._cell(ctx, seq, n++, x - 8, y - 8, 16, 0.85, colors);
+                    }
+                    ctx.globalAlpha = 1;
+                } else {
+                    ctx.strokeStyle = colors.c2;
+                    ctx.beginPath();
+                    for (let i = 0; i <= Math.PI * 2; i += 0.1) {
+                        const fIdx = Math.floor((i / (Math.PI * 2)) * 15);
+                        const r = 100 + freqs[fIdx] + (vol * Math.sin(t * 5));
+                        const x = cx + Math.cos(i + t) * r;
+                        const y = cy + Math.sin(i + t) * r;
+                        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                    }
+                    ctx.closePath();
+                    ctx.stroke();
+                }
+                break;
+            }
+
+            case 2: { // E: ASCII field / ROM tiles
+                const ASCII_CHARS = '@#%&$!?/\\|{}[]<>~^*+=:;_-0OI';
+                const SZ  = seq ? 16 : 24;
+                const cols = Math.ceil(cw / SZ);
+                const rows = Math.ceil(ch / SZ);
+
+                const field = (wx, wy) =>
+                    Math.sin(wx * 0.055 + t * 0.7)  * Math.cos(wy * 0.065 - t * 0.5)  * 0.45 +
+                    Math.sin(wx * 0.110 - t * 1.1)  * Math.sin(wy * 0.095 + t * 0.65) * 0.35 +
+                    Math.cos(wx * 0.030 + wy * 0.045 + t * 0.35) * 0.20;
+
+                ctx.save();
+                ctx.textBaseline = 'top';
+                if (!seq) ctx.font = `${SZ - 2}px monospace`;
+
+                let n = 0;
+                for (let c = 0; c < cols; c++) {
+                    for (let r = 0; r < rows; r++) {
+                        const fv  = freqs[Math.floor((c / cols) * 16)] / 255;
+                        const val = field(c * SZ, r * SZ);
+                        if (val < (0.05 - fv * 0.45 - vol / 600)) continue;
+                        // Bit-rot: per-cell temporal flicker
+                        const rot = Math.sin(c * 0.7 + r * 1.3 + t * 0.9) * 0.5 + 0.5;
+                        if (rot < 0.2) continue;
+                        const alpha = 0.3 + rot * 0.7;
+                        if (!this._cell(ctx, seq, n++, c * SZ, r * SZ, SZ, alpha, colors)) {
+                            const fi = Math.floor(((c * 17 + r * 31) % ASCII_CHARS.length + ASCII_CHARS.length) % ASCII_CHARS.length);
+                            ctx.globalAlpha = alpha;
+                            ctx.fillStyle = (c + r) % 2 === 0 ? colors.c1 : colors.c2;
+                            ctx.fillText(ASCII_CHARS[fi], c * SZ, r * SZ);
+                        }
+                    }
+                }
+
+                ctx.globalAlpha = 1;
+                ctx.restore();
+                break;
+            }
+
+            case 3: { // R: ANSI field / ROM tiles
+                const ANSI_POOL = '╔╗╚╝╠╣╦╩╬═║─│┌┐└┘├┤┬┴┼█▓▒░▄▀▌▐';
+                const SZ   = seq ? 16 : 20;
+                const cols = Math.ceil(cw / SZ);
+                const rows = Math.ceil(ch / SZ);
+
+                const field = (wx, wy) =>
+                    Math.sin(wx * 0.070 + t * 0.60) * Math.cos(wy * 0.080 - t * 0.45) * 0.40 +
+                    Math.cos(wx * 0.130 - t * 0.90) * Math.sin(wy * 0.120 + t * 0.55) * 0.35 +
+                    Math.sin((wx + wy) * 0.040 + t * 0.25) * 0.25;
+
+                ctx.save();
+                ctx.textBaseline = 'top';
+                if (!seq) ctx.font = `${SZ - 1}px monospace`;
+
+                let n = 0;
+                for (let c = 0; c < cols; c++) {
+                    for (let r = 0; r < rows; r++) {
+                        const fv      = freqs[Math.floor((c / cols) * 16)] / 255;
+                        const val     = field(c * SZ, r * SZ);
+                        if (val < (0.02 - fv * 0.45 - vol / 620)) continue;
+                        // Scan-line burst corruption
+                        const scan = Math.sin(r * 0.8 + t * 4.5);
+                        if (scan > 0.92 && Math.sin(c * 3.7 + t) > 0.5) continue;
+                        const alpha = 0.4 + Math.abs(val) * 0.6;
+                        if (!this._cell(ctx, seq, n++, c * SZ, r * SZ, SZ, alpha, colors)) {
+                            const fi = Math.floor(((c * 13 + r * 19) % ANSI_POOL.length + ANSI_POOL.length) % ANSI_POOL.length);
+                            ctx.globalAlpha = alpha;
+                            ctx.fillStyle = (c + r) % 2 === 0 ? colors.c1 : colors.c2;
+                            ctx.fillText(ANSI_POOL[fi], c * SZ, r * SZ);
+                        }
+                    }
+                }
+
+                ctx.globalAlpha = 1;
+                ctx.restore();
+                break;
+            }
+
+            case 4: { // T: Grid Floor Perspective
+                ctx.strokeStyle = colors.c1;
+                for (let i = 0; i < ch; i += 30) {
+                    const y = cy + Math.pow(i / ch, 2) * ch;
+                    const offset = (t * 50) % 30;
+                    ctx.beginPath(); ctx.moveTo(0, y + offset); ctx.lineTo(cw, y + offset); ctx.stroke();
+                }
+                // Frequency bars — ROM tiles stacked vertically, or fillRects
+                for (let i = 0; i < 16; i++) {
+                    const barH = freqs[i] * 1.5;
+                    const bx   = cx - 400 + i * 50;
+                    if (seq) {
+                        const tileH = 16;
+                        for (let row = 0; row < Math.ceil(barH / tileH); row++) {
+                            const ty = cy - row * tileH - tileH;
+                            this._cell(ctx, seq, i + row, bx, ty, tileH, 0.9, colors);
+                        }
+                        ctx.globalAlpha = 1;
+                    } else {
+                        ctx.fillStyle = colors.c2;
+                        ctx.fillRect(bx, cy, 40, -barH);
+                    }
+                }
+                break;
+            }
+
+            case 5: { // Y: Sine Waveform
+                if (seq) {
+                    let n = 0;
+                    for (let x = 0; x < cw; x += 18) {
+                        const fIdx = Math.floor((x / cw) * 16);
+                        const y = cy + Math.sin(x * 0.01 + t * 5) * freqs[fIdx];
+                        this._cell(ctx, seq, n++, x - 8, y - 8, 16, 0.9, colors);
+                    }
+                    ctx.globalAlpha = 1;
+                } else {
+                    ctx.strokeStyle = colors.c1;
+                    ctx.beginPath();
+                    for (let x = 0; x < cw; x += 10) {
+                        const fIdx = Math.floor((x / cw) * 16);
+                        const y = cy + Math.sin(x * 0.01 + t * 5) * freqs[fIdx];
+                        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+                }
+                break;
+            }
+
+            case 6: { // U: Binary Rain / Tile Cascade
+                if (seq) {
+                    // Each "column" drops a tile at a time-offset position
+                    const cols = Math.ceil(cw / 18);
+                    for (let i = 0; i < cols; i++) {
+                        if (freqs[i % 16] <= 60) continue;
+                        const x = i * 18;
+                        const y = ((Math.sin(i * 3.7) * 0.5 + 0.5) * ch + t * 180) % ch;
+                        this._cell(ctx, seq, i, x, y, 16, 0.9, colors);
+                    }
+                    ctx.globalAlpha = 1;
+                } else {
+                    ctx.fillStyle = colors.c2;
+                    ctx.font = '20px monospace';
+                    for (let i = 0; i < 30; i++) {
+                        if (freqs[i % 16] > 100) {
+                            const x = (i * 50 + t * 100) % cw;
+                            const y = (Math.sin(i * 123) * ch + t * 200) % ch;
+                            ctx.fillText(Math.random() > 0.5 ? '1' : '0', x, y);
+                        }
+                    }
+                }
+                break;
+            }
+
+            case 7: { // I: Concentric Polygons
+                const sides = 3 + Math.floor(vol / 50);
+                if (seq) {
+                    // Tiles at every polygon vertex
+                    let n = 0;
+                    for (let r = 50; r < Math.min(cw, ch) * 0.7; r += 80) {
+                        const dir = r % 2 === 0 ? 1 : -1;
+                        for (let i = 0; i <= sides; i++) {
+                            const ang = (i / sides) * Math.PI * 2 + t * dir;
+                            const x = cx + Math.cos(ang) * r;
+                            const y = cy + Math.sin(ang) * r;
+                            this._cell(ctx, seq, n++, x - 8, y - 8, 16, 0.9, colors);
+                        }
+                    }
+                    ctx.globalAlpha = 1;
+                } else {
+                    ctx.strokeStyle = colors.c1;
+                    for (let r = 50; r < cw; r += 80) {
+                        const dir = r % 2 === 0 ? 1 : -1;
+                        ctx.beginPath();
+                        for (let i = 0; i <= sides; i++) {
+                            const ang = (i / sides) * Math.PI * 2 + t * dir;
+                            const x = cx + Math.cos(ang) * r;
+                            const y = cy + Math.sin(ang) * r;
+                            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                        }
+                        ctx.stroke();
+                    }
+                }
+                break;
+            }
+
+            case 8: { // O: Target Lock
+                if (seq) {
+                    // Tiles along crosshair and arc sample points
+                    let n = 0;
+                    // Crosshair H
+                    for (let x = 0; x < cw; x += 24) this._cell(ctx, seq, n++, x, cy - 8, 16, 0.7, colors);
+                    // Crosshair V
+                    for (let y = 0; y < ch; y += 24) this._cell(ctx, seq, n++, cx - 8, y, 16, 0.7, colors);
+                    // Two ring arcs
+                    const radii = [100 + vol, 150 + freqs[2]];
+                    radii.forEach(radius => {
+                        for (let a = 0; a < Math.PI * 2; a += 0.2) {
+                            const x = cx + Math.cos(a + t) * radius;
+                            const y = cy + Math.sin(a + t) * radius;
+                            this._cell(ctx, seq, n++, x - 8, y - 8, 16, 0.85, colors);
+                        }
+                    });
+                    ctx.globalAlpha = 1;
+                } else {
+                    ctx.strokeStyle = colors.c2;
+                    ctx.beginPath(); ctx.arc(cx, cy, 100 + vol, 0, Math.PI * 2); ctx.stroke();
+                    ctx.beginPath(); ctx.arc(cx, cy, 150 + freqs[2], t, t + Math.PI); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(cw, cy); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, ch); ctx.stroke();
+                }
+                break;
+            }
+
+            case 9: { // P: Noise Static
+                if (seq) {
+                    // Random tiles scattered by volume
+                    for (let i = 0; i < Math.floor(vol * 1.5); i++) {
+                        const x = Math.random() * cw;
+                        const y = Math.random() * ch;
+                        const sz = 8 + Math.random() * 16;
+                        this._cell(ctx, seq, i, x, y, sz, 0.6 + Math.random() * 0.4, colors);
+                    }
+                    ctx.globalAlpha = 1;
+                } else {
+                    ctx.fillStyle = colors.c1;
+                    for (let i = 0; i < vol * 5; i++) {
+                        ctx.fillRect(Math.random() * cw, Math.random() * ch, Math.random() * 10, Math.random() * 10);
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+    // ── Spacebar Glyph Bursts ─────────────────
+
+    _handleGlyphBursts(state, colors) {
+        const { ctx, _cw: cw, _ch: ch } = this;
+        const { spaceTrig } = state;
+
+        // Fallback char pools (used when no ROM is loaded)
+        const BOX_D  = '╔╗╚╝╠╣╦╩╬═║╪╫';
+        const BOX_S  = '┌┐└┘├┤┬┴┼─│╴╵╶╷';
+        const ASCII  = '@#%&!?/\\|{}[]<>~^*+=:;_-';
+        const BLOCKS = '█▓▒░▄▀▌▐▙▛▜▟■▪';
+
+        const SIGILS = [
+            ['  ╬  ', '═╬═╬═╬═', '  ╬  '],
+            [' ╔══╗ ', '╠ ◉◉ ╣', ' ╚══╝ '],
+            ['╔═╗╔═╗', '║◈║║◈║', '╚╦╩╦╝', '  ╩╩  '],
+            ['   ╦   ', ' ╔═╩═╗ ', '═╣ ◈ ╠═', ' ╚═╦═╝ ', '   ╩   '],
+            [' ↑↑↑ ', '←← ╬ →→', ' ↓↓↓ '],
+        ];
+
+        const uh = (a, b, s = 0) => {
+            let h = (Math.imul(a ^ 0xdeadbeef, 2246822519)
+                   ^ Math.imul(b ^ 0xcafebabe, 1013904223)
+                   ^ Math.imul(s, 374761393)) >>> 0;
+            h = Math.imul(h ^ (h >>> 16), 0x85ebca6b) >>> 0;
+            h ^= h >>> 13;
+            return (h >>> 0) / 0xFFFFFFFF;
+        };
+
+        // Spawn
+        if (spaceTrig !== this._lastSpaceTrig) {
+            this._lastSpaceTrig = spaceTrig;
+            const type = Math.floor(Math.random() * 5);
+            const seed = Math.floor(Math.random() * 65535);
+            this._vectors.push({
+                x: Math.random() * cw, y: Math.random() * ch,
+                type, life: 1.0, age: 0, seed,
+                c1: Math.random() > 0.5 ? colors.c1 : colors.c2,
+                c2: Math.random() > 0.5 ? colors.c2 : colors.c1,
+                decay: [0.013, 0.011, 0.015, 0.014, 0.012][type],
+                // Each burst gets its own 5-tile seq offset by seed
+                seq: this._rom ? this._rom.getSeq(Math.floor(seed % 10), 5) : null,
+            });
+        }
+
+        ctx.save();
+        ctx.textBaseline = 'middle';
+
+        for (let i = this._vectors.length - 1; i >= 0; i--) {
+            const v = this._vectors[i];
+            v.age  += 1;
+            v.life -= v.decay;
+            if (v.life <= 0) { this._vectors.splice(i, 1); continue; }
+
+            // Per-burst helper: draw tile from burst seq OR fallback text
+            const bc = (pool, idx, x, y, sz, alpha) => {
+                if (!this._cell(ctx, v.seq, idx, x - sz/2, y - sz/2, sz, alpha,
+                        { c1: v.c1, c2: v.c2 })) {
+                    const fi = Math.floor(uh(idx, v.seed, 0) * pool.length);
+                    ctx.globalAlpha = alpha;
+                    ctx.fillStyle   = (idx % 2 === 0) ? v.c1 : v.c2;
+                    ctx.fillText(pool[fi], x, y);
+                }
+            };
+
+            switch (v.type) {
+
+                case 0: { // Radial Ring Burst
+                    const RINGS = 6, SZ = 15;
+                    if (!v.seq) ctx.font = `${SZ}px monospace`;
+                    for (let ring = 0; ring < RINGS; ring++) {
+                        if (v.age < ring * 5) continue;
+                        const ringAge  = v.age - ring * 5;
+                        const radius   = ringAge * 4 + ring * 18;
+                        const nChars   = Math.max(6, Math.floor(2 * Math.PI * radius / SZ));
+                        const ringLife = Math.max(0, 1 - ringAge / 45);
+                        const pool = ring % 2 === 0 ? BOX_D : BOX_S;
+                        for (let j = 0; j < nChars; j++) {
+                            const ang = (j / nChars) * Math.PI * 2 + v.age * 0.018;
+                            bc(pool, j + ring * 10,
+                                v.x + Math.cos(ang) * radius,
+                                v.y + Math.sin(ang) * radius,
+                                SZ, v.life * ringLife);
+                        }
+                    }
+                    break;
+                }
+
+                case 1: { // Nested ANSI Frames
+                    const MAX_F = 7, SZ = 13;
+                    if (!v.seq) ctx.font = `${SZ}px monospace`;
+                    for (let f = 0; f < MAX_F; f++) {
+                        if (v.age < f * 4) continue;
+                        const fw = (f + 1) * 3, fh = (f + 1) * 2;
+                        const frameLife = Math.max(0, 1 - (v.age - f * 4) / 38);
+                        let n = f * 30;
+                        for (let c = -fw; c <= fw; c++) {
+                            for (let r = -fh; r <= fh; r++) {
+                                const edgeX = Math.abs(c) === fw, edgeY = Math.abs(r) === fh;
+                                if (!edgeX && !edgeY) continue;
+                                if (!(edgeX && edgeY)) {
+                                    if (uh(c + fw, r + fh, v.seed + f + Math.floor(v.age / 4)) < 0.28 * (1 - frameLife)) continue;
+                                }
+                                let glyph = edgeX && edgeY
+                                    ? (c < 0 ? (r < 0 ? '╔' : '╚') : (r < 0 ? '╗' : '╝'))
+                                    : (edgeX ? '║' : '═');
+                                bc([glyph], n++, v.x + c * SZ, v.y + r * SZ, SZ, v.life * frameLife);
+                            }
+                        }
+                    }
+                    break;
+                }
+
+                case 2: { // ASCII Supernova
+                    const SPOKES = 10 + Math.floor(uh(v.seed, 0, 1) * 10), SZ = 13;
+                    if (!v.seq) ctx.font = `${SZ}px monospace`;
+                    for (let s = 0; s < SPOKES; s++) {
+                        const baseAng = (s / SPOKES) * Math.PI * 2 + v.seed * 0.001;
+                        const reach   = Math.floor(v.age * 0.55);
+                        for (let d = 0; d < reach && d < 22; d++) {
+                            const r = d * SZ * 1.25;
+                            const ang = baseAng + Math.sin(d * 0.35 + v.age * 0.06) * 0.25;
+                            const pool = d < 4 ? BLOCKS : (d < 12 ? BOX_S : ASCII);
+                            bc(pool, s * 25 + d,
+                                v.x + Math.cos(ang) * r,
+                                v.y + Math.sin(ang) * r,
+                                SZ, v.life * Math.max(0, 1 - d / 22));
+                        }
+                    }
+                    break;
+                }
+
+                case 3: { // Block Column Drain
+                    const COLS = 4 + Math.floor(uh(v.seed, 1, 0) * 7);
+                    const ROWS = 14 + Math.floor(uh(v.seed, 2, 0) * 8);
+                    const SZ   = 11;
+                    const ox   = v.x - (COLS * SZ) / 2, oy = v.y - (ROWS * SZ) / 2;
+                    if (!v.seq) ctx.font = `${SZ}px monospace`;
+                    for (let c = 0; c < COLS; c++) {
+                        for (let r = 0; r < ROWS; r++) {
+                            const fillAge = v.age - r * 1.4 - c * 0.4;
+                            if (fillAge < 0) continue;
+                            const drainAge = fillAge - 18;
+                            if (drainAge > ROWS * 2) continue;
+                            const intensity = drainAge < 0
+                                ? Math.min(1, fillAge / 4)
+                                : Math.max(0, 1 - drainAge / (ROWS * 1.6));
+                            const bi = Math.min(BLOCKS.length - 1, Math.floor((1 - intensity) * BLOCKS.length));
+                            bc([BLOCKS[bi]], c * ROWS + r, ox + c * SZ + SZ/2, oy + r * SZ + SZ/2, SZ, v.life * intensity);
+                        }
+                    }
+                    break;
+                }
+
+                case 4: { // ASCII Sigil
+                    const SZ = 17;
+                    const sigil = SIGILS[Math.floor(uh(v.seed, 0, 99) * SIGILS.length)];
+                    if (!v.seq) ctx.font = `bold ${SZ}px monospace`;
+                    const fadeIn = Math.min(1, v.age / 12);
+                    const decayT = Math.pow(Math.max(0, 1 - v.life), 1.6);
+                    let n = 0;
+                    for (let row = 0; row < sigil.length; row++) {
+                        const line = sigil[row];
+                        for (let col = 0; col < line.length; col++) {
+                            if (line[col] === ' ') continue;
+                            const cr = uh(col, row, v.seed + Math.floor(v.age * 0.8));
+                            const glyph = cr < decayT
+                                ? (cr < decayT * 0.5 ? BOX_D : ASCII)[Math.floor(uh(col * 3, row * 7, v.age) * (cr < decayT * 0.5 ? BOX_D.length : ASCII.length))]
+                                : line[col];
+                            bc([glyph], n++,
+                                v.x + (col - line.length / 2) * SZ * 0.62,
+                                v.y + (row - sigil.length / 2) * SZ,
+                                SZ, v.life * fadeIn * (0.55 + 0.45 * (1 - cr * decayT)));
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        ctx.globalAlpha = 1.0;
+        ctx.restore();
+    }
+
+    // ── Post-processing Effects ───────────────
+
+    _applyEffect(state, colors) {
+        if (state.effect === 0) return;
+        const { ctx, _canvas: canvas, _cw: cw, _ch: ch, _t: t } = this;
+        const { vol, effect } = state;
+
+        switch (effect) {
+            case 1: // Chromatic Aberration
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.drawImage(canvas, 10 + (vol / 10), 0);
+                ctx.drawImage(canvas, -(10 + vol / 10), 0);
+                break;
+            case 2: // CRT Scanlines
+                ctx.fillStyle = 'rgba(0,0,0,0.4)';
+                for (let y = 0; y < ch; y += 4) ctx.fillRect(0, y, cw, 2);
+                break;
+            case 3: // Glitch Slice
+                if (Math.random() < 0.2 + (vol / 500)) {
+                    const gh = ch * (0.02 + Math.random() * 0.1);
+                    const gy = Math.random() * ch;
+                    ctx.drawImage(canvas, 0, gy, cw, gh, (Math.random() - 0.5) * 100, gy, cw, gh);
+                }
+                break;
+            case 4: // Invert Color Block
+                ctx.globalCompositeOperation = 'difference';
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(
+                    Math.random() * cw * 0.5, Math.random() * ch * 0.5,
+                    cw * 0.5 * Math.random(), ch * Math.random()
+                );
+                break;
+            case 5: // Pixelate / Mosaic
+                ctx.drawImage(canvas, 0, 0, cw * 0.1, ch * 0.1);
+                ctx.imageSmoothingEnabled = false;
+                ctx.drawImage(canvas, 0, 0, cw * 0.1, ch * 0.1, 0, 0, cw, ch);
+                ctx.imageSmoothingEnabled = true;
+                break;
+            case 6: // Feedback Zoom
+                ctx.drawImage(canvas, -10, -10, cw + 20, ch + 20);
+                break;
+            case 7: // Hue Shift
+                ctx.globalCompositeOperation = 'hue';
+                ctx.fillStyle = `hsl(${(t * 100) % 360}, 100%, 50%)`;
+                ctx.fillRect(0, 0, cw, ch);
+                break;
+            case 8: // Total Chaos
+                ctx.drawImage(canvas, (Math.random() - 0.5) * vol * 0.5, (Math.random() - 0.5) * vol * 0.5);
+                ctx.globalCompositeOperation = 'difference';
+                ctx.fillStyle = Math.random() > 0.5 ? colors.c1 : colors.c2;
+                if (Math.random() > 0.7) ctx.fillRect(0, Math.random() * ch, cw, 50);
+                break;
+        }
+        ctx.globalCompositeOperation = 'source-over';
+    }
+}
+
+// ══════════════════════════════════════════════
+//  PROJECTOR CONTROLLER
+// ══════════════════════════════════════════════
+
+class ProjectorController {
+    constructor() {
+        this._state    = createState();
+        this._sab      = new SabTransport();
+        this._renderer = new Renderer(document.getElementById('visualCanvas'));
+        this._bindComms();
+        this._bindFullscreen();
+    }
+
+    _bindComms() {
+        window.addEventListener('message', ({ data }) => {
+            if (data.type === 'INIT') {
+                if (data.useSab && data.sab) this._sab.attach(data.sab);
+                requestAnimationFrame(this._loop.bind(this));
+            }
+            if (data.type === 'STATE_UPDATE') {
+                Object.assign(this._state, data.state);
+            }
+            // Reconstruct RomAtlas from serialized tile shade data
+            if (data.type === 'ROM_DATA' && data.tiles && data.tileCount > 0) {
+                const shadeArrays = [];
+                const flat = new Uint8Array(data.tiles);
+                for (let i = 0; i < data.tileCount; i++) {
+                    shadeArrays.push(flat.slice(i * 64, i * 64 + 64));
+                }
+                const atlas = new RomAtlas(shadeArrays);
+                this._renderer.setRom(atlas);
+            }
+        });
+
+        if (window.opener) {
+            window.opener.postMessage('PROJECTOR_READY', '*');
+        } else {
+            document.body.innerHTML = "<h1 style='color:red;margin:20px'>ERR: MUST OPEN FROM CONTROLLER</h1>";
+        }
+    }
+
+    _bindFullscreen() {
+        const btn       = document.getElementById('btn-fullscreen');
+        const container = document.getElementById('projector-container');
+
+        btn.addEventListener('click', () => {
+            const req = container.requestFullscreen
+                ?? container.webkitRequestFullscreen
+                ?? container.mozRequestFullScreen;
+            req?.call(container);
+        });
+
+        // Re-show button when exiting fullscreen
+        const onFsChange = () => {
+            const isFs = !!(document.fullscreenElement
+                ?? document.webkitFullscreenElement
+                ?? document.mozFullScreenElement);
+            btn.style.display = isFs ? 'none' : 'block';
+        };
+
+        document.addEventListener('fullscreenchange',       onFsChange);
+        document.addEventListener('webkitfullscreenchange', onFsChange);
+        document.addEventListener('mozfullscreenchange',    onFsChange);
+    }
+
+    _loop() {
+        this._sab.read(this._state);
+        this._renderer.render(this._state);
+
+        // Send a preview bitmap to the controller every 6 frames (~10fps at 60fps).
+        // createImageBitmap is async but non-blocking — it resolves off-frame
+        // and postMessage with transfer: zero copy, no serialization cost.
+        this._frameCount = (this._frameCount ?? 0) + 1;
+        if (this._frameCount % 6 === 0 && window.opener && !window.opener.closed) {
+            createImageBitmap(this._renderer._canvas,
+                0, 0,
+                this._renderer._canvas.width,
+                this._renderer._canvas.height,
+                { resizeWidth: 320, resizeHeight: 180, resizeQuality: 'low' }
+            ).then(bitmap => {
+                window.opener.postMessage({ type: 'PREVIEW_FRAME', bitmap }, '*', [bitmap]);
+            }).catch(() => {});
+        }
+
+        requestAnimationFrame(this._loop.bind(this));
+    }
+}
+
+// ══════════════════════════════════════════════
+//  ENTRY POINT
+// ══════════════════════════════════════════════
+
+if (IS_PROJECTOR) {
+    document.getElementById('backend').style.display           = 'none';
+    document.getElementById('projector-container').style.display = 'block';
+    new ProjectorController();
+} else {
+    new BackendController();
+}
+</script>
+</body>
+</html>
