@@ -3,12 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Playground — Ciro</title>
+    <title>KRANK/playground</title>
     <meta name="description" content="Experimentos interactivos y proyectos experimentales">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 
     <style>
         :root {
@@ -31,7 +27,8 @@
         html { scroll-behavior: smooth; }
 
         body {
-            font-family: 'DM Sans', sans-serif;
+            /* Tipografía corporativa clásica de los 90s */
+            font-family: Arial, Helvetica, sans-serif;
             background-color: var(--bg);
             color: var(--text);
             min-height: 100vh;
@@ -47,27 +44,6 @@
             pointer-events: none;
             z-index: 0;
             opacity: 0.6;
-        }
-
-        /* ── AMBIENT GLOW ── */
-        .ambient {
-            position: fixed;
-            width: 600px;
-            height: 600px;
-            border-radius: 50%;
-            filter: blur(120px);
-            pointer-events: none;
-            z-index: 0;
-        }
-        .ambient-1 {
-            background: radial-gradient(circle, rgba(71,179,254,0.08), transparent 70%);
-            top: -200px;
-            left: -100px;
-        }
-        .ambient-2 {
-            background: radial-gradient(circle, rgba(106,21,246,0.1), transparent 70%);
-            bottom: -200px;
-            right: -100px;
         }
 
         /* ── HEADER ── */
@@ -87,18 +63,13 @@
         }
 
         .nav-logo {
-            font-family: 'Syne', sans-serif;
-            font-weight: 800;
-            font-size: 1rem;
-            background: linear-gradient(to right, #23029b, #6a15f6, #47b3fe);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: var(--primary); /* Color sólido, sin degradado */
             letter-spacing: -0.02em;
         }
 
         .nav-back {
-            font-family: 'DM Sans', sans-serif;
             font-size: 0.85rem;
             color: var(--text-muted);
             text-decoration: none;
@@ -124,9 +95,8 @@
         }
 
         .hero-label {
-            font-family: 'DM Sans', sans-serif;
             font-size: 0.75rem;
-            font-weight: 500;
+            font-weight: bold;
             letter-spacing: 0.2em;
             text-transform: uppercase;
             color: var(--primary);
@@ -136,9 +106,8 @@
         }
 
         .hero-title {
-            font-family: 'Syne', sans-serif;
             font-size: clamp(2.8rem, 6vw, 5rem);
-            font-weight: 800;
+            font-weight: bold;
             line-height: 1.05;
             letter-spacing: -0.04em;
             color: var(--text);
@@ -147,17 +116,14 @@
         }
 
         .hero-title span {
-            background: linear-gradient(135deg, #47b3fe 0%, #6a15f6 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: var(--primary); /* Color sólido, sin degradado */
         }
 
         .hero-sub {
             margin-top: 16px;
             font-size: 1rem;
             color: var(--text-muted);
-            font-weight: 300;
+            font-weight: normal;
             letter-spacing: 0.01em;
             max-width: 360px;
             opacity: 0;
@@ -228,13 +194,12 @@
             letter-spacing: 0.18em;
             text-transform: uppercase;
             color: var(--primary);
-            font-weight: 500;
+            font-weight: bold;
         }
 
         .card-title {
-            font-family: 'Syne', sans-serif;
             font-size: clamp(1.8rem, 3vw, 2.6rem);
-            font-weight: 800;
+            font-weight: bold;
             letter-spacing: -0.035em;
             line-height: 1.1;
             color: var(--text);
@@ -244,7 +209,7 @@
             font-size: 0.9rem;
             color: var(--text-muted);
             line-height: 1.65;
-            font-weight: 300;
+            font-weight: normal;
             max-width: 320px;
         }
 
@@ -254,11 +219,10 @@
             gap: 10px;
             margin-top: 8px;
             padding: 13px 28px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            background-color: var(--primary); /* Fondo sólido */
             color: #fff;
-            font-family: 'DM Sans', sans-serif;
             font-size: 0.9rem;
-            font-weight: 500;
+            font-weight: bold;
             text-decoration: none;
             border-radius: 50px;
             letter-spacing: 0.01em;
@@ -315,20 +279,20 @@
             filter: drop-shadow(0 4px 24px rgba(255,255,255,0.15));
         }
 
-        /* Card-specific colors */
-        .card-ar .icon-container { background: linear-gradient(135deg, rgba(71,179,254,0.15), rgba(71,179,254,0.05)); border: 1px solid rgba(71,179,254,0.2); }
+        /* Card-specific colors (Solid colors instead of gradients) */
+        .card-ar .icon-container { background-color: rgba(71,179,254,0.1); border: 1px solid rgba(71,179,254,0.2); }
         .card-ar .icon-container svg { color: #47b3fe; }
         .card-ar .card-tag { color: #47b3fe; }
 
-        .card-fuzzy .icon-container { background: linear-gradient(135deg, rgba(0,245,160,0.12), rgba(0,245,160,0.04)); border: 1px solid rgba(0,245,160,0.18); }
+        .card-fuzzy .icon-container { background-color: rgba(0,245,160,0.08); border: 1px solid rgba(0,245,160,0.18); }
         .card-fuzzy .icon-container svg { color: #00f5a0; }
         .card-fuzzy .card-tag { color: #00f5a0; }
 
-        .card-kineto .icon-container { background: linear-gradient(135deg, rgba(255,160,60,0.12), rgba(255,100,80,0.06)); border: 1px solid rgba(255,160,60,0.18); }
+        .card-kineto .icon-container { background-color: rgba(255,160,60,0.08); border: 1px solid rgba(255,160,60,0.18); }
         .card-kineto .icon-container svg { color: #ffa03c; }
         .card-kineto .card-tag { color: #ffa03c; }
 
-        .card-react .icon-container { background: linear-gradient(135deg, rgba(106,21,246,0.18), rgba(106,21,246,0.06)); border: 1px solid rgba(106,21,246,0.25); }
+        .card-react .icon-container { background-color: rgba(106,21,246,0.12); border: 1px solid rgba(106,21,246,0.25); }
         .card-react .icon-container svg { color: #9b6dff; }
         .card-react .card-tag { color: #9b6dff; }
 
@@ -392,7 +356,6 @@
 
         /* ── COUNTER ── */
         .slide-counter {
-            font-family: 'Syne', sans-serif;
             font-size: 0.75rem;
             color: var(--text-muted);
             letter-spacing: 0.05em;
@@ -407,29 +370,22 @@
         /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
             header { padding: 14px 20px; }
-
             .hero { padding-top: 100px; }
             .hero-title { font-size: 2.4rem; }
-
             .slider-wrapper { padding: 24px 12px 40px; }
-
             .card-inner {
                 grid-template-columns: 1fr;
                 gap: 28px;
                 padding: 32px 24px;
                 min-height: auto;
             }
-
             .card-right { order: -1; }
-
             .icon-container {
                 width: 130px;
                 height: 130px;
                 border-radius: 28px;
             }
-
             .icon-container svg { width: 60px; height: 60px; }
-
             .card-title { font-size: 1.8rem; }
             .card-desc { font-size: 0.85rem; }
         }
@@ -442,20 +398,13 @@
 </head>
 <body>
 
-    <div class="ambient ambient-1"></div>
-    <div class="ambient ambient-2"></div>
-
     <header>
-        <div class="nav-logo"><b><</b> &#10084; <b>></b></div>
-        <a href="index.html" class="nav-back">
-            <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
-            Volver al portfolio
-        </a>
+        <div class="nav-logo">KRANK/playground</div>
     </header>
 
     <div class="hero">
         <p class="hero-label">Experimentos</p>
-        <h1 class="hero-title">Play<span>ground</span></h1>
+        <h1 class="hero-title">KRANK/<span>playground</span></h1>
         <p class="hero-sub">Proyectos interactivos, prototipos y exploraciones tecnológicas.</p>
     </div>
 
@@ -463,7 +412,6 @@
         <div class="slider-track-outer">
             <div class="slider-track" id="sliderTrack">
 
-                <!-- AR TRACKING -->
                 <div class="project-card">
                     <div class="card-inner card-ar">
                         <div class="card-left">
@@ -490,14 +438,13 @@
                     </div>
                 </div>
 
-                <!-- FUZZYTRONIC VT -->
                 <div class="project-card">
                     <div class="card-inner card-fuzzy">
                         <div class="card-left">
                             <span class="card-tag">Visual / Código</span>
                             <h2 class="card-title">Fuzzytronic VT</h2>
                             <p class="card-desc">Interfaz visual generativa para Fuzzytronic live performances.</p>
-                            <a href="/fuzzy_vt" class="enter-btn" style="background: linear-gradient(135deg, #00f5a0, #00b472);">
+                            <a href="/fuzzy_vt" class="enter-btn" style="background-color: #00f5a0; color: #161617;">
                                 Abrir terminal
                                 <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
                             </a>
@@ -512,14 +459,13 @@
                     </div>
                 </div>
 
-                <!-- KINETOSYNTH -->
                 <div class="project-card">
                     <div class="card-inner card-kineto">
                         <div class="card-left">
                             <span class="card-tag">Síntesis de Audio</span>
                             <h2 class="card-title">Kinetosynth</h2>
                             <p class="card-desc">Gesture controlled synth core for Dreamspace Party holographic installation.</p>
-                            <a href="/kinetosynth" class="enter-btn" style="background: linear-gradient(135deg, #ffa03c, #ff5050);">
+                            <a href="/kinetosynth" class="enter-btn" style="background-color: #ffa03c; color: #161617;">
                                 Abrir sintetizador
                                 <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
                             </a>
@@ -537,14 +483,13 @@
                     </div>
                 </div>
 
-                <!-- REACTLIVE -->
                 <div class="project-card">
                     <div class="card-inner card-react">
                         <div class="card-left">
                             <span class="card-tag">Interactivo / Live</span>
                             <h2 class="card-title">React/Live</h2>
                             <p class="card-desc">Synth de tangibles virtuales de control gestual.</p>
-                            <a href="/reactlive" class="enter-btn" style="background: linear-gradient(135deg, #9b6dff, #6a15f6);">
+                            <a href="/reactlive" class="enter-btn" style="background-color: #9b6dff; color: #fff;">
                                 Abrir editor
                                 <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
                             </a>
@@ -562,10 +507,7 @@
                     </div>
                 </div>
 
-            </div><!-- /slider-track -->
-        </div><!-- /outer -->
-
-        <div class="slider-controls">
+            </div></div><div class="slider-controls">
             <button class="ctrl-btn prev" aria-label="Anterior">
                 <svg viewBox="0 0 36 36"><path d="M21.559,12.062 L15.618,17.984 L21.5221,23.944 C22.105,24.533 22.1021,25.482 21.5131,26.065 C21.2211,26.355 20.8391,26.4999987 20.4571,26.4999987 C20.0711,26.4999987 19.6851,26.352 19.3921,26.056 L12.4351,19.034 C11.8531,18.446 11.8551,17.4999987 12.4411,16.916 L19.4411,9.938 C20.0261,9.353 20.9781,9.354 21.5621,9.941 C22.1471,10.528 22.1451,11.478 21.5591,12.062 L21.559,12.062 Z"/></svg>
             </button>
@@ -598,7 +540,6 @@
         const total   = items.length;
         let current   = 0;
 
-        // Touch / drag
         let startX = 0, isDragging = false;
         const isTouchDevice = 'ontouchstart' in window;
 
@@ -615,7 +556,6 @@
         next.addEventListener('click', () => goTo(current + 1));
         dots.forEach(d => d.addEventListener('click', () => goTo(+d.dataset.index)));
 
-        // Drag
         function onStart(e) { isDragging = true; startX = isTouchDevice ? e.touches[0].pageX : e.pageX; track.style.transition = 'none'; }
         function onMove(e) {
             if (!isDragging) return;
