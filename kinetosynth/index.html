@@ -1,0 +1,1878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReactLive - Modular Gesture Synthesizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { overflow: hidden; background: #0a0a0f; font-family: 'Segoe UI', system-ui, sans-serif; }
+        #container { position: fixed; inset: 0; }
+        #video { position: absolute; width: 100%; height: 100%; object-fit: cover; opacity: 0; }
+        #canvas { position: absolute; inset: 0; }
+        
+        #overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(10,10,20,0.95), rgba(20,10,30,0.95));
+            display: flex; justify-content: center; align-items: center;
+            z-index: 100; transition: opacity 0.5s;
+        }
+        
+        .intro-container {
+            display: flex; gap: 60px; align-items: center; max-width: 1100px; padding: 40px;
+        }
+        
+        .intro-left { flex: 1; }
+        .intro-right { flex: 1; display: flex; flex-direction: column; align-items: center; }
+        
+        .logo-container {
+            width: 160px; height: 160px; position: relative; margin-bottom: 30px;
+        }
+        
+        .logo-ring {
+            position: absolute; border-radius: 50%; border: 2px solid;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        .logo-ring:nth-child(1) { inset: 0; border-color: rgba(59,130,246,0.8); }
+        .logo-ring:nth-child(2) { inset: 15px; border-color: rgba(139,92,246,0.6); animation-delay: 0.3s; }
+        .logo-ring:nth-child(3) { inset: 30px; border-color: rgba(236,72,153,0.4); animation-delay: 0.6s; }
+        .logo-core {
+            position: absolute; inset: 45px; border-radius: 50%;
+            background: radial-gradient(circle, #fff 0%, #3b82f6 50%, #8b5cf6 100%);
+            box-shadow: 0 0 40px rgba(139,92,246,0.6);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.7; }
+        }
+        
+        .title {
+            font-size: 3rem; font-weight: 800; margin-bottom: 10px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle { color: #888; font-size: 1.1rem; margin-bottom: 30px; }
+        
+        .object-legend {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+            margin-bottom: 30px; width: 100%;
+        }
+        
+        .legend-item {
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(255,255,255,0.05); padding: 10px 14px;
+            border-radius: 8px; font-size: 0.85rem; color: #ccc;
+        }
+        
+        .legend-shape {
+            width: 24px; height: 24px; display: flex;
+            justify-content: center; align-items: center;
+        }
+        
+        #startBtn {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border: none; color: #fff; padding: 18px 50px;
+            border-radius: 30px; font-size: 1.1rem; font-weight: bold;
+            cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 0 30px rgba(139,92,246,0.4);
+        }
+        #startBtn:hover { transform: scale(1.05); box-shadow: 0 0 40px rgba(139,92,246,0.6); }
+        
+        .mirror-toggle {
+            display: flex; align-items: center; justify-content: center;
+            gap: 12px; margin-bottom: 20px; color: #aaa; font-size: 0.9rem;
+        }
+        
+        .toggle-switch {
+            position: relative; width: 50px; height: 26px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0; width: 0; height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute; cursor: pointer; inset: 0;
+            background: #333; border-radius: 26px; transition: 0.3s;
+        }
+        
+        .toggle-slider:before {
+            content: ''; position: absolute; height: 20px; width: 20px;
+            left: 3px; bottom: 3px; background: #fff; border-radius: 50%;
+            transition: 0.3s;
+        }
+        
+        .toggle-switch input:checked + .toggle-slider {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        }
+        
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+        
+        .scale-selector {
+            display: flex; align-items: center; justify-content: center;
+            gap: 12px; margin-bottom: 20px; color: #aaa; font-size: 0.9rem;
+        }
+        
+        .scale-selector select {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff; border: 1px solid rgba(139,92,246,0.5);
+            padding: 10px 15px; border-radius: 8px; font-size: 0.9rem;
+            cursor: pointer; outline: none; transition: all 0.3s;
+        }
+        
+        .scale-selector select:hover {
+            border-color: rgba(139,92,246,0.8);
+            box-shadow: 0 0 10px rgba(139,92,246,0.3);
+        }
+        
+        .scale-selector select:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 15px rgba(139,92,246,0.4);
+        }
+        
+        .scale-selector select option {
+            background: #1a1a2e; color: #fff; padding: 10px;
+        }
+        
+        .instructions {
+            background: rgba(255,255,255,0.03); border-radius: 16px;
+            padding: 25px; border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .instruction-item {
+            display: flex; align-items: flex-start; gap: 12px;
+            margin-bottom: 15px; color: #aaa; font-size: 0.9rem;
+        }
+        .instruction-item i { color: #8b5cf6; margin-top: 3px; }
+        .instruction-item:last-child { margin-bottom: 0; }
+        
+        #loading {
+            display: none; flex-direction: column; align-items: center;
+            justify-content: center; text-align: center; color: #fff;
+        }
+        #loading.show { display: flex; }
+        
+        .loader-rings {
+            width: 80px; height: 80px; position: relative; margin-bottom: 20px;
+        }
+        .loader-ring {
+            position: absolute; inset: 0; border: 3px solid transparent;
+            border-radius: 50%; animation: spin 1.5s linear infinite;
+        }
+        .loader-ring:nth-child(1) { border-top-color: #3b82f6; }
+        .loader-ring:nth-child(2) { inset: 8px; border-right-color: #8b5cf6; animation-direction: reverse; }
+        .loader-ring:nth-child(3) { inset: 16px; border-bottom-color: #ec4899; }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .load-steps { text-align: left; margin-top: 20px; }
+        .load-step { color: #666; margin: 8px 0; transition: color 0.3s; display: flex; align-items: center; gap: 8px; }
+        .load-step.done { color: #22c55e; }
+        .load-step.active { color: #fff; }
+        
+        .fullscreen-btn {
+            position: fixed; top: 15px; right: 15px; z-index: 50;
+            background: rgba(0,0,0,0.7); color: #fff; border: 1px solid rgba(255,255,255,0.3);
+            padding: 10px 20px; border-radius: 25px; font-size: 0.9rem; font-weight: bold;
+            cursor: pointer; transition: all 0.3s; backdrop-filter: blur(10px);
+        }
+        .fullscreen-btn:hover {
+            background: rgba(139,92,246,0.7); border-color: rgba(139,92,246,0.8);
+            transform: scale(1.05);
+        }
+        .fullscreen-btn.hidden { display: none; }
+    </style>
+</head>
+<body>
+<div id="container">
+    <video id="video" playsinline muted></video>
+    <canvas id="canvas"></canvas>
+    
+    <button id="fullscreenBtn" class="fullscreen-btn">
+        <i class="fas fa-expand"></i> FULLSCREEN
+    </button>
+    
+    <div id="overlay">
+        <div class="intro-container" id="intro">
+            <div class="intro-left">
+                <div class="instructions">
+                    <h3 style="color:#fff;margin-bottom:20px;font-size:1.2rem">
+                        <i class="fas fa-hand-sparkles" style="color:#8b5cf6"></i> How to Play
+                    </h3>
+                    <div class="instruction-item">
+                        <i class="fas fa-hand-point-up"></i>
+                        <span><b>Pinch</b> (thumb + index) to grab and move objects</span>
+                    </div>
+                    <div class="instruction-item">
+                        <i class="fas fa-sync-alt"></i>
+                        <span><b>Rotate</b> while pinching to change parameters</span>
+                    </div>
+                    <div class="instruction-item">
+                        <i class="fas fa-bullseye"></i>
+                        <span>Drag <b>Generators</b> to center to activate sound</span>
+                    </div>
+                    <div class="instruction-item">
+                        <i class="fas fa-link"></i>
+                        <span>Place <b>Effects</b> between generators and center to process audio</span>
+                    </div>
+                    <div class="instruction-item">
+                        <i class="fas fa-wave-square"></i>
+                        <span><b>LFO</b> modulates nearby compatible objects</span>
+                    </div>
+                </div>
+                
+                <div class="object-legend" style="margin-top:20px">
+                    <div class="legend-item">
+                        <div class="legend-shape"><svg width="20" height="20"><rect x="2" y="2" width="16" height="16" fill="#3b82f6" rx="2"/></svg></div>
+                        <span>Generators (Noise, FM, Grain)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-shape"><svg width="20" height="20"><rect x="2" y="2" width="16" height="16" fill="#f59e0b" rx="6"/></svg></div>
+                        <span>Effects (Delay, Reverb, Filter, Distort, Bitcrush)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-shape"><svg width="20" height="20"><circle cx="10" cy="10" r="8" fill="#22c55e"/></svg></div>
+                        <span>Controller (LFO - modulates nearby objects)</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="intro-right">
+                <div class="logo-container">
+                    <div class="logo-ring"></div>
+                    <div class="logo-ring"></div>
+                    <div class="logo-ring"></div>
+                    <div class="logo-core"></div>
+                </div>
+                <h1 class="title">ReactLive</h1>
+                <p class="subtitle">Gesture-Controlled Modular Synthesizer</p>
+                
+                <div class="mirror-toggle">
+                    <span>Mirror Camera</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="mirrorToggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="scale-selector">
+                    <span>Musical Scale</span>
+                    <select id="scaleSelect">
+                        <option value="chromatic">Chromatic (all notes)</option>
+                        <option value="major" selected>Major (happy)</option>
+                        <option value="minor">Minor (sad)</option>
+                        <option value="pentatonic">Pentatonic (easy)</option>
+                        <option value="blues">Blues (jazzy)</option>
+                        <option value="dorian">Dorian (jazz/funk)</option>
+                        <option value="phrygian">Phrygian (spanish)</option>
+                        <option value="lydian">Lydian (dreamy)</option>
+                        <option value="mixolydian">Mixolydian (rock)</option>
+                        <option value="arabic">Arabic (exotic)</option>
+                    </select>
+                </div>
+                
+                <button id="startBtn">
+                    <i class="fas fa-play"></i> START EXPERIENCE
+                </button>
+                <p style="color:#666;font-size:0.8rem;margin-top:15px">Requires camera access</p>
+            </div>
+        </div>
+        
+        <div id="loading">
+            <div class="loader-rings">
+                <div class="loader-ring"></div>
+                <div class="loader-ring"></div>
+                <div class="loader-ring"></div>
+            </div>
+            <p style="font-size:1.1rem;margin-bottom:5px">Initializing ReactLive</p>
+            <p id="load-status" style="color:#888;font-size:0.9rem">Preparing audio engine...</p>
+            <div class="load-steps">
+                <div class="load-step" id="step-audio"><i class="fas fa-circle"></i> Audio Engine</div>
+                <div class="load-step" id="step-camera"><i class="fas fa-circle"></i> Camera Access</div>
+                <div class="load-step" id="step-ai"><i class="fas fa-circle"></i> Hand Tracking AI</div>
+                <div class="load-step" id="step-ready"><i class="fas fa-circle"></i> Ready</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+// CONSTANTS & CONFIGURATION
+// ═══════════════════════════════════════════════════════════════════════════════
+const PI = Math.PI, PI2 = PI * 2;
+
+// Mirror mode is handled by MediaPipe selfieMode
+// This variable is kept for UI consistency but doesn't affect behavior
+let isMirrored = true;
+
+const CFG = {
+    zoneRadius: 0.48,
+    objRadius: 0.062,
+    pinchOn: 0.06,
+    pinchOff: 0.09,
+    grabRadius: 0.13,
+    posSmooth: 0.25,
+    rotSmooth: 0.20,
+    connectDist: 0.20,
+    lfoConnectDist: 0.35,
+    betweenTolerance: 0.14
+};
+
+// Dynamic object positioning based on window dimensions
+function getObjectEdgeRadius() {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const aspect = w / h;
+    
+    // Ensure objects are clearly OUTSIDE the active zone
+    // Using objRadius * 2 + safety margin ensures no overlap
+    const safetyMargin = 0.06; // Extra margin to guarantee outside
+    const baseOffset = CFG.objRadius * 2 + safetyMargin;
+    
+    // Adjust for aspect ratio
+    if (aspect > 1.5) {
+        // Very wide screen - objects can spread more
+        return CFG.zoneRadius + baseOffset + 0.02;
+    } else if (aspect < 0.8) {
+        // Tall screen (mobile portrait) - need more margin
+        return CFG.zoneRadius + baseOffset + 0.08;
+    } else {
+        // Normal aspect ratio
+        return CFG.zoneRadius + baseOffset;
+    }
+}
+
+function updateObjectHomePositions() {
+    const edgeRadius = getObjectEdgeRadius();
+    const count = State.objects.length;
+    const padding = CFG.objRadius + 0.05;
+    
+    for (let i = 0; i < count; i++) {
+        const angle = (i / count) * PI2 - PI / 2;
+        const obj = State.objects[i];
+        
+        // Calculate new home position
+        let newHomeX = 0.5 + Math.cos(angle) * edgeRadius;
+        let newHomeY = 0.5 + Math.sin(angle) * edgeRadius;
+        
+        // Clamp to screen bounds with padding
+        newHomeX = Math.max(padding, Math.min(1 - padding, newHomeX));
+        newHomeY = Math.max(padding, Math.min(1 - padding, newHomeY));
+        
+        // Safety check: if still inside zone, push further out
+        const distFromCenter = Math.hypot(newHomeX - 0.5, newHomeY - 0.5);
+        if (distFromCenter < CFG.zoneRadius + CFG.objRadius) {
+            const pushDist = (CFG.zoneRadius + CFG.objRadius + 0.02) / distFromCenter;
+            newHomeX = 0.5 + (newHomeX - 0.5) * pushDist;
+            newHomeY = 0.5 + (newHomeY - 0.5) * pushDist;
+            newHomeX = Math.max(padding, Math.min(1 - padding, newHomeX));
+            newHomeY = Math.max(padding, Math.min(1 - padding, newHomeY));
+        }
+        
+        obj.homeX = newHomeX;
+        obj.homeY = newHomeY;
+        
+        // If object is not active, also update current position
+        if (!obj.active && obj.heldBy < 0) {
+            obj.targetX = obj.homeX;
+            obj.targetY = obj.homeY;
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// GLOBAL TEMPO
+// ═══════════════════════════════════════════════════════════════════════════════
+const Tempo = {
+    bpm: 90,
+    phase: 0,
+    lastTime: 0,
+    
+    get beatDuration() { return 60 / this.bpm; },
+    
+    update(time) {
+        const dt = (time - this.lastTime) / 1000;
+        this.lastTime = time;
+        this.phase = (this.phase + dt / this.beatDuration) % 1;
+        return this.phase;
+    },
+    
+    getPulse() {
+        return Math.sin(this.phase * PI2) * 0.5 + 0.5;
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// OBJECT TYPE DEFINITIONS
+// ═══════════════════════════════════════════════════════════════════════════════
+const OBJ_TYPES = {
+    synth:    { cat: 'generator', color: '#3b82f6', icon: '\uf83e', name: 'SYNTH' },
+    noise:    { cat: 'generator', color: '#06b6d4', icon: '\uf72e', name: 'NOISE' },
+    fm:       { cat: 'generator', color: '#8b5cf6', icon: '\uf625', name: 'FM' },
+    grain:    { cat: 'generator', color: '#14b8a6', icon: '\uf7e4', name: 'GRAIN' },
+    delay:    { cat: 'effect', color: '#f59e0b', icon: '\uf017', name: 'DELAY' },
+    reverb:   { cat: 'effect', color: '#ec4899', icon: '\uf773', name: 'REVERB' },
+    filter:   { cat: 'effect', color: '#a3e635', icon: '\uf0b0', name: 'FILTER' },
+    lpf:      { cat: 'effect', color: '#84cc16', icon: '\uf0dc', name: 'LPF' },
+    distort:  { cat: 'effect', color: '#ef4444', icon: '\uf0e7', name: 'DISTORT' },
+    bitcrush: { cat: 'effect', color: '#f97316', icon: '\uf538', name: 'BITCRUSH' },
+    lfo:      { cat: 'controller', color: '#22c55e', icon: '\uf2f1', name: 'LFO' }
+};
+
+const CONNECTIONS = {
+    generator: ['effect', 'output'],
+    effect: ['effect', 'output'],
+    controller: ['generator', 'effect'],
+    global: []
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MUSICAL SCALES
+// ═══════════════════════════════════════════════════════════════════════════════
+const SCALES = {
+    chromatic:   [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+    major:       [0, 2, 4, 5, 7, 9, 11],
+    minor:       [0, 2, 3, 5, 7, 8, 10],
+    pentatonic:  [0, 2, 4, 7, 9],
+    blues:       [0, 3, 5, 6, 7, 10],
+    dorian:      [0, 2, 3, 5, 7, 9, 10],
+    phrygian:    [0, 1, 3, 5, 7, 8, 10],
+    lydian:      [0, 2, 4, 6, 7, 9, 11],
+    mixolydian:  [0, 2, 4, 5, 7, 9, 10],
+    arabic:      [0, 1, 4, 5, 7, 8, 11]
+};
+
+let currentScale = 'major';
+const BASE_FREQ = 110; // A2
+
+function getScaleFrequency(normalizedValue) {
+    const scale = SCALES[currentScale];
+    const numOctaves = 2;
+    const totalNotes = scale.length * numOctaves;
+    
+    // Map normalized value (0-1) to note index
+    const noteIndex = Math.floor(normalizedValue * totalNotes) % totalNotes;
+    const octave = Math.floor(noteIndex / scale.length);
+    const scaleIndex = noteIndex % scale.length;
+    const semitone = scale[scaleIndex] + (octave * 12);
+    
+    // Convert semitone to frequency
+    return BASE_FREQ * Math.pow(2, semitone / 12);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// AUDIO ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+const Audio = {
+    ctx: null,
+    master: null,
+    compressor: null,
+    analyser: null,
+    analyserData: null,
+    delayNode: null, delayGain: null,
+    reverbNode: null, reverbGain: null,
+    filterNode: null, filterGain: null,
+    distortNode: null, distortGain: null,
+    
+    async init() {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        this.ctx = new AC({ latencyHint: 'interactive' });
+        if (this.ctx.state === 'suspended') await this.ctx.resume();
+        
+        this.compressor = this.ctx.createDynamicsCompressor();
+        this.compressor.threshold.value = -12;
+        this.compressor.ratio.value = 8;
+        this.compressor.connect(this.ctx.destination);
+        
+        this.master = this.ctx.createGain();
+        this.master.gain.value = 0.7;
+        this.master.connect(this.compressor);
+        
+        this.analyser = this.ctx.createAnalyser();
+        this.analyser.fftSize = 256;
+        this.analyserData = new Uint8Array(128);
+        this.master.connect(this.analyser);
+        
+        this.createEffects();
+    },
+    
+    createEffects() {
+        const ctx = this.ctx;
+        
+        // DELAY
+        this.delayNode = ctx.createDelay(2);
+        this.delayNode.delayTime.value = 0.3;
+        const delayFb = ctx.createGain();
+        delayFb.gain.value = 0.35;
+        this.delayGain = ctx.createGain();
+        this.delayGain.gain.value = 0;
+        this.delayNode.connect(delayFb);
+        delayFb.connect(this.delayNode);
+        this.delayNode.connect(this.delayGain);
+        this.delayGain.connect(this.master);
+        
+        // REVERB
+        const reverbLen = ctx.sampleRate * 2;
+        const reverbBuf = ctx.createBuffer(2, reverbLen, ctx.sampleRate);
+        for (let c = 0; c < 2; c++) {
+            const d = reverbBuf.getChannelData(c);
+            for (let i = 0; i < reverbLen; i++) {
+                d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / reverbLen, 2.5);
+            }
+        }
+        this.reverbNode = ctx.createConvolver();
+        this.reverbNode.buffer = reverbBuf;
+        this.reverbGain = ctx.createGain();
+        this.reverbGain.gain.value = 0;
+        this.reverbNode.connect(this.reverbGain);
+        this.reverbGain.connect(this.master);
+        
+        // FILTER (Bandpass)
+        this.filterNode = ctx.createBiquadFilter();
+        this.filterNode.type = 'bandpass';
+        this.filterNode.frequency.value = 2000;
+        this.filterNode.Q.value = 4;
+        this.filterGain = ctx.createGain();
+        this.filterGain.gain.value = 0;
+        this.filterNode.connect(this.filterGain);
+        this.filterGain.connect(this.master);
+        
+        // LPF (Low Pass Filter)
+        this.lpfNode = ctx.createBiquadFilter();
+        this.lpfNode.type = 'lowpass';
+        this.lpfNode.frequency.value = 4000;
+        this.lpfNode.Q.value = 2;
+        this.lpfGain = ctx.createGain();
+        this.lpfGain.gain.value = 0;
+        this.lpfNode.connect(this.lpfGain);
+        this.lpfGain.connect(this.master);
+        
+        // DISTORTION
+        this.distortNode = ctx.createWaveShaper();
+        this.distortNode.oversample = '2x';
+        this.setDistortion(10);
+        this.distortGain = ctx.createGain();
+        this.distortGain.gain.value = 0;
+        this.distortNode.connect(this.distortGain);
+        this.distortGain.connect(this.master);
+        
+        // BITCRUSHER (using waveshaper + sample rate reduction simulation)
+        this.bitcrushNode = ctx.createWaveShaper();
+        this.setBitcrush(8);
+        this.bitcrushGain = ctx.createGain();
+        this.bitcrushGain.gain.value = 0;
+        this.bitcrushNode.connect(this.bitcrushGain);
+        this.bitcrushGain.connect(this.master);
+    },
+    
+    setBitcrush(bits) {
+        const samples = 256;
+        const curve = new Float32Array(samples);
+        const steps = Math.pow(2, bits);
+        for (let i = 0; i < samples; i++) {
+            const x = (i * 2 / samples) - 1;
+            curve[i] = Math.round(x * steps) / steps;
+        }
+        this.bitcrushNode.curve = curve;
+    },
+    
+    setDistortion(amount) {
+        const samples = 256;
+        const curve = new Float32Array(samples);
+        for (let i = 0; i < samples; i++) {
+            const x = (i * 2 / samples) - 1;
+            curve[i] = ((3 + amount) * x * 20 * (PI / 180)) / (PI + amount * Math.abs(x));
+        }
+        this.distortNode.curve = curve;
+    },
+    
+    cleanup() {
+        if (this.ctx) this.ctx.close();
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// LFO ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+const LFOEngine = {
+    osc: null,
+    gain: null,
+    connectedParams: new Set(),
+    rate: 2,
+    depth: 0,
+    ctx: null,
+    
+    init(ctx) {
+        this.ctx = ctx;
+        this.osc = ctx.createOscillator();
+        this.osc.type = 'sine';
+        this.osc.frequency.value = this.rate;
+        this.gain = ctx.createGain();
+        this.gain.gain.value = 0;
+        this.osc.connect(this.gain);
+        this.osc.start();
+    },
+    
+    setRate(rate) {
+        this.rate = rate;
+        if (this.osc && this.ctx) {
+            this.osc.frequency.setTargetAtTime(rate, this.ctx.currentTime, 0.05);
+        }
+    },
+    
+    setDepth(depth) {
+        this.depth = depth;
+        if (this.gain && this.ctx) {
+            this.gain.gain.setTargetAtTime(depth, this.ctx.currentTime, 0.05);
+        }
+    },
+    
+    connectTo(param) {
+        if (this.gain && param && !this.connectedParams.has(param)) {
+            try {
+                this.gain.connect(param);
+                this.connectedParams.add(param);
+            } catch(e) {}
+        }
+    },
+    
+    disconnectAll() {
+        this.connectedParams.forEach(param => {
+            try { this.gain.disconnect(param); } catch(e) {}
+        });
+        this.connectedParams.clear();
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SPATIAL HASH
+// ═══════════════════════════════════════════════════════════════════════════════
+class SpatialHash {
+    constructor(cellSize = 0.1) {
+        this.cellSize = cellSize;
+        this.grid = new Map();
+    }
+    
+    clear() { this.grid.clear(); }
+    
+    key(x, y) {
+        return `${Math.floor(x / this.cellSize)},${Math.floor(y / this.cellSize)}`;
+    }
+    
+    insert(obj, idx) {
+        const k = this.key(obj.x, obj.y);
+        if (!this.grid.has(k)) this.grid.set(k, []);
+        this.grid.get(k).push(idx);
+    }
+    
+    rebuild(objects) {
+        this.clear();
+        for (let i = 0; i < objects.length; i++) {
+            this.insert(objects[i], i);
+        }
+    }
+    
+    getNearby(x, y, radius) {
+        const result = [];
+        const cr = Math.ceil(radius / this.cellSize);
+        const cx = Math.floor(x / this.cellSize);
+        const cy = Math.floor(y / this.cellSize);
+        
+        for (let dx = -cr; dx <= cr; dx++) {
+            for (let dy = -cr; dy <= cr; dy++) {
+                const cell = this.grid.get(`${cx + dx},${cy + dy}`);
+                if (cell) result.push(...cell);
+            }
+        }
+        return result;
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// AUDIO NODE FACTORY
+// ═══════════════════════════════════════════════════════════════════════════════
+const AudioNodeFactory = {
+    synth(ctx, dest) {
+        const osc = ctx.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.value = 220;
+        
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 2000;
+        filter.Q.value = 2;
+        
+        const gain = ctx.createGain();
+        gain.gain.value = 0;
+        
+        const output = ctx.createGain();
+        output.gain.value = 1;
+        
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 256;
+        
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(output);
+        output.connect(analyser);
+        analyser.connect(dest);
+        osc.start();
+        
+        return { osc, filter, gain, output, analyser, modInput: filter.frequency };
+    },
+    
+    noise(ctx, dest) {
+        const bufSize = ctx.sampleRate;
+        const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < bufSize; i++) d[i] = Math.random() * 2 - 1;
+        
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.loop = true;
+        
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 1000;
+        filter.Q.value = 5;
+        
+        const gain = ctx.createGain();
+        gain.gain.value = 0;
+        
+        const output = ctx.createGain();
+        output.gain.value = 1;
+        
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 256;
+        
+        src.connect(filter);
+        filter.connect(gain);
+        gain.connect(output);
+        output.connect(analyser);
+        analyser.connect(dest);
+        src.start();
+        
+        return { src, filter, gain, output, analyser, modInput: filter.frequency };
+    },
+    
+    fm(ctx, dest) {
+        const carrier = ctx.createOscillator();
+        carrier.type = 'sine';
+        carrier.frequency.value = 220;
+        
+        const mod = ctx.createOscillator();
+        mod.type = 'sine';
+        mod.frequency.value = 110;
+        
+        const modGain = ctx.createGain();
+        modGain.gain.value = 200;
+        
+        const gain = ctx.createGain();
+        gain.gain.value = 0;
+        
+        const output = ctx.createGain();
+        output.gain.value = 1;
+        
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 256;
+        
+        mod.connect(modGain);
+        modGain.connect(carrier.frequency);
+        carrier.connect(gain);
+        gain.connect(output);
+        output.connect(analyser);
+        analyser.connect(dest);
+        
+        carrier.start();
+        mod.start();
+        
+        return { carrier, mod, modGain, gain, output, analyser, modInput: modGain.gain };
+    },
+    
+    grain(ctx, dest) {
+        // Granular texture - multiple detuned oscillators
+        const oscs = [];
+        const detunes = [-12, -5, 0, 7, 12];
+        const mixer = ctx.createGain();
+        mixer.gain.value = 0.2;
+        
+        for (const detune of detunes) {
+            const osc = ctx.createOscillator();
+            osc.type = 'sine';
+            osc.frequency.value = 220;
+            osc.detune.value = detune;
+            osc.connect(mixer);
+            osc.start();
+            oscs.push(osc);
+        }
+        
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 1000;
+        filter.Q.value = 2;
+        
+        const gain = ctx.createGain();
+        gain.gain.value = 0;
+        
+        const output = ctx.createGain();
+        output.gain.value = 1;
+        
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 256;
+        
+        mixer.connect(filter);
+        filter.connect(gain);
+        gain.connect(output);
+        output.connect(analyser);
+        analyser.connect(dest);
+        
+        return { oscs, mixer, filter, gain, output, analyser, modInput: filter.frequency };
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TANGIBLE OBJECT CLASS
+// ═══════════════════════════════════════════════════════════════════════════════
+class TangibleObject {
+    constructor(type, index, angle) {
+        const info = OBJ_TYPES[type];
+        
+        this.type = type;
+        this.index = index;
+        this.cat = info.cat;
+        this.color = info.color;
+        this.icon = info.icon;
+        this.name = info.name;
+        
+        // Position objects clearly OUTSIDE the active zone
+        const r = getObjectEdgeRadius();
+        let hx = 0.5 + Math.cos(angle) * r;
+        let hy = 0.5 + Math.sin(angle) * r;
+        
+        // Clamp to screen bounds with good padding
+        const padding = CFG.objRadius + 0.05;
+        hx = Math.max(padding, Math.min(1 - padding, hx));
+        hy = Math.max(padding, Math.min(1 - padding, hy));
+        
+        // Double-check: if still inside zone, push further out
+        const distFromCenter = Math.hypot(hx - 0.5, hy - 0.5);
+        if (distFromCenter < CFG.zoneRadius + CFG.objRadius) {
+            const pushDist = (CFG.zoneRadius + CFG.objRadius + 0.02) / distFromCenter;
+            hx = 0.5 + (hx - 0.5) * pushDist;
+            hy = 0.5 + (hy - 0.5) * pushDist;
+            // Re-clamp
+            hx = Math.max(padding, Math.min(1 - padding, hx));
+            hy = Math.max(padding, Math.min(1 - padding, hy));
+        }
+        
+        this.homeX = hx;
+        this.homeY = hy;
+        this.x = this.homeX;
+        this.y = this.homeY;
+        this.targetX = this.x;
+        this.targetY = this.y;
+        this.rot = 0;
+        this.targetRot = 0;
+        
+        this.active = false;
+        this.heldBy = -1;
+        this.intensity = 0;
+        
+        this.audioNode = null;
+        this.filterNode = null;
+        this.gainNode = null;
+        this.outputNode = null;
+        this.analyser = null;
+        this.modInput = null;
+        this.waveData = new Uint8Array(128);
+        
+        this.audioConnections = new Set();
+        this.controlConnections = new Set();
+    }
+    
+    initAudio(ctx, dest) {
+        if (this.audioNode) return;
+        
+        if (this.type === 'synth') {
+            const nodes = AudioNodeFactory.synth(ctx, dest);
+            this.audioNode = nodes.osc;
+            this.filterNode = nodes.filter;
+            this.gainNode = nodes.gain;
+            this.outputNode = nodes.output;
+            this.analyser = nodes.analyser;
+            this.modInput = nodes.modInput;
+        }
+        else if (this.type === 'noise') {
+            const nodes = AudioNodeFactory.noise(ctx, dest);
+            this.audioNode = nodes.src;
+            this.filterNode = nodes.filter;
+            this.gainNode = nodes.gain;
+            this.outputNode = nodes.output;
+            this.analyser = nodes.analyser;
+            this.modInput = nodes.modInput;
+        }
+        else if (this.type === 'fm') {
+            const nodes = AudioNodeFactory.fm(ctx, dest);
+            this.audioNode = nodes.carrier;
+            this.modNode = nodes.mod;
+            this.modGainNode = nodes.modGain;
+            this.gainNode = nodes.gain;
+            this.outputNode = nodes.output;
+            this.analyser = nodes.analyser;
+            this.modInput = nodes.modInput;
+        }
+        else if (this.type === 'grain') {
+            const nodes = AudioNodeFactory.grain(ctx, dest);
+            this.oscArray = nodes.oscs;
+            this.mixerNode = nodes.mixer;
+            this.filterNode = nodes.filter;
+            this.gainNode = nodes.gain;
+            this.outputNode = nodes.output;
+            this.analyser = nodes.analyser;
+            this.modInput = nodes.modInput;
+        }
+        else if (this.type === 'lfo') {
+            LFOEngine.init(ctx);
+        }
+    }
+    
+    getWaveData() {
+        if (this.analyser) {
+            this.analyser.getByteTimeDomainData(this.waveData);
+            return this.waveData;
+        }
+        return null;
+    }
+    
+    update(dt) {
+        const ps = 1 - Math.pow(1 - CFG.posSmooth, dt * 60);
+        this.x += (this.targetX - this.x) * ps;
+        this.y += (this.targetY - this.y) * ps;
+        
+        const rs = 1 - Math.pow(1 - CFG.rotSmooth, dt * 60);
+        this.rot += (this.targetRot - this.rot) * rs;
+        
+        const dist = Math.hypot(this.x - 0.5, this.y - 0.5);
+        
+        // Only activate when INSIDE the zone and not being held
+        if (this.heldBy < 0) {
+            // If outside zone, deactivate and return home
+            if (dist > CFG.zoneRadius) {
+                this.active = false;
+                this.targetX = this.homeX;
+                this.targetY = this.homeY;
+            } else {
+                // Inside zone - activate
+                this.active = true;
+            }
+        } else {
+            // While being held, only activate if inside zone
+            this.active = dist <= CFG.zoneRadius;
+        }
+        
+        this.intensity = this.active ? 1.0 : 0; // Constant volume when active
+        
+        this.updateAudio();
+    }
+    
+    updateAudio() {
+        if (!Audio.ctx) return;
+        
+        const ctx = Audio.ctx;
+        const now = ctx.currentTime;
+        const rotNorm = (this.rot + PI) / PI2;
+        
+        if (this.active) {
+            if (this.type === 'synth') {
+                const freq = getScaleFrequency(rotNorm);
+                this.audioNode.frequency.setTargetAtTime(freq, now, 0.05);
+                this.gainNode.gain.setTargetAtTime(0.25, now, 0.05);
+                this.filterNode.frequency.setTargetAtTime(500 + rotNorm * 3000, now, 0.05);
+            }
+            else if (this.type === 'noise') {
+                const freq = 200 + rotNorm * 4000;
+                this.filterNode.frequency.setTargetAtTime(freq, now, 0.05);
+                this.gainNode.gain.setTargetAtTime(0.15, now, 0.05);
+            }
+            else if (this.type === 'fm') {
+                const freq = getScaleFrequency(rotNorm);
+                this.audioNode.frequency.setTargetAtTime(freq, now, 0.05);
+                this.modNode.frequency.setTargetAtTime(freq * (0.5 + rotNorm), now, 0.05);
+                this.modGainNode.gain.setTargetAtTime(100 + rotNorm * 500, now, 0.05);
+                this.gainNode.gain.setTargetAtTime(0.2, now, 0.05);
+            }
+            else if (this.type === 'lfo') {
+                const divisions = [0.25, 0.5, 1, 2, 4, 8];
+                const divIdx = Math.floor(rotNorm * divisions.length) % divisions.length;
+                const rate = (Tempo.bpm / 60) * divisions[divIdx];
+                LFOEngine.setRate(rate);
+                LFOEngine.setDepth(this.intensity * 500);
+            }
+            else if (this.type === 'delay') {
+                const delayTime = Tempo.beatDuration * (0.25 + rotNorm * 0.75);
+                Audio.delayNode.delayTime.setTargetAtTime(delayTime, now, 0.05);
+                Audio.delayGain.gain.setTargetAtTime(0.5, now, 0.05);
+            }
+            else if (this.type === 'reverb') {
+                Audio.reverbGain.gain.setTargetAtTime(0.6, now, 0.05);
+            }
+            else if (this.type === 'filter') {
+                const freq = 200 + rotNorm * 6000;
+                Audio.filterNode.frequency.setTargetAtTime(freq, now, 0.05);
+                Audio.filterGain.gain.setTargetAtTime(0.8, now, 0.05);
+            }
+            else if (this.type === 'lpf') {
+                const freq = 100 + rotNorm * 10000;
+                Audio.lpfNode.frequency.setTargetAtTime(freq, now, 0.05);
+                Audio.lpfGain.gain.setTargetAtTime(0.8, now, 0.05);
+            }
+            else if (this.type === 'distort') {
+                const amount = 5 + rotNorm * 50;
+                Audio.setDistortion(amount);
+                Audio.distortGain.gain.setTargetAtTime(0.4, now, 0.05);
+            }
+            else if (this.type === 'bitcrush') {
+                const bits = 2 + rotNorm * 6; // 2-8 bits
+                Audio.setBitcrush(bits);
+                Audio.bitcrushGain.gain.setTargetAtTime(0.5, now, 0.05);
+            }
+            else if (this.type === 'grain') {
+                const baseFreq = getScaleFrequency(rotNorm);
+                if (this.oscArray) {
+                    for (const osc of this.oscArray) {
+                        osc.frequency.setTargetAtTime(baseFreq, now, 0.05);
+                    }
+                }
+                this.gainNode.gain.setTargetAtTime(0.2, now, 0.05);
+                this.filterNode.frequency.setTargetAtTime(500 + rotNorm * 3000, now, 0.05);
+            }
+        } else {
+            if (this.gainNode) {
+                this.gainNode.gain.setTargetAtTime(0, now, 0.08);
+            }
+            if (this.type === 'lfo') {
+                LFOEngine.setDepth(0);
+            }
+            if (this.type === 'delay') {
+                Audio.delayGain.gain.setTargetAtTime(0, now, 0.08);
+            }
+            if (this.type === 'reverb') {
+                Audio.reverbGain.gain.setTargetAtTime(0, now, 0.08);
+            }
+            if (this.type === 'filter') {
+                Audio.filterGain.gain.setTargetAtTime(0, now, 0.08);
+            }
+            if (this.type === 'lpf') {
+                Audio.lpfGain.gain.setTargetAtTime(0, now, 0.08);
+            }
+            if (this.type === 'distort') {
+                Audio.distortGain.gain.setTargetAtTime(0, now, 0.08);
+            }
+            if (this.type === 'bitcrush') {
+                Audio.bitcrushGain.gain.setTargetAtTime(0, now, 0.08);
+            }
+        }
+    }
+    
+    cleanup() {
+        try {
+            if (this.audioNode) {
+                if (this.audioNode.stop) this.audioNode.stop();
+                this.audioNode.disconnect();
+            }
+            if (this.gainNode) this.gainNode.disconnect();
+            if (this.outputNode) this.outputNode.disconnect();
+            if (this.modNode) {
+                this.modNode.stop();
+                this.modNode.disconnect();
+            }
+            if (this.oscArray) {
+                for (const osc of this.oscArray) {
+                    osc.stop();
+                    osc.disconnect();
+                }
+            }
+        } catch(e) {}
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// APPLICATION STATE
+// ═══════════════════════════════════════════════════════════════════════════════
+const State = {
+    video: null,
+    canvas: null,
+    ctx: null,
+    hands: null,
+    camera: null,
+    objects: [],
+    spatialHash: new SpatialHash(0.1),
+    handStates: [{}, {}],
+    grabbed: [-1, -1],
+    grabAngle: [0, 0],
+    grabRot: [0, 0],
+    lastTime: 0
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// HAND TRACKING
+// ═══════════════════════════════════════════════════════════════════════════════
+function processHand(landmarks, handIdx) {
+    const thumb = landmarks[4];
+    const index = landmarks[8];
+    
+    // Always use raw coordinates for position
+    // Mirror is handled in the rendering
+    const thumbX = thumb.x;
+    const indexX = index.x;
+    
+    const centerX = (thumbX + indexX) * 0.5;
+    const centerY = (thumb.y + index.y) * 0.5;
+    const dist = Math.hypot(thumb.x - index.x, thumb.y - index.y);
+    
+    const hs = State.handStates[handIdx];
+    const wasPinch = hs.isPinching || false;
+    const threshold = wasPinch ? CFG.pinchOff : CFG.pinchOn;
+    const isPinch = dist < threshold;
+    
+    hs.x = centerX;
+    hs.y = centerY;
+    hs.isPinching = isPinch;
+    hs.thumbX = thumbX;
+    hs.thumbY = thumb.y;
+    hs.indexX = indexX;
+    hs.indexY = index.y;
+    
+    const angle = Math.atan2(index.y - thumb.y, indexX - thumbX);
+    hs.angle = angle;
+    
+    if (isPinch && !wasPinch && State.grabbed[handIdx] < 0) {
+        const nearby = State.spatialHash.getNearby(centerX, centerY, CFG.grabRadius);
+        let closest = -1;
+        let closestDist = CFG.grabRadius;
+        
+        for (const idx of nearby) {
+            const obj = State.objects[idx];
+            if (obj.heldBy >= 0) continue;
+            
+            const d = Math.hypot(obj.x - centerX, obj.y - centerY);
+            if (d < closestDist) {
+                closestDist = d;
+                closest = idx;
+            }
+        }
+        
+        if (closest >= 0) {
+            State.grabbed[handIdx] = closest;
+            State.objects[closest].heldBy = handIdx;
+            State.grabAngle[handIdx] = angle;
+            State.grabRot[handIdx] = State.objects[closest].rot;
+        }
+    }
+    
+    if (!isPinch && wasPinch && State.grabbed[handIdx] >= 0) {
+        const obj = State.objects[State.grabbed[handIdx]];
+        obj.heldBy = -1;
+        State.grabbed[handIdx] = -1;
+    }
+    
+    if (isPinch && State.grabbed[handIdx] >= 0) {
+        const obj = State.objects[State.grabbed[handIdx]];
+        obj.targetX = centerX;
+        obj.targetY = centerY;
+        obj.targetRot = State.grabRot[handIdx] + (angle - State.grabAngle[handIdx]);
+        obj.active = true;
+    }
+    
+    return hs;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CONNECTION MANAGEMENT
+// ═══════════════════════════════════════════════════════════════════════════════
+function canConnect(srcCat, tgtCat) {
+    const allowed = CONNECTIONS[srcCat] || [];
+    return allowed.includes(tgtCat);
+}
+
+// Check if effect is between generator and center
+function isEffectBetween(gen, fx, centerX, centerY, tolerance) {
+    // Vector from generator to center
+    const gcX = centerX - gen.x;
+    const gcY = centerY - gen.y;
+    const gcLen = Math.sqrt(gcX * gcX + gcY * gcY);
+    if (gcLen < 0.01) return false;
+    
+    // Normalize
+    const gcNormX = gcX / gcLen;
+    const gcNormY = gcY / gcLen;
+    
+    // Vector from generator to effect
+    const gfX = fx.x - gen.x;
+    const gfY = fx.y - gen.y;
+    
+    // Project effect position onto gen-center line
+    const projection = gfX * gcNormX + gfY * gcNormY;
+    
+    // Effect must be between gen and center (not behind)
+    if (projection <= 0 || projection >= gcLen) return false;
+    
+    // Calculate perpendicular distance from line
+    const perpX = gfX - projection * gcNormX;
+    const perpY = gfY - projection * gcNormY;
+    const perpDist = Math.sqrt(perpX * perpX + perpY * perpY);
+    
+    return perpDist < tolerance;
+}
+
+function updateConnections() {
+    if (!Audio.ctx) return;
+    
+    LFOEngine.disconnectAll();
+    
+    const generators = State.objects.filter(o => o.active && o.cat === 'generator');
+    const effects = State.objects.filter(o => o.active && o.cat === 'effect');
+    const controllers = State.objects.filter(o => o.active && o.cat === 'controller');
+    
+    // Controllers (LFO) connect from further away to nearby generators/effects
+    for (const ctrl of controllers) {
+        const connectRange = ctrl.type === 'lfo' ? CFG.lfoConnectDist : CFG.connectDist;
+        const nearby = State.spatialHash.getNearby(ctrl.x, ctrl.y, connectRange);
+        
+        for (const idx of nearby) {
+            const target = State.objects[idx];
+            if (!target.active) continue;
+            if (!canConnect('controller', target.cat)) continue;
+            
+            const d = Math.hypot(ctrl.x - target.x, ctrl.y - target.y);
+            if (d >= connectRange) continue;
+            
+            if (ctrl.type === 'lfo' && target.modInput) {
+                LFOEngine.connectTo(target.modInput);
+                ctrl.controlConnections.add(target.index);
+            }
+        }
+    }
+    
+    // Effects connect when BETWEEN generator and center
+    const centerX = 0.5;
+    const centerY = 0.5;
+    
+    for (const gen of generators) {
+        if (!gen.outputNode) continue;
+        
+        // Clear previous connections
+        gen.audioConnections.clear();
+        
+        // Check each effect if it's between this generator and center
+        for (const fx of effects) {
+            if (isEffectBetween(gen, fx, centerX, centerY, CFG.betweenTolerance)) {
+                try {
+                    if (fx.type === 'delay') gen.outputNode.connect(Audio.delayNode);
+                    else if (fx.type === 'reverb') gen.outputNode.connect(Audio.reverbNode);
+                    else if (fx.type === 'filter') gen.outputNode.connect(Audio.filterNode);
+                    else if (fx.type === 'lpf') gen.outputNode.connect(Audio.lpfNode);
+                    else if (fx.type === 'distort') gen.outputNode.connect(Audio.distortNode);
+                    else if (fx.type === 'bitcrush') gen.outputNode.connect(Audio.bitcrushNode);
+                    
+                    gen.audioConnections.add(fx.index);
+                } catch(e) {}
+            }
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RENDERING
+// ═══════════════════════════════════════════════════════════════════════════════
+function drawShape(ctx, cat, type, size) {
+    ctx.beginPath();
+    
+    if (cat === 'generator') {
+        ctx.rect(-size, -size, size * 2, size * 2);
+    }
+    else if (cat === 'effect') {
+        const r = size * 0.4;
+        ctx.roundRect(-size, -size, size * 2, size * 2, r);
+    }
+    else if (cat === 'controller') {
+        ctx.arc(0, 0, size, 0, PI2);
+    }
+}
+
+function drawWaveformLine(ctx, x1, y1, x2, y2, waveData, color, intensity) {
+    if (!waveData || intensity < 0.1) {
+        ctx.save();
+        ctx.globalAlpha = 0.5 * intensity;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        ctx.restore();
+        return;
+    }
+    
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const angle = Math.atan2(dy, dx);
+    const perpX = -Math.sin(angle);
+    const perpY = Math.cos(angle);
+    const samples = Math.min(waveData.length, 64);
+    const amplitude = 20 * intensity;
+    const step = Math.floor(waveData.length / samples);
+    
+    ctx.save();
+    ctx.globalAlpha = 0.7 * intensity;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 10;
+    
+    ctx.beginPath();
+    for (let i = 0; i < samples; i++) {
+        const t = i / (samples - 1);
+        const px = x1 + dx * t;
+        const py = y1 + dy * t;
+        const wave = ((waveData[i * step] - 128) / 128) * amplitude;
+        const wx = px + perpX * wave;
+        const wy = py + perpY * wave;
+        
+        if (i === 0) ctx.moveTo(wx, wy);
+        else ctx.lineTo(wx, wy);
+    }
+    ctx.stroke();
+    ctx.restore();
+}
+
+function drawLFODataBars(ctx, x1, y1, x2, y2, color, intensity) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    if (len < 20) return;
+    
+    // Perpendicular direction
+    const perpX = -dy / len;
+    const perpY = dx / len;
+    
+    const time = performance.now() / 1000;
+    const numBars = 32; // More bars
+    const barWidth = Math.max(10, len / numBars * 0.85); // Much wider bars
+    const maxBarHeight = 45 * intensity; // Taller bars
+    
+    // LFO wave speed synced to rate
+    const lfoSpeed = LFOEngine.rate || 2;
+    const phase = (time * lfoSpeed) % 1;
+    
+    ctx.save();
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 20; // More glow
+    
+    for (let i = 0; i < numBars; i++) {
+        const t = (i + 0.5) / numBars;
+        const px = x1 + dx * t;
+        const py = y1 + dy * t;
+        
+        // Create wave pattern moving along the line - faster waves
+        const wavePhase = (phase * 3 + i / numBars * 2) * PI2;
+        const barHeight = (0.25 + Math.abs(Math.sin(wavePhase)) * 0.75) * maxBarHeight;
+        
+        // Gradient opacity - brighter in middle, fade at edges
+        const edgeFade = Math.sin(t * PI);
+        ctx.globalAlpha = 0.95 * intensity * edgeFade;
+        ctx.fillStyle = color;
+        
+        // Draw bar centered on the line, perpendicular to it
+        const halfH = barHeight / 2;
+        
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.rotate(Math.atan2(dy, dx) + PI / 2);
+        
+        // Draw rounded bar - wider
+        ctx.beginPath();
+        ctx.roundRect(-barWidth / 2, -halfH, barWidth, barHeight, barWidth / 3);
+        ctx.fill();
+        
+        ctx.restore();
+    }
+    
+    // Draw base line - more visible
+    ctx.globalAlpha = 0.4 * intensity;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    ctx.restore();
+}
+
+function drawCentralOutput(ctx, w, h) {
+    const cx = w * 0.5;
+    const cy = h * 0.5;
+    const minDim = Math.min(w, h);
+    
+    ctx.beginPath();
+    ctx.arc(cx, cy, minDim * CFG.zoneRadius, 0, PI2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    
+    const tempoPhase = Tempo.phase;
+    const pulseRadius = tempoPhase * minDim * 0.15;
+    const pulseAlpha = (1 - tempoPhase) * 0.4;
+    
+    ctx.beginPath();
+    ctx.arc(cx, cy, pulseRadius, 0, PI2);
+    ctx.strokeStyle = `rgba(255,255,255,${pulseAlpha})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    const phase2 = (tempoPhase + 0.5) % 1;
+    const pulse2Radius = phase2 * minDim * 0.15;
+    const pulse2Alpha = (1 - phase2) * 0.2;
+    
+    ctx.beginPath();
+    ctx.arc(cx, cy, pulse2Radius, 0, PI2);
+    ctx.strokeStyle = `rgba(255,255,255,${pulse2Alpha})`;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    
+    const coreSize = 6 + Tempo.getPulse() * 3;
+    
+    ctx.save();
+    ctx.shadowColor = '#fff';
+    ctx.shadowBlur = 15 + Tempo.getPulse() * 10;
+    ctx.beginPath();
+    ctx.arc(cx, cy, coreSize, 0, PI2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+    ctx.restore();
+}
+
+function drawRotationGauge(ctx, x, y, r, rotation, color, isActive) {
+    const gaugeRadius = r + 10;
+    const gaugeWidth = 4;
+    
+    // Normalize rotation to 0-1 range (full circle)
+    let normRot = ((rotation % PI2) + PI2) % PI2;
+    let rotPercent = normRot / PI2;
+    
+    // Background ring (dark)
+    ctx.beginPath();
+    ctx.arc(x, y, gaugeRadius, 0, PI2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.lineWidth = gaugeWidth;
+    ctx.stroke();
+    
+    // Active gauge arc (colored) - only when active
+    if (isActive) {
+        ctx.beginPath();
+        // Start from top (-PI/2) and go clockwise
+        const startAngle = -PI / 2;
+        const endAngle = startAngle + (rotPercent * PI2);
+        ctx.arc(x, y, gaugeRadius, startAngle, endAngle);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = gaugeWidth;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+        
+        // Glow on gauge
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(x, y, gaugeRadius, startAngle, endAngle);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = gaugeWidth - 1;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        
+        // Indicator dot at current position
+        const dotAngle = -PI / 2 + (rotPercent * PI2);
+        const dotX = Math.cos(dotAngle) * gaugeRadius;
+        const dotY = Math.sin(dotAngle) * gaugeRadius;
+        
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, gaugeWidth + 2, 0, PI2);
+        ctx.fillStyle = '#fff';
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 12;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+    } else {
+        // Just show a subtle dot for inactive objects
+        const dotAngle = -PI / 2 + (rotPercent * PI2);
+        const dotX = Math.cos(dotAngle) * gaugeRadius;
+        const dotY = Math.sin(dotAngle) * gaugeRadius;
+        
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, 3, 0, PI2);
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.fill();
+    }
+}
+
+function drawObject(ctx, obj, w, h, minDim) {
+    const ox = obj.x * w;
+    const oy = obj.y * h;
+    const size = CFG.objRadius * minDim;
+    
+    ctx.save();
+    ctx.translate(ox, oy);
+    
+    // Draw rotation gauge around the object
+    drawRotationGauge(ctx, 0, 0, size, obj.rot, obj.color, obj.active);
+    
+    if (obj.cat === 'generator') {
+        ctx.rotate(obj.rot);
+    }
+    
+    if (obj.active) {
+        ctx.shadowColor = obj.color;
+        ctx.shadowBlur = 15;
+    }
+    
+    drawShape(ctx, obj.cat, obj.type, size);
+    ctx.fillStyle = 'rgba(15,15,20,0.85)';
+    ctx.fill();
+    ctx.strokeStyle = obj.color;
+    ctx.lineWidth = obj.heldBy >= 0 ? 3 : 2;
+    ctx.stroke();
+    
+    ctx.shadowBlur = 0;
+    
+    if (obj.cat === 'generator') {
+        ctx.rotate(-obj.rot);
+    }
+    
+    ctx.fillStyle = obj.color;
+    ctx.font = '900 14px "Font Awesome 6 Free"';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(obj.icon, 0, -8);
+    
+    ctx.font = 'bold 8px system-ui';
+    ctx.fillText(obj.name, 0, 6);
+    
+    ctx.restore();
+}
+
+function drawHand(ctx, hs, w, h) {
+    const color = hs.isPinching ? 'rgba(34,197,94,0.8)' : 'rgba(255,255,255,0.5)';
+    
+    ctx.save();
+    ctx.globalAlpha = 0.8;
+    
+    if (hs.isPinching) {
+        ctx.shadowColor = '#22c55e';
+        ctx.shadowBlur = 10;
+    }
+    
+    ctx.beginPath();
+    ctx.moveTo(hs.thumbX * w, hs.thumbY * h);
+    ctx.lineTo(hs.indexX * w, hs.indexY * h);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(hs.thumbX * w, hs.thumbY * h, 5, 0, PI2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(hs.indexX * w, hs.indexY * h, 5, 0, PI2);
+    ctx.fill();
+    
+    ctx.shadowBlur = 0;
+    
+    ctx.beginPath();
+    ctx.arc(hs.x * w, hs.y * h, hs.isPinching ? 8 : 5, 0, PI2);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    if (hs.isPinching) {
+        ctx.beginPath();
+        ctx.arc(hs.x * w, hs.y * h, 3, 0, PI2);
+        ctx.fillStyle = '#22c55e';
+        ctx.fill();
+    }
+    
+    ctx.restore();
+}
+
+function render(results) {
+    const { canvas, ctx } = State;
+    const w = canvas.width;
+    const h = canvas.height;
+    const minDim = Math.min(w, h);
+    const cx = w * 0.5;
+    const cy = h * 0.5;
+    const time = performance.now();
+    
+    const dt = Math.min((time - State.lastTime) / 1000, 0.1);
+    State.lastTime = time;
+    
+    Tempo.update(time);
+    
+    // Draw video (selfieMode already mirrors the image from MediaPipe)
+    ctx.drawImage(results.image, 0, 0, w, h);
+    
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(0, 0, w, h);
+    
+    const activeHands = [];
+    
+    if (results.multiHandLandmarks) {
+        for (let i = 0; i < Math.min(results.multiHandLandmarks.length, 2); i++) {
+            const hs = processHand(results.multiHandLandmarks[i], i);
+            activeHands.push(hs);
+        }
+    }
+    
+    for (let i = activeHands.length; i < 2; i++) {
+        if (State.grabbed[i] >= 0) {
+            State.objects[State.grabbed[i]].heldBy = -1;
+            State.grabbed[i] = -1;
+        }
+        State.handStates[i] = {};
+    }
+    
+    for (const obj of State.objects) {
+        obj.update(dt);
+    }
+    
+    updateConnections();
+    State.spatialHash.rebuild(State.objects);
+    
+    drawCentralOutput(ctx, w, h);
+    
+    // Draw connections: generators -> effects -> center
+    for (const obj of State.objects) {
+        if (!obj.active) continue;
+        
+        const ox = obj.x * w;
+        const oy = obj.y * h;
+        
+        if (obj.cat === 'generator') {
+            const waveData = obj.getWaveData();
+            
+            if (obj.audioConnections.size > 0) {
+                // Draw: Generator -> Effect(s) -> Center
+                // Sort effects by distance to generator (closest first)
+                const sortedFx = Array.from(obj.audioConnections)
+                    .map(idx => State.objects[idx])
+                    .filter(fx => fx.active)
+                    .sort((a, b) => {
+                        const da = Math.hypot(obj.x - a.x, obj.y - a.y);
+                        const db = Math.hypot(obj.x - b.x, obj.y - b.y);
+                        return da - db;
+                    });
+                
+                if (sortedFx.length > 0) {
+                    // Draw generator -> first effect
+                    let prevX = ox;
+                    let prevY = oy;
+                    
+                    for (let i = 0; i < sortedFx.length; i++) {
+                        const fx = sortedFx[i];
+                        const fxX = fx.x * w;
+                        const fxY = fx.y * h;
+                        
+                        // Draw line from previous point to this effect
+                        drawWaveformLine(ctx, prevX, prevY, fxX, fxY, waveData, obj.color, obj.intensity * 0.8);
+                        
+                        prevX = fxX;
+                        prevY = fxY;
+                    }
+                    
+                    // Draw from last effect to center
+                    drawWaveformLine(ctx, prevX, prevY, cx, cy, waveData, obj.color, obj.intensity * 0.6);
+                }
+            } else {
+                // No effects in between - direct to center
+                drawWaveformLine(ctx, ox, oy, cx, cy, waveData, obj.color, obj.intensity);
+            }
+        }
+        
+        // Controller (LFO) connections
+        if (obj.cat === 'controller' && obj.controlConnections.size > 0) {
+            for (const targetIdx of obj.controlConnections) {
+                const target = State.objects[targetIdx];
+                if (!target.active) continue;
+                
+                const tx = target.x * w;
+                const ty = target.y * h;
+                // Use LFO data bars instead of simple dashed line
+                drawLFODataBars(ctx, ox, oy, tx, ty, obj.color, obj.intensity);
+            }
+        }
+    }
+    
+    // Clear connections for next frame (but keep them drawn)
+    for (const obj of State.objects) {
+        obj.controlConnections.clear();
+    }
+    
+    for (const obj of State.objects) {
+        drawObject(ctx, obj, w, h, minDim);
+    }
+    
+    for (const hs of activeHands) {
+        if (hs.x !== undefined) {
+            drawHand(ctx, hs, w, h);
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// INITIALIZATION
+// ═══════════════════════════════════════════════════════════════════════════════
+function createObjects() {
+    const types = ['noise', 'fm', 'grain', 'delay', 'reverb', 'filter', 'lpf', 'distort', 'bitcrush', 'lfo'];
+    const count = types.length;
+    
+    for (let i = 0; i < count; i++) {
+        const angle = (i / count) * PI2 - PI / 2;
+        State.objects.push(new TangibleObject(types[i], i, angle));
+    }
+    
+    State.spatialHash.rebuild(State.objects);
+}
+
+function resize() {
+    State.canvas.width = window.innerWidth;
+    State.canvas.height = window.innerHeight;
+    
+    // Update object positions based on new window size
+    if (State.objects.length > 0) {
+        updateObjectHomePositions();
+    }
+}
+
+function setStep(id, state) {
+    const el = document.getElementById(id);
+    el.classList.remove('done', 'active');
+    el.classList.add(state);
+    el.querySelector('i').className = state === 'done' ? 'fas fa-check-circle' : (state === 'active' ? 'fas fa-spinner fa-spin' : 'fas fa-circle');
+}
+
+async function start() {
+    document.getElementById('intro').style.display = 'none';
+    document.getElementById('loading').classList.add('show');
+    
+    try {
+        setStep('step-audio', 'active');
+        document.getElementById('load-status').textContent = 'Initializing audio engine...';
+        await Audio.init();
+        setStep('step-audio', 'done');
+        
+        setStep('step-camera', 'active');
+        document.getElementById('load-status').textContent = 'Requesting camera access...';
+        
+        State.hands = new Hands({
+            locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
+        
+        State.hands.setOptions({
+            maxNumHands: 2,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.7,
+            minTrackingConfidence: 0.6,
+            selfieMode: true
+        });
+        
+        State.hands.onResults(render);
+        
+        State.camera = new Camera(State.video, {
+            onFrame: async () => {
+                await State.hands.send({ image: State.video });
+            },
+            width: 1280,
+            height: 720
+        });
+        
+        await State.camera.start();
+        setStep('step-camera', 'done');
+        
+        setStep('step-ai', 'active');
+        document.getElementById('load-status').textContent = 'Loading hand tracking AI...';
+        
+        for (const obj of State.objects) {
+            obj.initAudio(Audio.ctx, Audio.master);
+        }
+        
+        setStep('step-ai', 'done');
+        
+        setStep('step-ready', 'done');
+        document.getElementById('load-status').textContent = 'Ready!';
+        
+        State.lastTime = performance.now();
+        
+        await new Promise(r => setTimeout(r, 500));
+        
+        document.getElementById('overlay').style.opacity = '0';
+        setTimeout(() => document.getElementById('overlay').style.display = 'none', 500);
+        
+    } catch(err) {
+        console.error(err);
+        alert('Error: ' + err.message);
+    }
+}
+
+function cleanup() {
+    if (State.camera) State.camera.stop();
+    for (const obj of State.objects) obj.cleanup();
+    Audio.cleanup();
+}
+
+function toggleFullscreen() {
+    const btn = document.getElementById('fullscreenBtn');
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().then(() => {
+            btn.classList.add('hidden');
+        }).catch(err => {
+            console.log('Fullscreen error:', err);
+        });
+    }
+}
+
+window.onload = function() {
+    State.video = document.getElementById('video');
+    State.canvas = document.getElementById('canvas');
+    State.ctx = State.canvas.getContext('2d', { alpha: false });
+    
+    resize();
+    window.addEventListener('resize', resize);
+    window.addEventListener('beforeunload', cleanup);
+    
+    createObjects();
+    
+    document.getElementById('mirrorToggle').addEventListener('change', (e) => {
+        isMirrored = e.target.checked;
+    });
+    
+    document.getElementById('scaleSelect').addEventListener('change', (e) => {
+        currentScale = e.target.value;
+    });
+    
+    document.getElementById('startBtn').addEventListener('click', start);
+    document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
+};
+</script>
+</body>
+</html>
