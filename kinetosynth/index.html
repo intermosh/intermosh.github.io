@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ReactLive - Modular Gesture Synthesizer</title>
+    <title>/Кинетосинт(Kinetosynth) - Modular Gesture Synthesizer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
@@ -142,6 +142,46 @@
             background: #1a1a2e; color: #fff; padding: 10px;
         }
         
+        .camera-selector {
+            display: flex; align-items: center; justify-content: center;
+            gap: 12px; margin-bottom: 20px; color: #aaa; font-size: 0.9rem;
+        }
+        
+        .camera-selector select {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff; border: 1px solid rgba(59,130,246,0.5);
+            padding: 10px 15px; border-radius: 8px; font-size: 0.9rem;
+            cursor: pointer; outline: none; transition: all 0.3s;
+            max-width: 220px;
+        }
+        
+        .camera-selector select:hover {
+            border-color: rgba(59,130,246,0.8);
+            box-shadow: 0 0 10px rgba(59,130,246,0.3);
+        }
+        
+        .camera-selector select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 15px rgba(59,130,246,0.4);
+        }
+        
+        .camera-selector select option {
+            background: #1a1a2e; color: #fff; padding: 10px;
+        }
+        
+        .camera-refresh {
+            background: rgba(59,130,246,0.2);
+            border: 1px solid rgba(59,130,246,0.5);
+            color: #3b82f6; padding: 8px 12px;
+            border-radius: 8px; cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .camera-refresh:hover {
+            background: rgba(59,130,246,0.4);
+            border-color: #3b82f6;
+        }
+        
         .instructions {
             background: rgba(255,255,255,0.03); border-radius: 16px;
             padding: 25px; border: 1px solid rgba(255,255,255,0.1);
@@ -231,8 +271,8 @@
                 
                 <div class="object-legend" style="margin-top:20px">
                     <div class="legend-item">
-                        <div class="legend-shape"><svg width="20" height="20"><rect x="2" y="2" width="16" height="16" fill="#3b82f6" rx="2"/></svg></div>
-                        <span>Generators (Noise, FM, Grain)</span>
+                        <div class="legend-shape"><svg width="20" height="20"><rect x="2" y="2" width="16" height="16" fill="#06b6d4" rx="2"/></svg></div>
+                        <span>Generators (Pad, FM, Grain)</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-shape"><svg width="20" height="20"><rect x="2" y="2" width="16" height="16" fill="#f59e0b" rx="6"/></svg></div>
@@ -252,8 +292,18 @@
                     <div class="logo-ring"></div>
                     <div class="logo-core"></div>
                 </div>
-                <h1 class="title">ReactLive</h1>
-                <p class="subtitle">Gesture-Controlled Modular Synthesizer</p>
+                <h1 class="title">/Кинетосинт</h1>
+                <p class="subtitle">Kinetosynth - Gesture-Controlled Modular Synthesizer</p>
+                
+                <div class="camera-selector">
+                    <span><i class="fas fa-video"></i> Camera</span>
+                    <select id="cameraSelect">
+                        <option value="">Detecting cameras...</option>
+                    </select>
+                    <button class="camera-refresh" id="refreshCameras" title="Refresh camera list">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
                 
                 <div class="mirror-toggle">
                     <span>Mirror Camera</span>
@@ -292,7 +342,7 @@
                 <div class="loader-ring"></div>
                 <div class="loader-ring"></div>
             </div>
-            <p style="font-size:1.1rem;margin-bottom:5px">Initializing ReactLive</p>
+            <p style="font-size:1.1rem;margin-bottom:5px">Initializing Kinetosynth</p>
             <p id="load-status" style="color:#888;font-size:0.9rem">Preparing audio engine...</p>
             <div class="load-steps">
                 <div class="load-step" id="step-audio"><i class="fas fa-circle"></i> Audio Engine</div>
@@ -415,8 +465,7 @@ const Tempo = {
 // OBJECT TYPE DEFINITIONS
 // ═══════════════════════════════════════════════════════════════════════════════
 const OBJ_TYPES = {
-    synth:    { cat: 'generator', color: '#3b82f6', icon: '\uf83e', name: 'SYNTH' },
-    noise:    { cat: 'generator', color: '#06b6d4', icon: '\uf72e', name: 'NOISE' },
+    pad:      { cat: 'generator', color: '#06b6d4', icon: '\uf001', name: 'PAD' },
     fm:       { cat: 'generator', color: '#8b5cf6', icon: '\uf625', name: 'FM' },
     grain:    { cat: 'generator', color: '#14b8a6', icon: '\uf7e4', name: 'GRAIN' },
     delay:    { cat: 'effect', color: '#f59e0b', icon: '\uf017', name: 'DELAY' },
@@ -453,6 +502,73 @@ const SCALES = {
 
 let currentScale = 'major';
 const BASE_FREQ = 110; // A2
+let selectedCameraId = ''; // Selected camera device ID
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CAMERA ENUMERATION (Support for PS3 Eye and other external cameras)
+// ═══════════════════════════════════════════════════════════════════════════════
+async function enumerateCameras() {
+    const select = document.getElementById('cameraSelect');
+    
+    try {
+        // Request permission first (needed to get device labels)
+        const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        tempStream.getTracks().forEach(track => track.stop());
+        
+        // Now enumerate devices
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(d => d.kind === 'videoinput');
+        
+        select.innerHTML = '';
+        
+        if (videoDevices.length === 0) {
+            select.innerHTML = '<option value="">No cameras found</option>';
+            return;
+        }
+        
+        videoDevices.forEach((device, index) => {
+            const option = document.createElement('option');
+            option.value = device.deviceId;
+            
+            // Try to identify PS3 Eye or other known cameras
+            let label = device.label || `Camera ${index + 1}`;
+            
+            // Highlight PS3 Eye camera if detected
+            if (label.toLowerCase().includes('ps3') || 
+                label.toLowerCase().includes('playstation') ||
+                label.toLowerCase().includes('eye')) {
+                label = '🎮 ' + label + ' (PS3 Eye)';
+            } else if (label.toLowerCase().includes('integrated') || 
+                       label.toLowerCase().includes('built-in') ||
+                       label.toLowerCase().includes('facetime')) {
+                label = '💻 ' + label;
+            } else {
+                label = '📷 ' + label;
+            }
+            
+            option.textContent = label;
+            select.appendChild(option);
+        });
+        
+        // Select first camera by default (or PS3 Eye if found)
+        const ps3Eye = videoDevices.find(d => 
+            d.label.toLowerCase().includes('ps3') || 
+            d.label.toLowerCase().includes('playstation') ||
+            d.label.toLowerCase().includes('eye')
+        );
+        
+        if (ps3Eye) {
+            select.value = ps3Eye.deviceId;
+            selectedCameraId = ps3Eye.deviceId;
+        } else {
+            selectedCameraId = videoDevices[0].deviceId;
+        }
+        
+    } catch (err) {
+        console.error('Camera enumeration error:', err);
+        select.innerHTML = '<option value="">Camera access denied</option>';
+    }
+}
 
 function getScaleFrequency(normalizedValue) {
     const scale = SCALES[currentScale];
@@ -730,21 +846,42 @@ const AudioNodeFactory = {
         return { osc, filter, gain, output, analyser, modInput: filter.frequency };
     },
     
-    noise(ctx, dest) {
-        const bufSize = ctx.sampleRate;
-        const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-        const d = buf.getChannelData(0);
-        for (let i = 0; i < bufSize; i++) d[i] = Math.random() * 2 - 1;
+    // PAD - Soft ambient synth with multiple detuned sine waves and slow filter
+    pad(ctx, dest) {
+        // Create multiple detuned oscillators for rich pad sound
+        const oscs = [];
+        const detunes = [-7, -3, 0, 4, 7]; // Soft chord intervals
+        const mixer = ctx.createGain();
+        mixer.gain.value = 0.15; // Soft volume per voice
         
-        const src = ctx.createBufferSource();
-        src.buffer = buf;
-        src.loop = true;
+        for (const detune of detunes) {
+            const osc = ctx.createOscillator();
+            osc.type = 'sine';
+            osc.frequency.value = 220;
+            osc.detune.value = detune;
+            osc.connect(mixer);
+            osc.start();
+            oscs.push(osc);
+        }
         
+        // Add subtle sub oscillator
+        const subOsc = ctx.createOscillator();
+        subOsc.type = 'sine';
+        subOsc.frequency.value = 110;
+        const subGain = ctx.createGain();
+        subGain.gain.value = 0.08;
+        subOsc.connect(subGain);
+        subGain.connect(mixer);
+        subOsc.start();
+        oscs.push(subOsc);
+        
+        // Soft lowpass filter for warm sound
         const filter = ctx.createBiquadFilter();
-        filter.type = 'bandpass';
-        filter.frequency.value = 1000;
-        filter.Q.value = 5;
+        filter.type = 'lowpass';
+        filter.frequency.value = 800;
+        filter.Q.value = 0.5; // Low resonance for smooth sound
         
+        // Main gain control
         const gain = ctx.createGain();
         gain.gain.value = 0;
         
@@ -754,14 +891,13 @@ const AudioNodeFactory = {
         const analyser = ctx.createAnalyser();
         analyser.fftSize = 256;
         
-        src.connect(filter);
+        mixer.connect(filter);
         filter.connect(gain);
         gain.connect(output);
         output.connect(analyser);
         analyser.connect(dest);
-        src.start();
         
-        return { src, filter, gain, output, analyser, modInput: filter.frequency };
+        return { oscs, subOsc, subGain, mixer, filter, gain, output, analyser, modInput: filter.frequency };
     },
     
     fm(ctx, dest) {
@@ -911,9 +1047,12 @@ class TangibleObject {
             this.analyser = nodes.analyser;
             this.modInput = nodes.modInput;
         }
-        else if (this.type === 'noise') {
-            const nodes = AudioNodeFactory.noise(ctx, dest);
-            this.audioNode = nodes.src;
+        else if (this.type === 'pad') {
+            const nodes = AudioNodeFactory.pad(ctx, dest);
+            this.oscArray = nodes.oscs;
+            this.subOsc = nodes.subOsc;
+            this.subGain = nodes.subGain;
+            this.mixerNode = nodes.mixer;
             this.filterNode = nodes.filter;
             this.gainNode = nodes.gain;
             this.outputNode = nodes.output;
@@ -998,10 +1137,21 @@ class TangibleObject {
                 this.gainNode.gain.setTargetAtTime(0.25, now, 0.05);
                 this.filterNode.frequency.setTargetAtTime(500 + rotNorm * 3000, now, 0.05);
             }
-            else if (this.type === 'noise') {
-                const freq = 200 + rotNorm * 4000;
-                this.filterNode.frequency.setTargetAtTime(freq, now, 0.05);
-                this.gainNode.gain.setTargetAtTime(0.15, now, 0.05);
+            else if (this.type === 'pad') {
+                // PAD: sweet ambient synth
+                const baseFreq = getScaleFrequency(rotNorm);
+                if (this.oscArray) {
+                    for (const osc of this.oscArray) {
+                        osc.frequency.setTargetAtTime(baseFreq, now, 0.1); // Slow transition for smooth pads
+                    }
+                }
+                if (this.subOsc) {
+                    this.subOsc.frequency.setTargetAtTime(baseFreq * 0.5, now, 0.1);
+                }
+                // Soft filter sweep based on rotation
+                const filterFreq = 400 + rotNorm * 2000;
+                this.filterNode.frequency.setTargetAtTime(filterFreq, now, 0.1);
+                this.gainNode.gain.setTargetAtTime(0.25, now, 0.08);
             }
             else if (this.type === 'fm') {
                 const freq = getScaleFrequency(rotNorm);
@@ -1101,6 +1251,11 @@ class TangibleObject {
                     osc.disconnect();
                 }
             }
+            if (this.subOsc) {
+                this.subOsc.stop();
+                this.subOsc.disconnect();
+            }
+            if (this.mixerNode) this.mixerNode.disconnect();
         } catch(e) {}
     }
 }
@@ -1568,6 +1723,38 @@ function drawObject(ctx, obj, w, h, minDim) {
     ctx.font = 'bold 8px system-ui';
     ctx.fillText(obj.name, 0, 6);
     
+    // Draw terminal-style debug info for generators (bottom right)
+    if (obj.cat === 'generator' && obj.active) {
+        const debugX = size + 8;
+        const debugY = size - 5;
+        
+        // Normalize rotation to degrees (0-360)
+        const rotDeg = (((obj.rot * 180 / PI) % 360) + 360) % 360;
+        
+        // Format values
+        const xVal = (obj.x * 100).toFixed(0);
+        const yVal = (obj.y * 100).toFixed(0);
+        const rVal = rotDeg.toFixed(0);
+        
+        ctx.font = '600 9px "Courier New", monospace';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        
+        // Green terminal style with slight transparency
+        ctx.fillStyle = 'rgba(34, 197, 94, 0.9)';
+        
+        // Add subtle glow
+        ctx.shadowColor = '#22c55e';
+        ctx.shadowBlur = 4;
+        
+        // Draw each line
+        ctx.fillText(`x:${xVal}`, debugX, debugY);
+        ctx.fillText(`y:${yVal}`, debugX, debugY + 10);
+        ctx.fillText(`r:${rVal}°`, debugX, debugY + 20);
+        
+        ctx.shadowBlur = 0;
+    }
+    
     ctx.restore();
 }
 
@@ -1743,7 +1930,7 @@ function render(results) {
 // INITIALIZATION
 // ═══════════════════════════════════════════════════════════════════════════════
 function createObjects() {
-    const types = ['noise', 'fm', 'grain', 'delay', 'reverb', 'filter', 'lpf', 'distort', 'bitcrush', 'lfo'];
+    const types = ['pad', 'fm', 'grain', 'delay', 'reverb', 'filter', 'lpf', 'distort', 'bitcrush', 'lfo'];
     const count = types.length;
     
     for (let i = 0; i < count; i++) {
@@ -1798,13 +1985,21 @@ async function start() {
         
         State.hands.onResults(render);
         
-        State.camera = new Camera(State.video, {
+        // Configure camera with selected device
+        const cameraConstraints = {
             onFrame: async () => {
                 await State.hands.send({ image: State.video });
             },
             width: 1280,
             height: 720
-        });
+        };
+        
+        // If a specific camera is selected, use it
+        if (selectedCameraId) {
+            cameraConstraints.deviceId = selectedCameraId;
+        }
+        
+        State.camera = new Camera(State.video, cameraConstraints);
         
         await State.camera.start();
         setStep('step-camera', 'done');
@@ -1869,6 +2064,17 @@ window.onload = function() {
     document.getElementById('scaleSelect').addEventListener('change', (e) => {
         currentScale = e.target.value;
     });
+    
+    document.getElementById('cameraSelect').addEventListener('change', (e) => {
+        selectedCameraId = e.target.value;
+    });
+    
+    document.getElementById('refreshCameras').addEventListener('click', () => {
+        enumerateCameras();
+    });
+    
+    // Enumerate cameras on page load
+    enumerateCameras();
     
     document.getElementById('startBtn').addEventListener('click', start);
     document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
