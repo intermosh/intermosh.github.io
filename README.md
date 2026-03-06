@@ -1,78 +1,78 @@
 # Intermosh
 
-A personal playground and portfolio showcasing interactive web experiments, prototypes, and creative coding projects by Ciro Mendoza (KRANK).
+Un espacio personal de experimentación y portafolio de proyectos interactivos, prototipos y experimentos de programación creativa de Ciro Mendoza (KRANK).
 
-## 🌟 Live Demo
+## 🌟 Portfolio
 
-Visit the live site: [intermosh.github.io](https://intermosh.github.io)
+Sitio principal: [intermosh.github.io](https://intermosh.github.io)
 
-## 📁 Projects
+## 📁 Proyectos
 
-This repository contains several interactive web applications and experiments:
+Este repositorio contiene varias aplicaciones web interactivas y experimentos:
 
 ### Fuzzytronic Visual Terminal (`fuzzy_vt/`)
-A retro-styled audio-visual terminal featuring multiple visualization modes including oscilloscope, matrix rain, concentric patterns, Lissajous curves, tunnel effects, particle systems, terrain generation, spirographs, and glitch art. Built with Canvas 2D and Web Audio API.
+Una terminal visual audiovisual de estilo retro que presenta múltiples modos de visualización incluyendo osciloscopio, lluvia de matriz, patrones concéntricos, curvas de Lissajous, efectos de túnel, sistemas de partículas, generación de terreno, espirórafos y arte glitch. Construido con Canvas 2D y Web Audio API.
 
 ### GP Live Visualizer (`gp_live/`)
-A real-time audio visualizer with modular architecture. Features live audio processing, customizable rendering pipelines, and interactive controls.
+Un visualizador de audio en tiempo real con arquitectura modular. Presenta procesamiento de audio en vivo, tuberías de renderizado personalizables y controles interactivos.
 
 ### Kinetosynth (`kinetosynth/`)
-A modular gesture synthesizer using MediaPipe hand tracking. Control audio synthesis parameters through hand gestures and movements.
+Un sintetizador modular de gestos usando seguimiento de manos con MediaPipe. Controla los parámetros de síntesis de audio a través de gestos y movimientos de las manos.
 
 ### AR Tracking System (`artrack/`)
-An augmented reality marker tracking system with retro terminal interface. Uses computer vision for real-time marker detection and tracking.
+Un sistema de seguimiento de marcadores de realidad aumentada con interfaz de terminal retro. Utiliza visión por computadora para detección y seguimiento de marcadores en tiempo real.
 
-### Other Experiments
-- **ReactLive** (`reactlive/`): Live coding environment
-- **Carousel** (`js/carousel.js`): Interactive carousel component
-- Various HTML demos and prototypes
+### Otros Experimentos
+- **ReactLive** (`reactlive/`): Entorno de codificación en vivo
+- **Carousel** (`js/carousel.js`): Componente carrusel interactivo
+- Varios demos HTML y prototipos
 
-## 🛠️ Technologies Used
+## 🛠️ Tecnologías Utilizadas
 
 - **Frontend**: HTML5, CSS3, JavaScript (ES6+)
-- **Graphics**: Canvas 2D, WebGL
+- **Gráficos**: Canvas 2D, WebGL
 - **Audio**: Web Audio API
-- **Computer Vision**: MediaPipe Hands
-- **Styling**: Tailwind CSS, Custom CSS
-- **Build Tools**: None (vanilla web development)
+- **Visión por Computadora**: MediaPipe Hands
+- **Estilos**: Tailwind CSS, CSS personalizado
+- **Herramientas de Construcción**: Ninguna (desarrollo web vanilla)
 
-## 🚀 Getting Started
+## 🚀 Comenzar
+Para proyectos que requieran acceso a cámara/micrófono (como Kinetosynth), asegúrate de estar sirviendo sobre HTTPS o localhost.
 
-1. Clone the repository:
+1. Clona el repositorio:
    ```bash
    git clone https://github.com/intermosh/intermosh.github.io.git
    cd intermosh.github.io
    ```
+2. Abre cualquier archivo `index.html` en tu navegador, o sirve el directorio raíz con un servidor local.
 
-2. Open any `index.html` file in your browser, or serve the root directory with a local server.
+Para proyectos que requieran shadowArrayBuffer, asegúrate de estar sirviendo sobre HTTPS o localhost.
 
-For projects requiring camera/microphone access (like Kinetosynth), ensure you're serving over HTTPS or localhost.
+## 📝 Uso
 
-## 📝 Usage
+Algunos proyectos pueden requerir:
 
-Each project is self-contained in its own directory. Simply open the `index.html` file in a modern web browser. Some projects may require:
+- Acceso al micrófono para visualización de audio
+- Acceso a la cámara para seguimiento de gestos
+- Navegador moderno con soporte de Web Audio API
 
-- Microphone access for audio visualization
-- Camera access for gesture tracking
-- Modern browser with Web Audio API support
+## 🤝 Contribuir
 
-## 🤝 Contributing
+Este es un portafolio personal, pero siéntete libre de:
+- Reportar bugs o problemas
+- Sugerir mejoras
+- Hacer fork y crear tus propias variaciones
 
-This is a personal portfolio repository, but feel free to:
-- Report bugs or issues
-- Suggest improvements
-- Fork and create your own variations
+## 📄 Licencia
 
-## 📄 License
+Este proyecto es código abierto y está disponible bajo la [Licencia MIT](LICENSE).
 
-This project is open source and available under the [MIT License](LICENSE).
-
-## 👤 Author
+## 👤 Autor
 
 **Ciro Mendoza** (KRANK)
-- Website: [intermosh.github.io](https://intermosh.github.io)
+- Sitio Web: [intermosh.github.io](https://intermosh.github.io)
 - GitHub: [@intermosh](https://github.com/intermosh)
 
 ---
 
-*Built with passion for creative coding and interactive experiences.*
+*Construido con pasión por la programación creativa y experiencias interactivas.*
