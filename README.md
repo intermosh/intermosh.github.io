@@ -2,11 +2,11 @@
 
 Un espacio personal de experimentación y portafolio de proyectos interactivos, prototipos y experimentos de programación creativa de Ciro Mendoza (KRANK).
 
-## 🌟 Portfolio
+## Portfolio
 
 Sitio principal: [intermosh.github.io](https://intermosh.github.io)
 
-## 📁 Proyectos
+## Proyectos
 
 Este repositorio contiene varias aplicaciones web interactivas y experimentos:
 
@@ -27,7 +27,7 @@ Un sistema de seguimiento de marcadores de realidad aumentada con interfaz de te
 - **Carousel** (`js/carousel.js`): Componente carrusel interactivo
 - Varios demos HTML y prototipos
 
-## 🛠️ Tecnologías Utilizadas
+## Tecnologías Utilizadas
 
 - **Frontend**: HTML5, CSS3, JavaScript (ES6+)
 - **Gráficos**: Canvas 2D, WebGL
@@ -36,7 +36,7 @@ Un sistema de seguimiento de marcadores de realidad aumentada con interfaz de te
 - **Estilos**: Tailwind CSS, CSS personalizado
 - **Herramientas de Construcción**: Ninguna (desarrollo web vanilla)
 
-## 🚀 Comenzar
+## Comenzar
 Para proyectos que requieran acceso a cámara/micrófono (como Kinetosynth), asegúrate de estar sirviendo sobre HTTPS o localhost.
 
 1. Clona el repositorio:
@@ -48,7 +48,7 @@ Para proyectos que requieran acceso a cámara/micrófono (como Kinetosynth), ase
 
 Para proyectos que requieran shadowArrayBuffer, asegúrate de estar sirviendo sobre HTTPS o localhost.
 
-## 📝 Uso
+## Uso
 
 Algunos proyectos pueden requerir:
 
@@ -56,18 +56,18 @@ Algunos proyectos pueden requerir:
 - Acceso a la cámara para seguimiento de gestos
 - Navegador moderno con soporte de Web Audio API
 
-## 🤝 Contribuir
+## Contribuir
 
 Este es un portafolio personal, pero siéntete libre de:
 - Reportar bugs o problemas
 - Sugerir mejoras
 - Hacer fork y crear tus propias variaciones
 
-## 📄 Licencia
+## Licencia
 
 Este proyecto es código abierto y está disponible bajo la [Licencia MIT](LICENSE).
 
-## 👤 Autor
+## Autor
 
 **Ciro Mendoza** (KRANK)
 - Sitio Web: [intermosh.github.io](https://intermosh.github.io)
