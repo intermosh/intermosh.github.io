@@ -1,6 +1,6 @@
 # Intermosh
 
-Un espacio personal de experimentación y portafolio de proyectos interactivos, prototipos y experimentos de programación creativa de Ciro Mendoza (KRANK).
+Espacio personal de experimentación y portafolio de proyectos interactivos, prototipos y experimentos de programación creativa.
 
 ## Portfolio
 
@@ -44,9 +44,9 @@ Para proyectos que requieran acceso a cámara/micrófono (como Kinetosynth), ase
    git clone https://github.com/intermosh/intermosh.github.io.git
    cd intermosh.github.io
    ```
-2. Abre cualquier archivo `index.html` en tu navegador, o sirve el directorio raíz con un servidor local.
+2. Sirve el directorio raíz con un servidor local. Ejecuta `python server.py`.
 
-Para proyectos que requieran shadowArrayBuffer, asegúrate de estar sirviendo sobre HTTPS o localhost.
+Para proyectos que requieran shadowArrayBuffer, asegúrate de estar sirviendo los headers necesarios.
 
 ## Uso
 
@@ -75,4 +75,4 @@ Este proyecto es código abierto y está disponible bajo la [Licencia MIT](LICEN
 
 ---
 
-*Construido con pasión por la programación creativa y experiencias interactivas.*
+*Mess with the best. Die like the rest.*
