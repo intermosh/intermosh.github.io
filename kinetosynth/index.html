@@ -586,6 +586,160 @@ function getScaleFrequency(normalizedValue) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// AUDIO CONNECTION MANAGER - Prevents memory leaks by tracking all connections
+// ═══════════════════════════════════════════════════════════════════════════════
+const AudioConnectionManager = {
+    // Maps: objectIndex -> Set of connected effect types
+    generatorConnections: new Map(),
+    // Maps: effectType -> Set of connected generator indices
+    effectInputs: new Map(),
+    // Tracks LFO connections: param -> true
+    lfoConnections: new WeakSet(),
+    
+    init() {
+        this.generatorConnections.clear();
+        this.effectInputs.clear();
+        ['delay', 'reverb', 'filter', 'lpf', 'distort', 'bitcrush'].forEach(fx => {
+            this.effectInputs.set(fx, new Set());
+        });
+    },
+    
+    // Check if generator is connected to effect
+    isConnected(genIdx, effectType) {
+        const connections = this.generatorConnections.get(genIdx);
+        return connections ? connections.has(effectType) : false;
+    },
+    
+    // Connect generator to effect (only if not already connected)
+    connect(genObj, effectType) {
+        if (!genObj.outputNode) return false;
+        
+        const genIdx = genObj.index;
+        
+        // Check if already connected
+        if (this.isConnected(genIdx, effectType)) {
+            return false; // No action needed
+        }
+        
+        // Get effect node
+        let effectNode = null;
+        switch(effectType) {
+            case 'delay': effectNode = Audio.delayNode; break;
+            case 'reverb': effectNode = Audio.reverbNode; break;
+            case 'filter': effectNode = Audio.filterNode; break;
+            case 'lpf': effectNode = Audio.lpfNode; break;
+            case 'distort': effectNode = Audio.distortNode; break;
+            case 'bitcrush': effectNode = Audio.bitcrushNode; break;
+        }
+        
+        if (!effectNode) return false;
+        
+        try {
+            genObj.outputNode.connect(effectNode);
+            
+            // Track connection
+            if (!this.generatorConnections.has(genIdx)) {
+                this.generatorConnections.set(genIdx, new Set());
+            }
+            this.generatorConnections.get(genIdx).add(effectType);
+            this.effectInputs.get(effectType).add(genIdx);
+            
+            return true;
+        } catch(e) {
+            console.warn('Connection failed:', e);
+            return false;
+        }
+    },
+    
+    // Disconnect generator from effect
+    disconnect(genObj, effectType) {
+        if (!genObj.outputNode) return false;
+        
+        const genIdx = genObj.index;
+        
+        // Check if actually connected
+        if (!this.isConnected(genIdx, effectType)) {
+            return false; // Not connected, nothing to do
+        }
+        
+        // Get effect node
+        let effectNode = null;
+        switch(effectType) {
+            case 'delay': effectNode = Audio.delayNode; break;
+            case 'reverb': effectNode = Audio.reverbNode; break;
+            case 'filter': effectNode = Audio.filterNode; break;
+            case 'lpf': effectNode = Audio.lpfNode; break;
+            case 'distort': effectNode = Audio.distortNode; break;
+            case 'bitcrush': effectNode = Audio.bitcrushNode; break;
+        }
+        
+        if (!effectNode) return false;
+        
+        try {
+            genObj.outputNode.disconnect(effectNode);
+            
+            // Remove from tracking
+            this.generatorConnections.get(genIdx).delete(effectType);
+            this.effectInputs.get(effectType).delete(genIdx);
+            
+            return true;
+        } catch(e) {
+            // Ignore disconnect errors (may already be disconnected)
+            return false;
+        }
+    },
+    
+    // Disconnect all effects from a generator
+    disconnectAll(genObj) {
+        if (!genObj.outputNode) return;
+        
+        const genIdx = genObj.index;
+        const connections = this.generatorConnections.get(genIdx);
+        
+        if (connections) {
+            for (const effectType of Array.from(connections)) {
+                this.disconnect(genObj, effectType);
+            }
+        }
+    },
+    
+    // Sync connections: ensure only specified effects are connected
+    syncConnections(genObj, targetEffects) {
+        const genIdx = genObj.index;
+        const currentConnections = this.generatorConnections.get(genIdx) || new Set();
+        
+        // Disconnect effects that shouldn't be connected
+        for (const effectType of Array.from(currentConnections)) {
+            if (!targetEffects.has(effectType)) {
+                this.disconnect(genObj, effectType);
+            }
+        }
+        
+        // Connect effects that should be connected
+        for (const effectType of targetEffects) {
+            if (!currentConnections.has(effectType)) {
+                this.connect(genObj, effectType);
+            }
+        }
+    },
+    
+    // Get connection count for debugging
+    getConnectionCount() {
+        let total = 0;
+        for (const [, connections] of this.generatorConnections) {
+            total += connections.size;
+        }
+        return total;
+    },
+    
+    // Cleanup all connections
+    cleanup() {
+        this.generatorConnections.clear();
+        this.effectInputs.clear();
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // AUDIO ENGINE
 // ═══════════════════════════════════════════════════════════════════════════════
 const Audio = {
@@ -619,6 +773,9 @@ const Audio = {
         this.master.connect(this.analyser);
         
         this.createEffects();
+        
+        // Initialize connection manager
+        AudioConnectionManager.init();
     },
     
     createEffects() {
@@ -712,22 +869,33 @@ const Audio = {
     },
     
     cleanup() {
-        if (this.ctx) this.ctx.close();
+        // Clean up connection manager first
+        AudioConnectionManager.cleanup();
+        // Clean up LFO
+        LFOEngine.cleanup();
+        // Close audio context
+        if (this.ctx) {
+            this.ctx.close();
+            this.ctx = null;
+        }
     }
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// LFO ENGINE
+// LFO ENGINE - With proper connection tracking
 // ═══════════════════════════════════════════════════════════════════════════════
 const LFOEngine = {
     osc: null,
     gain: null,
-    connectedParams: new Set(),
+    connectedParams: new Map(), // Map: objIndex -> param (for proper tracking)
+    targetParams: new Set(), // Set of objIndex we WANT to connect to
     rate: 2,
     depth: 0,
     ctx: null,
+    initialized: false,
     
     init(ctx) {
+        if (this.initialized) return;
         this.ctx = ctx;
         this.osc = ctx.createOscillator();
         this.osc.type = 'sine';
@@ -736,6 +904,7 @@ const LFOEngine = {
         this.gain.gain.value = 0;
         this.osc.connect(this.gain);
         this.osc.start();
+        this.initialized = true;
     },
     
     setRate(rate) {
@@ -752,20 +921,88 @@ const LFOEngine = {
         }
     },
     
-    connectTo(param) {
-        if (this.gain && param && !this.connectedParams.has(param)) {
-            try {
-                this.gain.connect(param);
-                this.connectedParams.add(param);
-            } catch(e) {}
+    // Mark which objects we want to connect to this frame
+    markTarget(objIndex) {
+        this.targetParams.add(objIndex);
+    },
+    
+    // Connect to a param if not already connected
+    connectTo(objIndex, param) {
+        if (!this.gain || !param) return;
+        
+        if (this.connectedParams.has(objIndex)) {
+            return; // Already connected
+        }
+        
+        try {
+            this.gain.connect(param);
+            this.connectedParams.set(objIndex, param);
+        } catch(e) {
+            console.warn('LFO connect failed:', e);
         }
     },
     
+    // Disconnect from an object's param
+    disconnectFrom(objIndex) {
+        if (!this.connectedParams.has(objIndex)) return;
+        
+        const param = this.connectedParams.get(objIndex);
+        try {
+            this.gain.disconnect(param);
+        } catch(e) {
+            // Ignore - may already be disconnected
+        }
+        this.connectedParams.delete(objIndex);
+    },
+    
+    // Sync connections: connect to targets, disconnect from non-targets
+    syncConnections(objects) {
+        // Disconnect from objects that are no longer targets
+        for (const [objIndex, param] of this.connectedParams) {
+            if (!this.targetParams.has(objIndex)) {
+                this.disconnectFrom(objIndex);
+            }
+        }
+        
+        // Connect to new targets
+        for (const objIndex of this.targetParams) {
+            if (!this.connectedParams.has(objIndex)) {
+                const obj = objects[objIndex];
+                if (obj && obj.modInput) {
+                    this.connectTo(objIndex, obj.modInput);
+                }
+            }
+        }
+        
+        // Clear targets for next frame
+        this.targetParams.clear();
+    },
+    
+    // Full disconnect (cleanup)
     disconnectAll() {
-        this.connectedParams.forEach(param => {
-            try { this.gain.disconnect(param); } catch(e) {}
-        });
+        for (const [objIndex, param] of this.connectedParams) {
+            try { 
+                this.gain.disconnect(param); 
+            } catch(e) {}
+        }
         this.connectedParams.clear();
+        this.targetParams.clear();
+    },
+    
+    getConnectionCount() {
+        return this.connectedParams.size;
+    },
+    
+    cleanup() {
+        this.disconnectAll();
+        if (this.osc) {
+            try { this.osc.stop(); } catch(e) {}
+            try { this.osc.disconnect(); } catch(e) {}
+        }
+        if (this.gain) {
+            try { this.gain.disconnect(); } catch(e) {}
+        }
+        this.initialized = false;
     }
 };
 
@@ -1092,6 +1329,28 @@ class TangibleObject {
         return null;
     }
     
+    // Called when object becomes inactive - ensures clean audio state
+    deactivate() {
+        if (!this.active) return; // Already inactive
+        
+        this.active = false;
+        this.intensity = 0;
+        
+        // Disconnect from all effects
+        if (this.cat === 'generator') {
+            AudioConnectionManager.disconnectAll(this);
+        }
+        
+        // Clear connection visuals
+        this.audioConnections.clear();
+        this.controlConnections.clear();
+        
+        // Silence the audio
+        if (Audio.ctx && this.gainNode) {
+            this.gainNode.gain.setTargetAtTime(0, Audio.ctx.currentTime, 0.05);
+        }
+    }
+    
     update(dt) {
         const ps = 1 - Math.pow(1 - CFG.posSmooth, dt * 60);
         this.x += (this.targetX - this.x) * ps;
@@ -1101,12 +1360,15 @@ class TangibleObject {
         this.rot += (this.targetRot - this.rot) * rs;
         
         const dist = Math.hypot(this.x - 0.5, this.y - 0.5);
+        const wasActive = this.active;
         
         // Only activate when INSIDE the zone and not being held
         if (this.heldBy < 0) {
             // If outside zone, deactivate and return home
             if (dist > CFG.zoneRadius) {
-                this.active = false;
+                if (wasActive) {
+                    this.deactivate(); // Proper cleanup
+                }
                 this.targetX = this.homeX;
                 this.targetY = this.homeY;
             } else {
@@ -1115,7 +1377,12 @@ class TangibleObject {
             }
         } else {
             // While being held, only activate if inside zone
-            this.active = dist <= CFG.zoneRadius;
+            const shouldBeActive = dist <= CFG.zoneRadius;
+            if (wasActive && !shouldBeActive) {
+                this.deactivate(); // Proper cleanup when dragged out
+            } else {
+                this.active = shouldBeActive;
+            }
         }
         
         this.intensity = this.active ? 1.0 : 0; // Constant volume when active
@@ -1234,29 +1501,70 @@ class TangibleObject {
     }
     
     cleanup() {
+        // First, disconnect from all effects using the connection manager
+        if (this.cat === 'generator') {
+            AudioConnectionManager.disconnectAll(this);
+        }
+        
         try {
             if (this.audioNode) {
                 if (this.audioNode.stop) this.audioNode.stop();
                 this.audioNode.disconnect();
+                this.audioNode = null;
             }
-            if (this.gainNode) this.gainNode.disconnect();
-            if (this.outputNode) this.outputNode.disconnect();
+            if (this.gainNode) {
+                this.gainNode.disconnect();
+                this.gainNode = null;
+            }
+            if (this.outputNode) {
+                this.outputNode.disconnect();
+                this.outputNode = null;
+            }
+            if (this.analyser) {
+                this.analyser.disconnect();
+                this.analyser = null;
+            }
+            if (this.filterNode) {
+                this.filterNode.disconnect();
+                this.filterNode = null;
+            }
             if (this.modNode) {
                 this.modNode.stop();
                 this.modNode.disconnect();
+                this.modNode = null;
+            }
+            if (this.modGainNode) {
+                this.modGainNode.disconnect();
+                this.modGainNode = null;
             }
             if (this.oscArray) {
                 for (const osc of this.oscArray) {
                     osc.stop();
                     osc.disconnect();
                 }
+                this.oscArray = null;
             }
             if (this.subOsc) {
                 this.subOsc.stop();
                 this.subOsc.disconnect();
+                this.subOsc = null;
             }
-            if (this.mixerNode) this.mixerNode.disconnect();
-        } catch(e) {}
+            if (this.subGain) {
+                this.subGain.disconnect();
+                this.subGain = null;
+            }
+            if (this.mixerNode) {
+                this.mixerNode.disconnect();
+                this.mixerNode = null;
+            }
+            
+            // Clear connection sets
+            this.audioConnections.clear();
+            this.controlConnections.clear();
+            this.modInput = null;
+        } catch(e) {
+            console.warn('Cleanup error for', this.type, e);
+        }
     }
 }
 
@@ -1352,7 +1660,7 @@ function processHand(landmarks, handIdx) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// CONNECTION MANAGEMENT
+// CONNECTION MANAGEMENT - With explicit disconnect to prevent memory leaks
 // ═══════════════════════════════════════════════════════════════════════════════
 function canConnect(srcCat, tgtCat) {
     const allowed = CONNECTIONS[srcCat] || [];
@@ -1392,15 +1700,24 @@ function isEffectBetween(gen, fx, centerX, centerY, tolerance) {
 function updateConnections() {
     if (!Audio.ctx) return;
     
-    LFOEngine.disconnectAll();
+    // Clear control connections at start of each frame
+    for (const obj of State.objects) {
+        obj.controlConnections.clear();
+    }
     
     const generators = State.objects.filter(o => o.active && o.cat === 'generator');
     const effects = State.objects.filter(o => o.active && o.cat === 'effect');
     const controllers = State.objects.filter(o => o.active && o.cat === 'controller');
     
-    // Controllers (LFO) connect from further away to nearby generators/effects
+    // Create set of active effect types for fast lookup
+    const activeEffectTypes = new Set(effects.map(e => e.type));
+    
+    // ─── CONTROLLER (LFO) CONNECTIONS ───
+    // Mark targets first, then sync connections (connect new, disconnect old)
     for (const ctrl of controllers) {
-        const connectRange = ctrl.type === 'lfo' ? CFG.lfoConnectDist : CFG.connectDist;
+        if (ctrl.type !== 'lfo') continue;
+        
+        const connectRange = CFG.lfoConnectDist;
         const nearby = State.spatialHash.getNearby(ctrl.x, ctrl.y, connectRange);
         
         for (const idx of nearby) {
@@ -1411,37 +1728,51 @@ function updateConnections() {
             const d = Math.hypot(ctrl.x - target.x, ctrl.y - target.y);
             if (d >= connectRange) continue;
             
-            if (ctrl.type === 'lfo' && target.modInput) {
-                LFOEngine.connectTo(target.modInput);
+            if (target.modInput) {
+                LFOEngine.markTarget(target.index);
                 ctrl.controlConnections.add(target.index);
             }
         }
     }
     
-    // Effects connect when BETWEEN generator and center
+    // Sync LFO connections (connects new targets, disconnects old ones)
+    LFOEngine.syncConnections(State.objects);
+    
+    // ─── EFFECT CONNECTIONS (GENERATOR -> EFFECT) ───
     const centerX = 0.5;
     const centerY = 0.5;
     
     for (const gen of generators) {
         if (!gen.outputNode) continue;
         
-        // Clear previous connections
+        // Calculate which effects should be connected this frame
+        const targetEffects = new Set();
+        
+        // Clear visual connection tracking
         gen.audioConnections.clear();
         
-        // Check each effect if it's between this generator and center
+        // Check each active effect if it's between this generator and center
         for (const fx of effects) {
             if (isEffectBetween(gen, fx, centerX, centerY, CFG.betweenTolerance)) {
-                try {
-                    if (fx.type === 'delay') gen.outputNode.connect(Audio.delayNode);
-                    else if (fx.type === 'reverb') gen.outputNode.connect(Audio.reverbNode);
-                    else if (fx.type === 'filter') gen.outputNode.connect(Audio.filterNode);
-                    else if (fx.type === 'lpf') gen.outputNode.connect(Audio.lpfNode);
-                    else if (fx.type === 'distort') gen.outputNode.connect(Audio.distortNode);
-                    else if (fx.type === 'bitcrush') gen.outputNode.connect(Audio.bitcrushNode);
-                    
-                    gen.audioConnections.add(fx.index);
-                } catch(e) {}
+                targetEffects.add(fx.type);
+                gen.audioConnections.add(fx.index);
             }
+        }
+        
+        // Use AudioConnectionManager to sync connections
+        // This will: 
+        // 1. Disconnect effects that are no longer in targetEffects
+        // 2. Connect effects that are newly in targetEffects
+        // 3. Leave existing correct connections unchanged
+        AudioConnectionManager.syncConnections(gen, targetEffects);
+    }
+    
+    // ─── DISCONNECT INACTIVE GENERATORS ───
+    // Make sure inactive generators have no effect connections
+    for (const obj of State.objects) {
+        if (obj.cat === 'generator' && !obj.active) {
+            AudioConnectionManager.disconnectAll(obj);
+            obj.audioConnections.clear();
         }
     }
 }
@@ -1910,10 +2241,8 @@ function render(results) {
         }
     }
     
-    // Clear connections for next frame (but keep them drawn)
-    for (const obj of State.objects) {
-        obj.controlConnections.clear();
-    }
+    // Control connections are cleared after being drawn
+    // Audio connections are managed by AudioConnectionManager (persistent)
     
     for (const obj of State.objects) {
         drawObject(ctx, obj, w, h, minDim);
