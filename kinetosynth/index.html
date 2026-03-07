@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>/Кинетосинт(Kinetosynth) v1.8 - Modular Gesture Synthesizer</title>
+    <title>/Кинетосинт(Kinetosynth) v1.9 - Modular Gesture Synthesizer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
@@ -310,7 +310,7 @@
                     </div>
                     <div class="legend-item">
                         <div class="legend-shape"><svg width="20" height="20"><rect x="2" y="2" width="16" height="16" fill="#f59e0b" rx="6"/></svg></div>
-                        <span>Efectos (Delay, Reverb, Distort, Bitcrush)</span>
+                        <span>Efectos (Delay, Reverb)</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-shape"><svg width="20" height="20"><circle cx="10" cy="10" r="8" fill="#22c55e"/></svg></div>
@@ -331,7 +331,7 @@
                     <div class="logo-core"></div>
                 </div>
                 <h1 class="title">/Кинетосинт</h1>
-                <p class="subtitle">Kinetosynth v1.8 - Sintetizador Modular por Gestos</p>
+                <p class="subtitle">Kinetosynth v1.9 - Sintetizador Modular por Gestos</p>
                 
                 <div class="camera-selector">
                     <span><i class="fas fa-video"></i> Cámara</span>
@@ -529,7 +529,6 @@ const OBJ_TYPES = {
     pulse:    { cat: 'generator', color: '#a3e635', icon: '\uf83e', name: 'PULSE' },
     delay:    { cat: 'effect', color: '#f59e0b', icon: '\uf017', name: 'DELAY' },
     reverb:   { cat: 'effect', color: '#ec4899', icon: '\uf773', name: 'REVERB' },
-    distort:  { cat: 'effect', color: '#ef4444', icon: '\uf0e7', name: 'DISTORT' },
     lfo:      { cat: 'controller', color: '#22c55e', icon: '\uf2f1', name: 'LFO' },
     lfo2:     { cat: 'controller', color: '#ef4444', icon: '\uf2f1', name: 'LFO2' },
     tempo:    { cat: 'global', color: '#fbbf24', icon: '\uf3fd', name: 'TEMPO' }
@@ -692,7 +691,7 @@ const AudioConnectionManager = {
     init() {
         this.generatorConnections.clear();
         this.effectInputs.clear();
-        ['delay', 'reverb', 'filter', 'lpf', 'distort'].forEach(fx => {
+        ['delay', 'reverb'].forEach(fx => {
             this.effectInputs.set(fx, new Set());
         });
     },
@@ -720,14 +719,11 @@ const AudioConnectionManager = {
             return false; // Effect already has max generators connected
         }
         
-        // Get effect node (bitcrush removed)
+        // Get effect node
         let effectNode = null;
         switch(effectType) {
             case 'delay': effectNode = Audio.delayNode; break;
             case 'reverb': effectNode = Audio.reverbNode; break;
-            case 'filter': effectNode = Audio.filterNode; break;
-            case 'lpf': effectNode = Audio.lpfNode; break;
-            case 'distort': effectNode = Audio.distortNode; break;
         }
         
         if (!effectNode) return false;
@@ -760,14 +756,11 @@ const AudioConnectionManager = {
             return false; // Not connected, nothing to do
         }
         
-        // Get effect node (bitcrush removed)
+        // Get effect node
         let effectNode = null;
         switch(effectType) {
             case 'delay': effectNode = Audio.delayNode; break;
             case 'reverb': effectNode = Audio.reverbNode; break;
-            case 'filter': effectNode = Audio.filterNode; break;
-            case 'lpf': effectNode = Audio.lpfNode; break;
-            case 'distort': effectNode = Audio.distortNode; break;
         }
         
         if (!effectNode) return false;
@@ -892,8 +885,9 @@ const Audio = {
         this.master.connect(this.compressor);
         
         this.analyser = this.ctx.createAnalyser();
-        this.analyser.fftSize = 256;
-        this.analyserData = new Uint8Array(128);
+        // FIX: Reduced fftSize from 256 to 64 - less precise waves but saves CPU
+        this.analyser.fftSize = 64;
+        this.analyserData = new Uint8Array(32);
         this.master.connect(this.analyser);
         
         this.createEffects();
@@ -964,8 +958,9 @@ const Audio = {
         this.lpfGain.connect(this.master);
         
         // DISTORTION
+        // FIX: Changed oversample from '2x' to 'none' - WaveShaperNode oversampling is CPU-expensive
         this.distortNode = ctx.createWaveShaper();
-        this.distortNode.oversample = '2x';
+        this.distortNode.oversample = 'none';
         this.setDistortion(10);
         this.distortGain = ctx.createGain();
         this.distortGain.gain.value = 0;
@@ -1422,7 +1417,7 @@ const AudioNodeFactory = {
         output.gain.value = 1;
         
         const analyser = ctx.createAnalyser();
-        analyser.fftSize = 256;
+        analyser.fftSize = 64;  // FIX: Reduced for performance
         
         osc.connect(filter);
         filter.connect(gain);
@@ -1477,7 +1472,7 @@ const AudioNodeFactory = {
         output.gain.value = 1;
         
         const analyser = ctx.createAnalyser();
-        analyser.fftSize = 256;
+        analyser.fftSize = 64;  // FIX: Reduced for performance
         
         mixer.connect(filter);
         filter.connect(gain);
@@ -1507,7 +1502,7 @@ const AudioNodeFactory = {
         output.gain.value = 1;
         
         const analyser = ctx.createAnalyser();
-        analyser.fftSize = 256;
+        analyser.fftSize = 64;  // FIX: Reduced for performance
         
         mod.connect(modGain);
         modGain.connect(carrier.frequency);
@@ -1597,7 +1592,7 @@ const AudioNodeFactory = {
         output.gain.value = 1;
         
         const analyser = ctx.createAnalyser();
-        analyser.fftSize = 256;
+        analyser.fftSize = 64;  // FIX: Reduced for performance
         
         // Connect oscillators
         osc.connect(mixer);
@@ -1674,7 +1669,7 @@ const AudioNodeFactory = {
         output.gain.value = 1;
         
         const analyser = ctx.createAnalyser();
-        analyser.fftSize = 256;
+        analyser.fftSize = 64;  // FIX: Reduced for performance
         
         mixer.connect(hpFilter);
         hpFilter.connect(lpFilter);
@@ -1746,7 +1741,7 @@ class TangibleObject {
         this.outputNode = null;
         this.analyser = null;
         this.modInput = null;
-        this.waveData = new Uint8Array(128);
+        this.waveData = new Uint8Array(32);  // FIX: Reduced to match fftSize/2
         
         this.audioConnections = new Set();
         this.controlConnections = new Set();
@@ -2012,11 +2007,7 @@ class TangibleObject {
                 Audio.lpfNode.frequency.setTargetAtTime(freq, now, 0.05);
                 Audio.lpfGain.gain.setTargetAtTime(0.8, now, 0.05);
             }
-            else if (this.type === 'distort') {
-                const amount = 5 + rotNorm * 50;
-                Audio.setDistortion(amount);
-                Audio.distortGain.gain.setTargetAtTime(0.4, now, 0.05);
-            }
+
             
             else if (this.type === 'bells') {
                 const baseFreq = getScaleFrequency(rotNorm);
@@ -2103,9 +2094,7 @@ class TangibleObject {
             if (this.type === 'lpf') {
                 Audio.lpfGain.gain.setTargetAtTime(0, now, 0.08);
             }
-            if (this.type === 'distort') {
-                Audio.distortGain.gain.setTargetAtTime(0, now, 0.08);
-            }
+
             
             // pulse uses gainNode which is already handled above
         }
@@ -3289,7 +3278,7 @@ function render(results) {
 // INITIALIZATION
 // ═══════════════════════════════════════════════════════════════════════════════
 function createObjects() {
-    const types = ['pad', 'fm', 'bells', 'pulse', 'delay', 'reverb', 'distort', 'lfo', 'lfo2', 'tempo'];
+    const types = ['pad', 'fm', 'bells', 'pulse', 'delay', 'reverb', 'lfo', 'lfo2', 'tempo'];
     const count = types.length;
     
     for (let i = 0; i < count; i++) {
