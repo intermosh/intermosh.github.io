@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>/Кинетосинт(Kinetosynth) - Modular Gesture Synthesizer</title>
+    <title>/Кинетосинт(Kinetosynth) v1.9 - Modular Gesture Synthesizer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="./mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="./mediapipe/hands/hands.js" crossorigin="anonymous"></script>
@@ -182,6 +182,32 @@
             border-color: #3b82f6;
         }
         
+        .resolution-selector {
+            display: flex; align-items: center; justify-content: center;
+            gap: 12px; margin-bottom: 20px; color: #aaa; font-size: 0.9rem;
+        }
+        
+        .resolution-selector select {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff; border: 1px solid rgba(236,72,153,0.5);
+            padding: 10px 15px; border-radius: 8px; font-size: 0.9rem;
+            cursor: pointer; outline: none; transition: all 0.3s;
+        }
+        
+        .resolution-selector select:hover {
+            border-color: rgba(236,72,153,0.8);
+            box-shadow: 0 0 10px rgba(236,72,153,0.3);
+        }
+        
+        .resolution-selector select:focus {
+            border-color: #ec4899;
+            box-shadow: 0 0 15px rgba(236,72,153,0.4);
+        }
+        
+        .resolution-selector select option {
+            background: #1a1a2e; color: #fff; padding: 10px;
+        }
+        
         .instructions {
             background: rgba(255,255,255,0.03); border-radius: 16px;
             padding: 25px; border: 1px solid rgba(255,255,255,0.1);
@@ -229,6 +255,8 @@
             transform: scale(1.05);
         }
         .fullscreen-btn.hidden { display: none; }
+        
+
     </style>
 </head>
 <body>
@@ -240,47 +268,57 @@
         <i class="fas fa-expand"></i> FULLSCREEN
     </button>
     
+
+    
     <div id="overlay">
         <div class="intro-container" id="intro">
             <div class="intro-left">
                 <div class="instructions">
                     <h3 style="color:#fff;margin-bottom:20px;font-size:1.2rem">
-                        <i class="fas fa-hand-sparkles" style="color:#8b5cf6"></i> How to Play
+                        <i class="fas fa-hand-sparkles" style="color:#8b5cf6"></i> Cómo Usar
                     </h3>
                     <div class="instruction-item">
                         <i class="fas fa-hand-point-up"></i>
-                        <span><b>Pinch</b> (thumb + index) to grab and move objects</span>
+                        <span><b>Pinza</b> (pulgar + índice) para agarrar y mover objetos</span>
                     </div>
                     <div class="instruction-item">
                         <i class="fas fa-sync-alt"></i>
-                        <span><b>Rotate</b> while pinching to change parameters</span>
+                        <span><b>Rota</b> mientras sostienes para cambiar parámetros</span>
                     </div>
                     <div class="instruction-item">
                         <i class="fas fa-bullseye"></i>
-                        <span>Drag <b>Generators</b> to center to activate sound</span>
+                        <span>Arrastra <b>Generadores</b> al centro para activar el sonido</span>
                     </div>
                     <div class="instruction-item">
                         <i class="fas fa-link"></i>
-                        <span>Place <b>Effects</b> between generators and center to process audio</span>
+                        <span>Coloca <b>Efectos</b> entre generadores y el centro para procesar audio</span>
                     </div>
                     <div class="instruction-item">
                         <i class="fas fa-wave-square"></i>
-                        <span><b>LFO</b> modulates nearby compatible objects</span>
+                        <span><b>LFO</b> modula objetos cercanos compatibles</span>
+                    </div>
+                    <div class="instruction-item">
+                        <i class="fas fa-redo"></i>
+                        <span>Presiona <b>"R"</b> para resetear todos los objetos</span>
                     </div>
                 </div>
                 
                 <div class="object-legend" style="margin-top:20px">
                     <div class="legend-item">
                         <div class="legend-shape"><svg width="20" height="20"><rect x="2" y="2" width="16" height="16" fill="#06b6d4" rx="2"/></svg></div>
-                        <span>Generators (Pad, FM, Bells)</span>
+                        <span>Generadores (Pad, FM, Bells, Pulse)</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-shape"><svg width="20" height="20"><rect x="2" y="2" width="16" height="16" fill="#f59e0b" rx="6"/></svg></div>
-                        <span>Effects (Delay, Reverb, Filter, Distort, Bitcrush)</span>
+                        <span>Efectos (Delay, Reverb)</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-shape"><svg width="20" height="20"><circle cx="10" cy="10" r="8" fill="#22c55e"/></svg></div>
-                        <span>Controllers (LFO green, LFO2 red)</span>
+                        <span>Controladores (LFO verde, LFO2 rojo)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-shape"><svg width="20" height="20"><polygon points="10,2 18,10 10,18 2,10" fill="#fbbf24"/></svg></div>
+                        <span>Global (Tempo - rota para cambiar BPM)</span>
                     </div>
                 </div>
             </div>
@@ -293,10 +331,10 @@
                     <div class="logo-core"></div>
                 </div>
                 <h1 class="title">/Кинетосинт</h1>
-                <p class="subtitle">Kinetosynth - Gesture-Controlled Modular Synthesizer</p>
+                <p class="subtitle">Kinetosynth v1.9 - Sintetizador Modular por Gestos</p>
                 
                 <div class="camera-selector">
-                    <span><i class="fas fa-video"></i> Camera</span>
+                    <span><i class="fas fa-video"></i> Cámara</span>
                     <select id="cameraSelect">
                         <option value="">Detecting cameras...</option>
                     </select>
@@ -305,16 +343,33 @@
                     </button>
                 </div>
                 
+                <div class="resolution-selector">
+                    <span><i class="fas fa-expand-arrows-alt"></i> Resolución IA</span>
+                    <select id="resolutionSelect">
+                        <option value="1280x720">1280×720 (HD)</option>
+                        <option value="800x600">800×600 (Medium)</option>
+                        <option value="640x480" selected>640×480 (Recommended)</option>
+                    </select>
+                </div>
+                
                 <div class="mirror-toggle">
-                    <span>Mirror Camera</span>
+                    <span>Espejo de Cámara</span>
                     <label class="toggle-switch">
                         <input type="checkbox" id="mirrorToggle" checked>
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
                 
+                <div class="mirror-toggle">
+                    <span>Modo Sin Video</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="noVideoToggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
                 <div class="scale-selector">
-                    <span>Musical Scale</span>
+                    <span>Escala Musical</span>
                     <select id="scaleSelect">
                         <option value="chromatic">Chromatic (all notes)</option>
                         <option value="major" selected>Major (happy)</option>
@@ -364,6 +419,9 @@ const PI = Math.PI, PI2 = PI * 2;
 // This variable is kept for UI consistency but doesn't affect behavior
 let isMirrored = true;
 
+// No Video mode - hides video while maintaining hand tracking
+let noVideoMode = false;
+
 const CFG = {
     zoneRadius: 0.48,
     objRadius: 0.062,
@@ -384,17 +442,17 @@ function getObjectEdgeRadius() {
     const aspect = w / h;
     
     // Ensure objects are clearly OUTSIDE the active zone
-    // Using objRadius * 2 + safety margin ensures no overlap
-    const safetyMargin = 0.06; // Extra margin to guarantee outside
+    // Large safety margin to guarantee objects start silent
+    const safetyMargin = 0.10; // Increased margin to guarantee outside
     const baseOffset = CFG.objRadius * 2 + safetyMargin;
     
     // Adjust for aspect ratio
     if (aspect > 1.5) {
         // Very wide screen - objects can spread more
-        return CFG.zoneRadius + baseOffset + 0.02;
+        return CFG.zoneRadius + baseOffset + 0.04;
     } else if (aspect < 0.8) {
         // Tall screen (mobile portrait) - need more margin
-        return CFG.zoneRadius + baseOffset + 0.08;
+        return CFG.zoneRadius + baseOffset + 0.10;
     } else {
         // Normal aspect ratio
         return CFG.zoneRadius + baseOffset;
@@ -462,19 +520,18 @@ const Tempo = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// OBJECT TYPE DEFINITIONS
+// OBJECT TYPE DEFINITIONS (BITCRUSH removed)
 // ═══════════════════════════════════════════════════════════════════════════════
 const OBJ_TYPES = {
     pad:      { cat: 'generator', color: '#06b6d4', icon: '\uf001', name: 'PAD' },
     fm:       { cat: 'generator', color: '#8b5cf6', icon: '\uf625', name: 'FM' },
     bells:    { cat: 'generator', color: '#14b8a6', icon: '\uf0f3', name: 'BELLS' },
+    pulse:    { cat: 'generator', color: '#a3e635', icon: '\uf83e', name: 'PULSE' },
     delay:    { cat: 'effect', color: '#f59e0b', icon: '\uf017', name: 'DELAY' },
     reverb:   { cat: 'effect', color: '#ec4899', icon: '\uf773', name: 'REVERB' },
-    filter:   { cat: 'effect', color: '#a3e635', icon: '\uf0b0', name: 'FILTER' },
-    distort:  { cat: 'effect', color: '#ef4444', icon: '\uf0e7', name: 'DISTORT' },
-    bitcrush: { cat: 'effect', color: '#f97316', icon: '\uf538', name: 'BITCRUSH' },
     lfo:      { cat: 'controller', color: '#22c55e', icon: '\uf2f1', name: 'LFO' },
-    lfo2:     { cat: 'controller', color: '#ef4444', icon: '\uf2f1', name: 'LFO2' }
+    lfo2:     { cat: 'controller', color: '#ef4444', icon: '\uf2f1', name: 'LFO2' },
+    tempo:    { cat: 'global', color: '#fbbf24', icon: '\uf3fd', name: 'TEMPO' }
 };
 
 const CONNECTIONS = {
@@ -503,6 +560,18 @@ const SCALES = {
 let currentScale = 'major';
 const BASE_FREQ = 110; // A2
 let selectedCameraId = ''; // Selected camera device ID
+let selectedResolution = { width: 640, height: 480 }; // FIX: Lower resolution = less CPU/GPU, better audio latency
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DEBOUNCE UTILITY - Prevents rapid UI changes from causing expensive restarts
+// ═══════════════════════════════════════════════════════════════════════════════
+function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CAMERA ENUMERATION (Support for PS3 Eye and other external cameras)
@@ -611,15 +680,18 @@ function getScaleFrequency(normalizedValue) {
 const AudioConnectionManager = {
     // Maps: objectIndex -> Set of connected effect types
     generatorConnections: new Map(),
-    // Maps: effectType -> Set of connected generator indices
+    // Maps: effectType -> connected generator index (-1 if none)
+    // SIMPLIFIED: Each effect can only connect to ONE generator at a time
     effectInputs: new Map(),
     // Tracks LFO connections: param -> true
     lfoConnections: new WeakSet(),
+    // FIX: Limit to exactly 1 generator per effect
+    maxGeneratorsPerEffect: 1,
     
     init() {
         this.generatorConnections.clear();
         this.effectInputs.clear();
-        ['delay', 'reverb', 'filter', 'lpf', 'distort', 'bitcrush'].forEach(fx => {
+        ['delay', 'reverb'].forEach(fx => {
             this.effectInputs.set(fx, new Set());
         });
     },
@@ -641,15 +713,17 @@ const AudioConnectionManager = {
             return false; // No action needed
         }
         
+        // FIX: Check if this effect already has max connections
+        const currentInputs = this.effectInputs.get(effectType);
+        if (currentInputs && currentInputs.size >= this.maxGeneratorsPerEffect) {
+            return false; // Effect already has max generators connected
+        }
+        
         // Get effect node
         let effectNode = null;
         switch(effectType) {
             case 'delay': effectNode = Audio.delayNode; break;
             case 'reverb': effectNode = Audio.reverbNode; break;
-            case 'filter': effectNode = Audio.filterNode; break;
-            case 'lpf': effectNode = Audio.lpfNode; break;
-            case 'distort': effectNode = Audio.distortNode; break;
-            case 'bitcrush': effectNode = Audio.bitcrushNode; break;
         }
         
         if (!effectNode) return false;
@@ -687,10 +761,6 @@ const AudioConnectionManager = {
         switch(effectType) {
             case 'delay': effectNode = Audio.delayNode; break;
             case 'reverb': effectNode = Audio.reverbNode; break;
-            case 'filter': effectNode = Audio.filterNode; break;
-            case 'lpf': effectNode = Audio.lpfNode; break;
-            case 'distort': effectNode = Audio.distortNode; break;
-            case 'bitcrush': effectNode = Audio.bitcrushNode; break;
         }
         
         if (!effectNode) return false;
@@ -760,6 +830,27 @@ const AudioConnectionManager = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// PRE-GENERATED REVERB BUFFER - Avoids accumulation when audio restarts
+// Create once globally, reuse always
+// ═══════════════════════════════════════════════════════════════════════════════
+let GLOBAL_REVERB_BUFFER = null;
+
+function generateReverbBuffer(sampleRate) {
+    const length = sampleRate * 2;
+    // Use offline context to generate buffer (doesn't block main thread)
+    const offlineCtx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(2, length, sampleRate);
+    const buffer = offlineCtx.createBuffer(2, length, sampleRate);
+    
+    for (let c = 0; c < 2; c++) {
+        const data = buffer.getChannelData(c);
+        for (let i = 0; i < length; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 2.5);
+        }
+    }
+    return buffer;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // AUDIO ENGINE
 // ═══════════════════════════════════════════════════════════════════════════════
 const Audio = {
@@ -771,7 +862,13 @@ const Audio = {
     delayNode: null, delayGain: null,
     reverbNode: null, reverbGain: null,
     filterNode: null, filterGain: null,
+    lpfNode: null, lpfGain: null,
     distortNode: null, distortGain: null,
+    // Camera watchdog and audio recovery
+    cameraWatchdog: null,
+    lastFrameTime: 0,
+    frameCount: 0,
+    watchdogThrottled: false, // FIX: Throttle recovery attempts
     
     async init() {
         const AC = window.AudioContext || window.webkitAudioContext;
@@ -788,8 +885,9 @@ const Audio = {
         this.master.connect(this.compressor);
         
         this.analyser = this.ctx.createAnalyser();
-        this.analyser.fftSize = 256;
-        this.analyserData = new Uint8Array(128);
+        // FIX: Reduced fftSize from 256 to 64 - less precise waves but saves CPU
+        this.analyser.fftSize = 64;
+        this.analyserData = new Uint8Array(32);
         this.master.connect(this.analyser);
         
         this.createEffects();
@@ -801,29 +899,39 @@ const Audio = {
     createEffects() {
         const ctx = this.ctx;
         
-        // DELAY
+        // DELAY with LIMITER to prevent runaway feedback with distortion
         this.delayNode = ctx.createDelay(2);
         this.delayNode.delayTime.value = 0.3;
+        
+        // FIX: Add a limiter/compressor in the feedback loop to prevent runaway
+        // when distortion is in the chain (distortion amplifies before feedback)
+        this.delayFbLimiter = ctx.createDynamicsCompressor();
+        this.delayFbLimiter.threshold.value = -6;  // Aggressive limiting
+        this.delayFbLimiter.knee.value = 0;
+        this.delayFbLimiter.ratio.value = 20;      // Hard limiting
+        this.delayFbLimiter.attack.value = 0.001;  // Fast attack
+        this.delayFbLimiter.release.value = 0.1;
+        
         const delayFb = ctx.createGain();
-        delayFb.gain.value = 0.35;
+        delayFb.gain.value = 0.2;  // FIX: Reduced from 0.35 to prevent runaway
+        this.delayFeedback = delayFb; // Store reference for dynamic adjustment
+        
         this.delayGain = ctx.createGain();
         this.delayGain.gain.value = 0;
+        
+        // FIX: Route feedback through limiter to prevent runaway
         this.delayNode.connect(delayFb);
-        delayFb.connect(this.delayNode);
+        delayFb.connect(this.delayFbLimiter);
+        this.delayFbLimiter.connect(this.delayNode);
         this.delayNode.connect(this.delayGain);
         this.delayGain.connect(this.master);
         
-        // REVERB
-        const reverbLen = ctx.sampleRate * 2;
-        const reverbBuf = ctx.createBuffer(2, reverbLen, ctx.sampleRate);
-        for (let c = 0; c < 2; c++) {
-            const d = reverbBuf.getChannelData(c);
-            for (let i = 0; i < reverbLen; i++) {
-                d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / reverbLen, 2.5);
-            }
+        // REVERB - Uses pre-generated global buffer to prevent accumulation
+        if (!GLOBAL_REVERB_BUFFER) {
+            GLOBAL_REVERB_BUFFER = generateReverbBuffer(ctx.sampleRate);
         }
         this.reverbNode = ctx.createConvolver();
-        this.reverbNode.buffer = reverbBuf;
+        this.reverbNode.buffer = GLOBAL_REVERB_BUFFER;
         this.reverbGain = ctx.createGain();
         this.reverbGain.gain.value = 0;
         this.reverbNode.connect(this.reverbGain);
@@ -850,32 +958,14 @@ const Audio = {
         this.lpfGain.connect(this.master);
         
         // DISTORTION
+        // FIX: Changed oversample from '2x' to 'none' - WaveShaperNode oversampling is CPU-expensive
         this.distortNode = ctx.createWaveShaper();
-        this.distortNode.oversample = '2x';
+        this.distortNode.oversample = 'none';
         this.setDistortion(10);
         this.distortGain = ctx.createGain();
         this.distortGain.gain.value = 0;
         this.distortNode.connect(this.distortGain);
         this.distortGain.connect(this.master);
-        
-        // BITCRUSHER (using waveshaper + sample rate reduction simulation)
-        this.bitcrushNode = ctx.createWaveShaper();
-        this.setBitcrush(8);
-        this.bitcrushGain = ctx.createGain();
-        this.bitcrushGain.gain.value = 0;
-        this.bitcrushNode.connect(this.bitcrushGain);
-        this.bitcrushGain.connect(this.master);
-    },
-    
-    setBitcrush(bits) {
-        const samples = 256;
-        const curve = new Float32Array(samples);
-        const steps = Math.pow(2, bits);
-        for (let i = 0; i < samples; i++) {
-            const x = (i * 2 / samples) - 1;
-            curve[i] = Math.round(x * steps) / steps;
-        }
-        this.bitcrushNode.curve = curve;
     },
     
     setDistortion(amount) {
@@ -888,12 +978,114 @@ const Audio = {
         this.distortNode.curve = curve;
     },
     
+    // ═══════════════════════════════════════════════════════════════
+    // CAMERA WATCHDOG - Detects camera freeze and attempts recovery
+    // FIX: Throttled recovery to prevent firing under heavy CPU load
+    // ═══════════════════════════════════════════════════════════════
+    startWatchdog() {
+        if (this.cameraWatchdog) return;
+        
+        this.lastFrameTime = performance.now();
+        this.frameCount = 0;
+        this.watchdogThrottled = false;
+        this.consecutiveMisses = 0;
+        
+        this.cameraWatchdog = setInterval(() => {
+            const now = performance.now();
+            const elapsed = now - this.lastFrameTime;
+            
+            // FIX: Only trigger after consistent misses, not just heavy CPU load
+            if (elapsed > 3000 && this.frameCount > 10) {
+                this.consecutiveMisses++;
+                
+                // FIX: Require 2 consecutive misses before recovery
+                // Single miss could just be heavy CPU load
+                if (this.consecutiveMisses >= 2 && !this.watchdogThrottled) {
+                    console.warn('Camera watchdog: Persistent frame loss, attempting recovery...');
+                    this.watchdogThrottled = true;
+                    this.attemptCameraRecovery().finally(() => {
+                        // Throttle: wait 10 seconds before allowing another recovery
+                        setTimeout(() => {
+                            this.watchdogThrottled = false;
+                            this.consecutiveMisses = 0;
+                        }, 10000);
+                    });
+                }
+            } else {
+                // Reset consecutive misses if we got frames
+                this.consecutiveMisses = 0;
+            }
+        }, 1000);
+    },
+    
+    stopWatchdog() {
+        if (this.cameraWatchdog) {
+            clearInterval(this.cameraWatchdog);
+            this.cameraWatchdog = null;
+        }
+        this.watchdogThrottled = false;
+        this.consecutiveMisses = 0;
+    },
+    
+    frameReceived() {
+        this.lastFrameTime = performance.now();
+        this.frameCount++;
+    },
+    
+    async attemptCameraRecovery() {
+        console.log('Attempting camera recovery...');
+        
+        // First, try to recover audio context if suspended
+        if (this.ctx && this.ctx.state === 'suspended') {
+            try {
+                await this.ctx.resume();
+                console.log('Audio context resumed');
+            } catch(e) {
+                console.warn('Audio resume failed:', e);
+            }
+        }
+        
+        // FIX: Only restart camera if truly frozen, not just slow
+        if (State.camera && this.frameCount > 0) {
+            try {
+                console.log('Stopping camera...');
+                await State.camera.stop();
+                await new Promise(r => setTimeout(r, 500));
+                console.log('Restarting camera...');
+                await State.camera.start();
+                console.log('Camera restarted successfully');
+                // Reset frame count after successful restart
+                this.frameCount = 0;
+                this.lastFrameTime = performance.now();
+            } catch(e) {
+                console.warn('Camera restart failed:', e);
+            }
+        }
+    },
+    
+    // ═══════════════════════════════════════════════════════════════
+    // AUDIO RECOVERY - Resumes audio context if suspended
+    // ═══════════════════════════════════════════════════════════════
+    async ensureAudioRunning() {
+        if (this.ctx && this.ctx.state === 'suspended') {
+            try {
+                await this.ctx.resume();
+            } catch(e) {
+                console.warn('Audio resume failed:', e);
+            }
+        }
+    },
+    
     cleanup() {
+        // Stop watchdog
+        this.stopWatchdog();
         // Clean up connection manager first
         AudioConnectionManager.cleanup();
         // Clean up LFOs
         LFOEngine.cleanup();
         LFO2Engine.cleanup();
+        // Clear LFO mutex
+        LFOConnectionMutex.clear();
         // Close audio context
         if (this.ctx) {
             this.ctx.close();
@@ -903,18 +1095,22 @@ const Audio = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// LFO ENGINE FACTORY - Creates LFO engines with proper connection tracking
+// LFO ENGINE - Simplified architecture (only 1 connection at a time)
+// This eliminates memory leaks and reduces CPU overhead
 // ═══════════════════════════════════════════════════════════════════════════════
 function createLFOEngine() {
     return {
         osc: null,
         gain: null,
-        connectedParams: new Map(),
-        targetParams: new Set(),
+        // SIMPLIFIED: Only track ONE connection (no Map needed)
+        connectedObjIndex: -1,
+        connectedParam: null,
+        targetObjIndex: -1,  // Single target, not a Set
         rate: 2,
         depth: 0,
         ctx: null,
         initialized: false,
+        id: null,
         
         init(ctx) {
             if (this.initialized) return;
@@ -930,6 +1126,7 @@ function createLFOEngine() {
         },
         
         setRate(rate) {
+            if (rate === this.rate) return;
             this.rate = rate;
             if (this.osc && this.ctx) {
                 this.osc.frequency.setTargetAtTime(rate, this.ctx.currentTime, 0.05);
@@ -937,67 +1134,122 @@ function createLFOEngine() {
         },
         
         setDepth(depth) {
+            if (depth === this.depth) return;
             this.depth = depth;
             if (this.gain && this.ctx) {
                 this.gain.gain.setTargetAtTime(depth, this.ctx.currentTime, 0.05);
             }
         },
         
+        // SIMPLIFIED: Mark single target (closest valid one)
         markTarget(objIndex) {
-            this.targetParams.add(objIndex);
+            this.targetObjIndex = objIndex;
         },
         
+        // SIMPLIFIED: Connect to single object
         connectTo(objIndex, param) {
-            if (!this.gain || !param) return;
-            if (this.connectedParams.has(objIndex)) return;
+            if (!this.gain || !param) return false;
+            if (this.connectedObjIndex === objIndex) return false; // Already connected
+            
+            // Disconnect previous if any
+            this.disconnect();
             
             try {
                 this.gain.connect(param);
-                this.connectedParams.set(objIndex, param);
+                this.connectedObjIndex = objIndex;
+                this.connectedParam = param;
+                return true;
             } catch(e) {
                 console.warn('LFO connect failed:', e);
+                return false;
             }
         },
         
-        disconnectFrom(objIndex) {
-            if (!this.connectedParams.has(objIndex)) return;
+        // SIMPLIFIED: Disconnect current connection
+        disconnect() {
+            if (this.connectedObjIndex < 0) return false;
             
-            const param = this.connectedParams.get(objIndex);
-            try {
-                this.gain.disconnect(param);
-            } catch(e) {}
-            this.connectedParams.delete(objIndex);
-        },
-        
-        syncConnections(objects) {
-            for (const [objIndex] of this.connectedParams) {
-                if (!this.targetParams.has(objIndex)) {
-                    this.disconnectFrom(objIndex);
+            if (this.connectedParam) {
+                try {
+                    this.gain.disconnect(this.connectedParam);
+                } catch(e) {
+                    // Ignore - may already be disconnected
                 }
             }
             
-            for (const objIndex of this.targetParams) {
-                if (!this.connectedParams.has(objIndex)) {
-                    const obj = objects[objIndex];
-                    if (obj && obj.modInput) {
-                        this.connectTo(objIndex, obj.modInput);
+            // Release mutex
+            if (this.id) {
+                LFOConnectionMutex.release(this.connectedObjIndex, this.id);
+            }
+            
+            this.connectedObjIndex = -1;
+            this.connectedParam = null;
+            return true;
+        },
+        
+        // SIMPLIFIED: Sync single connection - ALWAYS connects to closest valid target
+        // Will disconnect from current and connect to new if target changed
+        syncConnections(objects) {
+            const hasNewTarget = this.targetObjIndex >= 0;
+            const hasCurrentConnection = this.connectedObjIndex >= 0;
+            
+            // Check if current connection is still valid
+            if (hasCurrentConnection) {
+                const obj = objects[this.connectedObjIndex];
+                const isValid = obj && 
+                               obj.active && 
+                               obj.modInput && 
+                               (obj.cat === 'generator' || obj.cat === 'effect');
+                
+                // DISCONNECT if:
+                // 1. Current connection is no longer valid
+                // 2. We have a NEW target that is different from current (switch to closer object)
+                // 3. No target found (LFO moved away from all objects)
+                if (!isValid || 
+                    (hasNewTarget && this.targetObjIndex !== this.connectedObjIndex) ||
+                    !hasNewTarget) {
+                    this.disconnect();
+                }
+            }
+            
+            // Connect to new target if we have one and aren't connected
+            if (this.targetObjIndex >= 0 && this.connectedObjIndex < 0) {
+                const obj = objects[this.targetObjIndex];
+                if (obj && obj.active && obj.modInput) {
+                    // Check mutex - can we connect to this object?
+                    if (!this.id || LFOConnectionMutex.canConnect(this.targetObjIndex, this.id)) {
+                        if (this.connectTo(this.targetObjIndex, obj.modInput)) {
+                            if (this.id) {
+                                LFOConnectionMutex.claim(this.targetObjIndex, this.id);
+                            }
+                        }
                     }
                 }
             }
             
-            this.targetParams.clear();
+            // Reset target for next frame
+            this.targetObjIndex = -1;
         },
         
         disconnectAll() {
-            for (const [objIndex, param] of this.connectedParams) {
-                try { this.gain.disconnect(param); } catch(e) {}
-            }
-            this.connectedParams.clear();
-            this.targetParams.clear();
+            this.disconnect();
+            this.targetObjIndex = -1;
         },
         
         getConnectionCount() {
-            return this.connectedParams.size;
+            return this.connectedObjIndex >= 0 ? 1 : 0;
+        },
+        
+        // For compatibility with visual connections
+        get connectedParams() {
+            // Return a fake Map-like interface for the render loop
+            const self = this;
+            return {
+                size: self.connectedObjIndex >= 0 ? 1 : 0,
+                keys() {
+                    return self.connectedObjIndex >= 0 ? [self.connectedObjIndex][Symbol.iterator]() : [][Symbol.iterator]();
+                }
+            };
         },
         
         cleanup() {
@@ -1005,28 +1257,76 @@ function createLFOEngine() {
             if (this.osc) {
                 try { this.osc.stop(); } catch(e) {}
                 try { this.osc.disconnect(); } catch(e) {}
+                this.osc = null;
             }
             if (this.gain) {
                 try { this.gain.disconnect(); } catch(e) {}
+                this.gain = null;
             }
             this.initialized = false;
+            this.connectedObjIndex = -1;
+            this.connectedParam = null;
+            this.targetObjIndex = -1;
         }
     };
 }
 
-// Create two LFO engines
+// Create two LFO engines (simplified - 1 connection each)
 const LFOEngine = createLFOEngine();
+LFOEngine.id = 'lfo1';
 const LFO2Engine = createLFOEngine();
+LFO2Engine.id = 'lfo2';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// LFO CONNECTION MUTEX - Prevents two LFOs from connecting to the same object
+// ═══════════════════════════════════════════════════════════════════════════════
+const LFOConnectionMutex = {
+    // Map of object index -> LFO id that owns it
+    objectOwner: new Map(),
+    
+    // Check if an object is free or owned by a specific LFO
+    canConnect(objIndex, lfoId) {
+        const owner = this.objectOwner.get(objIndex);
+        // Can connect if no owner, or if this LFO already owns it
+        return !owner || owner === lfoId;
+    },
+    
+    // Claim ownership of an object for an LFO
+    claim(objIndex, lfoId) {
+        this.objectOwner.set(objIndex, lfoId);
+    },
+    
+    // Release ownership of an object
+    release(objIndex, lfoId) {
+        const owner = this.objectOwner.get(objIndex);
+        if (owner === lfoId) {
+            this.objectOwner.delete(objIndex);
+        }
+    },
+    
+    // Get which LFO owns an object (if any)
+    getOwner(objIndex) {
+        return this.objectOwner.get(objIndex) || null;
+    },
+    
+    // Clear all ownership
+    clear() {
+        this.objectOwner.clear();
+    }
+};
 
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SPATIAL HASH
+// SPATIAL HASH - Optimized for minimal GC pressure
 // ═══════════════════════════════════════════════════════════════════════════════
 class SpatialHash {
     constructor(cellSize = 0.1) {
         this.cellSize = cellSize;
         this.grid = new Map();
+        // Pre-allocated result array to avoid GC
+        this._resultBuffer = new Array(32);
+        this._resultLength = 0;
     }
     
     clear() { this.grid.clear(); }
@@ -1043,13 +1343,15 @@ class SpatialHash {
     
     rebuild(objects) {
         this.clear();
-        for (let i = 0; i < objects.length; i++) {
+        const len = objects.length;
+        for (let i = 0; i < len; i++) {
             this.insert(objects[i], i);
         }
     }
     
+    // Optimized: reuses internal buffer, returns view into it
     getNearby(x, y, radius) {
-        const result = [];
+        this._resultLength = 0;
         const cr = Math.ceil(radius / this.cellSize);
         const cx = Math.floor(x / this.cellSize);
         const cy = Math.floor(y / this.cellSize);
@@ -1057,10 +1359,40 @@ class SpatialHash {
         for (let dx = -cr; dx <= cr; dx++) {
             for (let dy = -cr; dy <= cr; dy++) {
                 const cell = this.grid.get(`${cx + dx},${cy + dy}`);
-                if (cell) result.push(...cell);
+                if (cell) {
+                    const cellLen = cell.length;
+                    for (let i = 0; i < cellLen; i++) {
+                        // Expand buffer if needed
+                        if (this._resultLength >= this._resultBuffer.length) {
+                            this._resultBuffer.length = this._resultBuffer.length * 2;
+                        }
+                        this._resultBuffer[this._resultLength++] = cell[i];
+                    }
+                }
             }
         }
-        return result;
+        
+        // Return a lightweight view (reusing same array, just sliced)
+        // Note: caller must use immediately, not store reference
+        return this._resultBuffer.slice(0, this._resultLength);
+    }
+    
+    // Alternative: iterate without creating array
+    forEachNearby(x, y, radius, callback) {
+        const cr = Math.ceil(radius / this.cellSize);
+        const cx = Math.floor(x / this.cellSize);
+        const cy = Math.floor(y / this.cellSize);
+        
+        for (let dx = -cr; dx <= cr; dx++) {
+            for (let dy = -cr; dy <= cr; dy++) {
+                const cell = this.grid.get(`${cx + dx},${cy + dy}`);
+                if (cell) {
+                    for (let i = 0; i < cell.length; i++) {
+                        callback(cell[i]);
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -1085,7 +1417,7 @@ const AudioNodeFactory = {
         output.gain.value = 1;
         
         const analyser = ctx.createAnalyser();
-        analyser.fftSize = 256;
+        analyser.fftSize = 64;  // FIX: Reduced for performance
         
         osc.connect(filter);
         filter.connect(gain);
@@ -1140,7 +1472,7 @@ const AudioNodeFactory = {
         output.gain.value = 1;
         
         const analyser = ctx.createAnalyser();
-        analyser.fftSize = 256;
+        analyser.fftSize = 64;  // FIX: Reduced for performance
         
         mixer.connect(filter);
         filter.connect(gain);
@@ -1170,7 +1502,7 @@ const AudioNodeFactory = {
         output.gain.value = 1;
         
         const analyser = ctx.createAnalyser();
-        analyser.fftSize = 256;
+        analyser.fftSize = 64;  // FIX: Reduced for performance
         
         mod.connect(modGain);
         modGain.connect(carrier.frequency);
@@ -1183,6 +1515,109 @@ const AudioNodeFactory = {
         mod.start();
         
         return { carrier, mod, modGain, gain, output, analyser, modInput: modGain.gain };
+    },
+    
+    // PULSE - Rhythmical sinusoidal ambient generator synced to tempo
+    // FIX: Uses DC offset + LFO architecture to ensure gain never goes negative
+    pulse(ctx, dest) {
+        // Main sine oscillator - smooth and warm
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = 220;
+        
+        // Secondary oscillator for richness (fifth above)
+        const osc2 = ctx.createOscillator();
+        osc2.type = 'sine';
+        osc2.frequency.value = 330;
+        
+        // Sub oscillator for depth
+        const subOsc = ctx.createOscillator();
+        subOsc.type = 'sine';
+        subOsc.frequency.value = 110;
+        
+        // ═══════════════════════════════════════════════════════════════
+        // FIX: LFO + DC OFFSET architecture to keep gain always positive
+        // The bipolar LFO (-1 to +1) is scaled and added to a DC offset
+        // Result: gain always stays in range [minGain, maxGain]
+        // ═══════════════════════════════════════════════════════════════
+        
+        // LFO for rhythmic amplitude modulation (synced to tempo)
+        const lfo = ctx.createOscillator();
+        lfo.type = 'sine';
+        lfo.frequency.value = 1.5; // Will be updated based on tempo
+        
+        // LFO depth: scales the bipolar LFO output
+        // With depth=0.15, LFO outputs range from -0.15 to +0.15
+        const lfoGain = ctx.createGain();
+        lfoGain.gain.value = 0.15; // Reduced depth to prevent negative values
+        
+        // DC Offset: a constant value added to shift the LFO to positive range
+        // We use a ConstantSourceNode to add a DC offset
+        const dcOffset = ctx.createConstantSource();
+        dcOffset.offset.value = 0; // Will be set to base volume when active (e.g., 0.25)
+        
+        // Modulation mixer: combines DC offset with LFO
+        // Final gain = dcOffset.offset + (lfo * lfoGain)
+        // With offset=0.25 and depth=0.15: range is [0.10, 0.40] - always positive!
+        const modMixer = ctx.createGain();
+        modMixer.gain.value = 1;
+        
+        // Mixer for all oscillators
+        const mixer = ctx.createGain();
+        mixer.gain.value = 0.25;
+        
+        const osc2Gain = ctx.createGain();
+        osc2Gain.gain.value = 0.15;
+        
+        const subGain = ctx.createGain();
+        subGain.gain.value = 0.12;
+        
+        // Soft lowpass for warmth
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 1200;
+        filter.Q.value = 0.7;
+        
+        // Main output gain - will be modulated by LFO + DC offset
+        const gain = ctx.createGain();
+        gain.gain.value = 0; // Starts silent
+        
+        // FIX: Connect LFO through the safe architecture
+        // The DC offset and LFO both modulate the gain parameter
+        lfo.connect(lfoGain);
+        lfoGain.connect(gain.gain); // LFO modulates gain
+        dcOffset.connect(gain.gain); // DC offset provides base level
+        
+        const output = ctx.createGain();
+        output.gain.value = 1;
+        
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 64;  // FIX: Reduced for performance
+        
+        // Connect oscillators
+        osc.connect(mixer);
+        osc2.connect(osc2Gain);
+        osc2Gain.connect(mixer);
+        subOsc.connect(subGain);
+        subGain.connect(mixer);
+        
+        mixer.connect(filter);
+        filter.connect(gain);
+        gain.connect(output);
+        output.connect(analyser);
+        analyser.connect(dest);
+        
+        osc.start();
+        osc2.start();
+        subOsc.start();
+        lfo.start();
+        dcOffset.start();
+        
+        return { 
+            osc, osc2, subOsc, lfo, lfoGain, dcOffset, modMixer,
+            mixer, osc2Gain, subGain, filter, gain, output, analyser, 
+            modInput: filter.frequency 
+        };
     },
     
     // BELLS - Sweet crystalline bell tones with harmonics
@@ -1234,7 +1669,7 @@ const AudioNodeFactory = {
         output.gain.value = 1;
         
         const analyser = ctx.createAnalyser();
-        analyser.fftSize = 256;
+        analyser.fftSize = 64;  // FIX: Reduced for performance
         
         mixer.connect(hpFilter);
         hpFilter.connect(lpFilter);
@@ -1262,7 +1697,8 @@ class TangibleObject {
         this.name = info.name;
         
         // Position objects clearly OUTSIDE the active zone
-        const r = getObjectEdgeRadius();
+        // Use a larger multiplier to ensure they're far enough out
+        const r = getObjectEdgeRadius() + 0.05; // Extra margin
         let hx = 0.5 + Math.cos(angle) * r;
         let hy = 0.5 + Math.sin(angle) * r;
         
@@ -1271,13 +1707,16 @@ class TangibleObject {
         hx = Math.max(padding, Math.min(1 - padding, hx));
         hy = Math.max(padding, Math.min(1 - padding, hy));
         
-        // Double-check: if still inside zone, push further out
+        // CRITICAL: Ensure object is definitely outside the active zone
         const distFromCenter = Math.hypot(hx - 0.5, hy - 0.5);
-        if (distFromCenter < CFG.zoneRadius + CFG.objRadius) {
-            const pushDist = (CFG.zoneRadius + CFG.objRadius + 0.02) / distFromCenter;
-            hx = 0.5 + (hx - 0.5) * pushDist;
-            hy = 0.5 + (hy - 0.5) * pushDist;
-            // Re-clamp
+        const minDistFromCenter = CFG.zoneRadius + CFG.objRadius + 0.05; // Safe margin
+        
+        if (distFromCenter < minDistFromCenter) {
+            // Push the object outward to be safely outside the zone
+            const scale = minDistFromCenter / distFromCenter;
+            hx = 0.5 + (hx - 0.5) * scale;
+            hy = 0.5 + (hy - 0.5) * scale;
+            // Re-clamp to screen bounds
             hx = Math.max(padding, Math.min(1 - padding, hx));
             hy = Math.max(padding, Math.min(1 - padding, hy));
         }
@@ -1291,6 +1730,7 @@ class TangibleObject {
         this.rot = 0;
         this.targetRot = 0;
         
+        // IMPORTANT: Always start inactive and silent
         this.active = false;
         this.heldBy = -1;
         this.intensity = 0;
@@ -1301,7 +1741,7 @@ class TangibleObject {
         this.outputNode = null;
         this.analyser = null;
         this.modInput = null;
-        this.waveData = new Uint8Array(128);
+        this.waveData = new Uint8Array(32);  // FIX: Reduced to match fftSize/2
         
         this.audioConnections = new Set();
         this.controlConnections = new Set();
@@ -1318,6 +1758,8 @@ class TangibleObject {
             this.outputNode = nodes.output;
             this.analyser = nodes.analyser;
             this.modInput = nodes.modInput;
+            // Ensure starts silent
+            this.gainNode.gain.value = 0;
         }
         else if (this.type === 'pad') {
             const nodes = AudioNodeFactory.pad(ctx, dest);
@@ -1330,6 +1772,8 @@ class TangibleObject {
             this.outputNode = nodes.output;
             this.analyser = nodes.analyser;
             this.modInput = nodes.modInput;
+            // Ensure starts silent
+            this.gainNode.gain.value = 0;
         }
         else if (this.type === 'fm') {
             const nodes = AudioNodeFactory.fm(ctx, dest);
@@ -1340,6 +1784,8 @@ class TangibleObject {
             this.outputNode = nodes.output;
             this.analyser = nodes.analyser;
             this.modInput = nodes.modInput;
+            // Ensure starts silent
+            this.gainNode.gain.value = 0;
         }
         else if (this.type === 'bells') {
             const nodes = AudioNodeFactory.bells(ctx, dest);
@@ -1351,6 +1797,30 @@ class TangibleObject {
             this.outputNode = nodes.output;
             this.analyser = nodes.analyser;
             this.modInput = nodes.modInput;
+            // Ensure starts silent
+            this.gainNode.gain.value = 0;
+        }
+        else if (this.type === 'pulse') {
+            const nodes = AudioNodeFactory.pulse(ctx, dest);
+            this.audioNode = nodes.osc;
+            this.osc2 = nodes.osc2;
+            this.subOsc = nodes.subOsc;
+            this.pulseLfo = nodes.lfo;
+            this.pulseLfoGain = nodes.lfoGain;
+            this.pulseDcOffset = nodes.dcOffset; // FIX: Store DC offset node
+            this.mixerNode = nodes.mixer;
+            this.osc2Gain = nodes.osc2Gain;
+            this.subGain = nodes.subGain;
+            this.filterNode = nodes.filter;
+            this.gainNode = nodes.gain;
+            this.outputNode = nodes.output;
+            this.analyser = nodes.analyser;
+            this.modInput = nodes.modInput;
+            // Track if internal LFO is connected to prevent multiple connections
+            this.pulseLfoConnected = true;
+            // Ensure starts silent - both gain and DC offset at 0
+            this.gainNode.gain.value = 0;
+            this.pulseDcOffset.offset.value = 0;
         }
         else if (this.type === 'lfo') {
             LFOEngine.init(ctx);
@@ -1382,11 +1852,46 @@ class TangibleObject {
         
         // Clear connection visuals
         this.audioConnections.clear();
-        this.controlConnections.clear();
+        
+        // ═══════════════════════════════════════════════════════════════
+        // FIX: PULSE audio leak - disconnect internal LFO AND DC offset
+        // The DC offset + LFO architecture requires both to be silenced
+        // ═══════════════════════════════════════════════════════════════
+        if (this.type === 'pulse' && this.gainNode && Audio.ctx) {
+            const now = Audio.ctx.currentTime;
+            
+            // Disconnect LFO from gain parameter
+            if (this.pulseLfoConnected && this.pulseLfoGain) {
+                try {
+                    this.pulseLfoGain.disconnect(this.gainNode.gain);
+                    this.pulseLfoConnected = false;
+                } catch(e) {
+                    // May already be disconnected
+                }
+            }
+            
+            // FIX: Also disconnect DC offset to ensure complete silence
+            if (this.pulseDcOffset) {
+                try {
+                    this.pulseDcOffset.disconnect(this.gainNode.gain);
+                } catch(e) {
+                    // May already be disconnected
+                }
+                // Set DC offset to 0
+                this.pulseDcOffset.offset.cancelScheduledValues(now);
+                this.pulseDcOffset.offset.setValueAtTime(0, now);
+            }
+            
+            // Cancel any scheduled automation and set gain to zero immediately
+            this.gainNode.gain.cancelScheduledValues(now);
+            this.gainNode.gain.setValueAtTime(0, now);
+        }
         
         // Silence the audio
         if (Audio.ctx && this.gainNode) {
-            this.gainNode.gain.setTargetAtTime(0, Audio.ctx.currentTime, 0.05);
+            this.gainNode.gain.cancelScheduledValues(Audio.ctx.currentTime);
+            this.gainNode.gain.setValueAtTime(0, Audio.ctx.currentTime);
+            this.gainNode.gain.setTargetAtTime(0, Audio.ctx.currentTime, 0.02);
         }
     }
     
@@ -1467,19 +1972,22 @@ class TangibleObject {
                 this.gainNode.gain.setTargetAtTime(0.2, now, 0.05);
             }
             else if (this.type === 'lfo') {
-                const divisions = [0.25, 0.5, 1, 2, 4, 8];
-                const divIdx = Math.floor(rotNorm * divisions.length) % divisions.length;
-                const rate = (Tempo.bpm / 60) * divisions[divIdx];
-                LFOEngine.setRate(rate);
-                LFOEngine.setDepth(this.intensity * 500);
+                if (LFOEngine.initialized) {
+                    const divisions = [0.25, 0.5, 1, 2, 4, 8];
+                    const divIdx = Math.floor(rotNorm * divisions.length) % divisions.length;
+                    const rate = (Tempo.bpm / 60) * divisions[divIdx];
+                    LFOEngine.setRate(rate);
+                    LFOEngine.setDepth(this.intensity * 500);
+                }
             }
             else if (this.type === 'lfo2') {
-                // LFO2 uses different wave shapes based on rotation
-                const divisions = [0.5, 1, 2, 3, 4, 6];
-                const divIdx = Math.floor(rotNorm * divisions.length) % divisions.length;
-                const rate = (Tempo.bpm / 60) * divisions[divIdx];
-                LFO2Engine.setRate(rate);
-                LFO2Engine.setDepth(this.intensity * 400);
+                if (LFO2Engine.initialized) {
+                    const divisions = [0.5, 1, 2, 3, 4, 6];
+                    const divIdx = Math.floor(rotNorm * divisions.length) % divisions.length;
+                    const rate = (Tempo.bpm / 60) * divisions[divIdx];
+                    LFO2Engine.setRate(rate);
+                    LFO2Engine.setDepth(this.intensity * 400);
+                }
             }
             else if (this.type === 'delay') {
                 const delayTime = Tempo.beatDuration * (0.25 + rotNorm * 0.75);
@@ -1499,16 +2007,8 @@ class TangibleObject {
                 Audio.lpfNode.frequency.setTargetAtTime(freq, now, 0.05);
                 Audio.lpfGain.gain.setTargetAtTime(0.8, now, 0.05);
             }
-            else if (this.type === 'distort') {
-                const amount = 5 + rotNorm * 50;
-                Audio.setDistortion(amount);
-                Audio.distortGain.gain.setTargetAtTime(0.4, now, 0.05);
-            }
-            else if (this.type === 'bitcrush') {
-                const bits = 2 + rotNorm * 6; // 2-8 bits
-                Audio.setBitcrush(bits);
-                Audio.bitcrushGain.gain.setTargetAtTime(0.5, now, 0.05);
-            }
+
+            
             else if (this.type === 'bells') {
                 const baseFreq = getScaleFrequency(rotNorm);
                 if (this.bellOscs) {
@@ -1520,14 +2020,66 @@ class TangibleObject {
                 // Subtle filter sweep for expression
                 this.lpFilterNode.frequency.setTargetAtTime(2000 + rotNorm * 6000, now, 0.1);
             }
+            else if (this.type === 'pulse') {
+                // PULSE: Rhythmical ambient synced to tempo
+                const baseFreq = getScaleFrequency(rotNorm);
+                
+                // Set oscillator frequencies
+                this.audioNode.frequency.setTargetAtTime(baseFreq, now, 0.1);
+                this.osc2.frequency.setTargetAtTime(baseFreq * 1.5, now, 0.1); // Perfect fifth
+                this.subOsc.frequency.setTargetAtTime(baseFreq * 0.5, now, 0.1); // Octave below
+                
+                // Sync LFO to tempo - creates rhythmic pulsing
+                const pulseDivisions = [0.25, 0.5, 1, 2]; // Quarter, half, full, double beat
+                const divIdx = Math.floor(rotNorm * pulseDivisions.length) % pulseDivisions.length;
+                const pulseRate = (Tempo.bpm / 60) * pulseDivisions[divIdx];
+                this.pulseLfo.frequency.setTargetAtTime(pulseRate, now, 0.05);
+                
+                // ═══════════════════════════════════════════════════════════════
+                // FIX: Reconnect internal LFO AND DC offset when activated
+                // Uses DC offset + LFO architecture for always-positive gain
+                // DC offset provides base level, LFO adds rhythmic variation
+                // ═══════════════════════════════════════════════════════════════
+                if (this.pulseLfoGain && this.gainNode && !this.pulseLfoConnected) {
+                    try {
+                        // Reconnect both LFO and DC offset to gain parameter
+                        this.pulseLfoGain.connect(this.gainNode.gain);
+                        if (this.pulseDcOffset) {
+                            this.pulseDcOffset.connect(this.gainNode.gain);
+                        }
+                        this.pulseLfoConnected = true;
+                    } catch(e) {
+                        // Connection error, ignore
+                    }
+                }
+                
+                // FIX: Use DC offset for base volume instead of gain.gain directly
+                // DC offset = 0.25 (base) + LFO depth = 0.15 = range [0.10, 0.40]
+                // This ensures gain never goes negative!
+                if (this.pulseDcOffset) {
+                    this.pulseDcOffset.offset.setTargetAtTime(0.25, now, 0.08);
+                }
+                
+                // Filter follows rotation
+                this.filterNode.frequency.setTargetAtTime(600 + rotNorm * 2000, now, 0.1);
+            }
+            else if (this.type === 'tempo') {
+                // TEMPO: Global tempo controller
+                // Rotation changes global BPM (40-180 range) - CLAMPED
+                // rotNorm is 0-1, map to 40-180 BPM
+                const minBpm = 40;
+                const maxBpm = 180;
+                const newBpm = Math.max(minBpm, Math.min(maxBpm, minBpm + rotNorm * (maxBpm - minBpm)));
+                Tempo.bpm = newBpm;
+            }
         } else {
             if (this.gainNode) {
                 this.gainNode.gain.setTargetAtTime(0, now, 0.08);
             }
-            if (this.type === 'lfo') {
+            if (this.type === 'lfo' && LFOEngine.initialized) {
                 LFOEngine.setDepth(0);
             }
-            if (this.type === 'lfo2') {
+            if (this.type === 'lfo2' && LFO2Engine.initialized) {
                 LFO2Engine.setDepth(0);
             }
             if (this.type === 'delay') {
@@ -1542,12 +2094,9 @@ class TangibleObject {
             if (this.type === 'lpf') {
                 Audio.lpfGain.gain.setTargetAtTime(0, now, 0.08);
             }
-            if (this.type === 'distort') {
-                Audio.distortGain.gain.setTargetAtTime(0, now, 0.08);
-            }
-            if (this.type === 'bitcrush') {
-                Audio.bitcrushGain.gain.setTargetAtTime(0, now, 0.08);
-            }
+
+            
+            // pulse uses gainNode which is already handled above
         }
     }
     
@@ -1624,6 +2173,29 @@ class TangibleObject {
                 this.mixerNode.disconnect();
                 this.mixerNode = null;
             }
+            if (this.osc2) {
+                this.osc2.stop();
+                this.osc2.disconnect();
+                this.osc2 = null;
+            }
+            if (this.osc2Gain) {
+                this.osc2Gain.disconnect();
+                this.osc2Gain = null;
+            }
+            if (this.pulseLfo) {
+                this.pulseLfo.stop();
+                this.pulseLfo.disconnect();
+                this.pulseLfo = null;
+            }
+            if (this.pulseLfoGain) {
+                this.pulseLfoGain.disconnect();
+                this.pulseLfoGain = null;
+            }
+            if (this.pulseDcOffset) {
+                this.pulseDcOffset.stop();
+                this.pulseDcOffset.disconnect();
+                this.pulseDcOffset = null;
+            }
             
             // Clear connection sets
             this.audioConnections.clear();
@@ -1636,8 +2208,110 @@ class TangibleObject {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// MANUAL RESET FUNCTION - Triggered by "R" key
+// ═══════════════════════════════════════════════════════════════════════════════
+function resetAllObjects() {
+    const objects = State.objects;
+    const objCount = objects.length;
+    
+    // Reset all objects to home position
+    for (let i = 0; i < objCount; i++) {
+        const obj = objects[i];
+        if (obj.active) {
+            obj.deactivate();
+        }
+        obj.targetX = obj.homeX;
+        obj.targetY = obj.homeY;
+        obj.x = obj.homeX;
+        obj.y = obj.homeY;
+        obj.heldBy = -1;
+    }
+    
+    // Reset grabbed state for both hands
+    State.grabbed[0] = -1;
+    State.grabbed[1] = -1;
+    
+    // Clear LFO connections
+    if (LFOEngine.initialized) {
+        LFOEngine.disconnectAll();
+    }
+    if (LFO2Engine.initialized) {
+        LFO2Engine.disconnectAll();
+    }
+    
+    // Clear LFO mutex
+    LFOConnectionMutex.clear();
+    
+    // Clear audio connection manager
+    AudioConnectionManager.cleanup();
+    AudioConnectionManager.init();
+    
+    console.log('All objects reset to home positions');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // APPLICATION STATE
 // ═══════════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════════
+// FRAME BUDGET - FPS limiting and accurate tracking
+// FIX: Limits canvas draw rate to 30 FPS to free CPU/GPU for audio
+// ═══════════════════════════════════════════════════════════════════════════════
+const FrameBudget = {
+    fps: 60,
+    frameCount: 0,
+    lastSecond: 0,
+    frameTimes: new Float32Array(60),
+    frameIndex: 0,
+    qualityLevel: 1.0,
+    
+    // FPS LIMITER: Target 30 FPS for canvas drawing (33.33ms per frame)
+    targetFPS: 30,
+    lastDrawTime: 0,
+    minFrameInterval: 1000 / 30, // ~33ms between draws
+    
+    // Check if we should draw this frame
+    shouldDraw(currentTime) {
+        const elapsed = currentTime - this.lastDrawTime;
+        if (elapsed >= this.minFrameInterval) {
+            this.lastDrawTime = currentTime;
+            return true;
+        }
+        return false;
+    },
+    
+    update(dt, currentTime) {
+        // Store frame time in circular buffer
+        this.frameTimes[this.frameIndex] = dt;
+        this.frameIndex = (this.frameIndex + 1) % 60;
+        this.frameCount++;
+        
+        // Calculate FPS every 500ms for stability
+        if (!this.lastSecond) this.lastSecond = currentTime;
+        if (currentTime - this.lastSecond >= 500) {
+            // Calculate average frame time from buffer
+            let sum = 0;
+            const count = Math.min(this.frameCount, 60);
+            for (let i = 0; i < count; i++) {
+                sum += this.frameTimes[i];
+            }
+            const avgFrameTime = sum / count;
+            this.fps = avgFrameTime > 0 ? Math.round(1000 / avgFrameTime) : 60;
+            this.lastSecond = currentTime;
+        }
+        
+        // Quality adjustment based on frame time
+        if (dt > 40) { // Adjusted for 30 FPS target
+            this.qualityLevel = Math.max(0.5, this.qualityLevel - 0.1);
+        } else if (dt < 35) {
+            this.qualityLevel = Math.min(1.0, this.qualityLevel + 0.02);
+        }
+    },
+    
+    getFPS() {
+        return this.fps;
+    }
+};
+
 const State = {
     video: null,
     canvas: null,
@@ -1650,73 +2324,135 @@ const State = {
     grabbed: [-1, -1],
     grabAngle: [0, 0],
     grabRot: [0, 0],
-    lastTime: 0
+    lastTime: 0,
+    frameBudget: FrameBudget
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// HAND TRACKING
+// PRE-ALLOCATED ARRAYS FOR GC OPTIMIZATION
+// Avoid creating new arrays every frame in render loop
+// ═══════════════════════════════════════════════════════════════════════════════
+const RenderCache = {
+    // For updateConnections
+    generators: [],
+    effects: [],
+    controllers: [],
+    activeEffectTypes: new Set(),
+    targetEffects: new Set(),
+    sortedFx: [],
+    nearbyIndices: [],
+    
+    // For render function
+    activeHands: [],
+    
+    // Reset arrays to empty (reuse same array)
+    reset() {
+        this.generators.length = 0;
+        this.effects.length = 0;
+        this.controllers.length = 0;
+        this.activeEffectTypes.clear();
+        this.targetEffects.clear();
+        this.sortedFx.length = 0;
+        this.nearbyIndices.length = 0;
+        this.activeHands.length = 0;
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CONNECTION UPDATE TIMING - Limit to 10Hz to prevent micro-lags
+// ═══════════════════════════════════════════════════════════════════════════════
+const ConnectionTiming = {
+    lastUpdate: 0,
+    updateInterval: 100,  // 100ms = 10Hz
+    
+    shouldUpdate(now) {
+        if (now - this.lastUpdate >= this.updateInterval) {
+            this.lastUpdate = now;
+            return true;
+        }
+        return false;
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// HAND TRACKING - Optimized to minimize GC pressure
 // ═══════════════════════════════════════════════════════════════════════════════
 function processHand(landmarks, handIdx) {
+    // Direct property access (avoid destructuring)
     const thumb = landmarks[4];
     const index = landmarks[8];
     
-    // Always use raw coordinates for position
-    // Mirror is handled in the rendering
     const thumbX = thumb.x;
+    const thumbY = thumb.y;
     const indexX = index.x;
+    const indexY = index.y;
     
     const centerX = (thumbX + indexX) * 0.5;
-    const centerY = (thumb.y + index.y) * 0.5;
-    const dist = Math.hypot(thumb.x - index.x, thumb.y - index.y);
+    const centerY = (thumbY + indexY) * 0.5;
+    const dx = thumbX - indexX;
+    const dy = thumbY - indexY;
+    const dist = Math.sqrt(dx * dx + dy * dy); // Faster than hypot
     
     const hs = State.handStates[handIdx];
     const wasPinch = hs.isPinching || false;
     const threshold = wasPinch ? CFG.pinchOff : CFG.pinchOn;
     const isPinch = dist < threshold;
     
+    // Update hand state (reuse existing object)
     hs.x = centerX;
     hs.y = centerY;
     hs.isPinching = isPinch;
     hs.thumbX = thumbX;
-    hs.thumbY = thumb.y;
+    hs.thumbY = thumbY;
     hs.indexX = indexX;
-    hs.indexY = index.y;
+    hs.indexY = indexY;
+    hs.angle = Math.atan2(indexY - thumbY, indexX - thumbX);
     
-    const angle = Math.atan2(index.y - thumb.y, indexX - thumbX);
-    hs.angle = angle;
+    const objects = State.objects;
+    const angle = hs.angle;
     
+    // Handle grab start
+    // FIX: Use LINEAR SEARCH instead of spatial hash to avoid stale hash issues
+    // When hand moves quickly, the hash may be outdated (only rebuilt at 10Hz)
+    // Linear search over all objects guarantees accurate grab detection
     if (isPinch && !wasPinch && State.grabbed[handIdx] < 0) {
-        const nearby = State.spatialHash.getNearby(centerX, centerY, CFG.grabRadius);
         let closest = -1;
         let closestDist = CFG.grabRadius;
+        let obj, d, odx, ody;
+        const objCount = objects.length;
         
-        for (const idx of nearby) {
-            const obj = State.objects[idx];
-            if (obj.heldBy >= 0) continue;
+        // Linear search over ALL objects - no dependency on spatial hash
+        for (let i = 0; i < objCount; i++) {
+            obj = objects[i];
+            if (obj.heldBy >= 0) continue;  // Skip already held objects
             
-            const d = Math.hypot(obj.x - centerX, obj.y - centerY);
+            odx = obj.x - centerX;
+            ody = obj.y - centerY;
+            d = Math.sqrt(odx * odx + ody * ody);
             if (d < closestDist) {
                 closestDist = d;
-                closest = idx;
+                closest = i;
             }
         }
         
         if (closest >= 0) {
             State.grabbed[handIdx] = closest;
-            State.objects[closest].heldBy = handIdx;
+            objects[closest].heldBy = handIdx;
             State.grabAngle[handIdx] = angle;
-            State.grabRot[handIdx] = State.objects[closest].rot;
+            State.grabRot[handIdx] = objects[closest].rot;
         }
     }
     
+    // Handle grab release
     if (!isPinch && wasPinch && State.grabbed[handIdx] >= 0) {
-        const obj = State.objects[State.grabbed[handIdx]];
-        obj.heldBy = -1;
+        objects[State.grabbed[handIdx]].heldBy = -1;
         State.grabbed[handIdx] = -1;
     }
     
-    if (isPinch && State.grabbed[handIdx] >= 0) {
-        const obj = State.objects[State.grabbed[handIdx]];
+    // Handle object movement while grabbed
+    const grabbedIdx = State.grabbed[handIdx];
+    if (isPinch && grabbedIdx >= 0) {
+        const obj = objects[grabbedIdx];
         obj.targetX = centerX;
         obj.targetY = centerY;
         obj.targetRot = State.grabRot[handIdx] + (angle - State.grabAngle[handIdx]);
@@ -1767,80 +2503,125 @@ function isEffectBetween(gen, fx, centerX, centerY, tolerance) {
 function updateConnections() {
     if (!Audio.ctx) return;
     
-    // Clear control connections at start of each frame
-    for (const obj of State.objects) {
-        obj.controlConnections.clear();
-    }
+    const objects = State.objects;
+    const objCount = objects.length;
+    let i, j, obj, ctrl, gen, fx, target, idx, d;
     
-    const generators = State.objects.filter(o => o.active && o.cat === 'generator');
-    const effects = State.objects.filter(o => o.active && o.cat === 'effect');
-    const controllers = State.objects.filter(o => o.active && o.cat === 'controller');
+    // Use pre-allocated arrays instead of filter()
+    const generators = RenderCache.generators;
+    const effects = RenderCache.effects;
+    const controllers = RenderCache.controllers;
+    const activeEffectTypes = RenderCache.activeEffectTypes;
     
-    // Create set of active effect types for fast lookup
-    const activeEffectTypes = new Set(effects.map(e => e.type));
+    generators.length = 0;
+    effects.length = 0;
+    controllers.length = 0;
+    activeEffectTypes.clear();
     
-    // ─── CONTROLLER (LFO) CONNECTIONS ───
-    // Mark targets first, then sync connections (connect new, disconnect old)
-    for (const ctrl of controllers) {
-        const connectRange = CFG.lfoConnectDist;
-        const nearby = State.spatialHash.getNearby(ctrl.x, ctrl.y, connectRange);
+    // Categorize objects using classic for loop (no filter/map)
+    for (i = 0; i < objCount; i++) {
+        obj = objects[i];
+        if (!obj.active) continue;
         
-        for (const idx of nearby) {
-            const target = State.objects[idx];
-            if (!target.active) continue;
-            if (!canConnect('controller', target.cat)) continue;
-            
-            const d = Math.hypot(ctrl.x - target.x, ctrl.y - target.y);
-            if (d >= connectRange) continue;
-            
-            if (target.modInput) {
-                // Route to appropriate LFO engine
-                if (ctrl.type === 'lfo') {
-                    LFOEngine.markTarget(target.index);
-                } else if (ctrl.type === 'lfo2') {
-                    LFO2Engine.markTarget(target.index);
-                }
-                ctrl.controlConnections.add(target.index);
-            }
+        if (obj.cat === 'generator') {
+            generators.push(obj);
+        } else if (obj.cat === 'effect') {
+            effects.push(obj);
+            activeEffectTypes.add(obj.type);
+        } else if (obj.cat === 'controller') {
+            controllers.push(obj);
         }
     }
     
-    // Sync LFO connections (connects new targets, disconnects old ones)
-    LFOEngine.syncConnections(State.objects);
-    LFO2Engine.syncConnections(State.objects);
+    // ─── CONTROLLER (LFO) CONNECTIONS ───
+    // SIMPLIFIED: Each LFO connects to exactly 1 object (the closest one)
+    // LFO will automatically switch to closer objects when moved
+    const connectRange = CFG.lfoConnectDist;
+    
+    for (i = 0; i < controllers.length; i++) {
+        ctrl = controllers[i];
+        
+        // Get the appropriate engine
+        const engine = ctrl.type === 'lfo' ? LFOEngine : LFO2Engine;
+        
+        // Skip if not initialized
+        if (!engine.initialized) continue;
+        
+        // Clear previous visual connections
+        ctrl.controlConnections.clear();
+        
+        // ALWAYS find the closest valid target (even if already connected)
+        // This allows LFO to switch to a closer object when moved
+        let closestIdx = -1;
+        let closestDist = connectRange;
+        
+        // Use forEachNearby to iterate without creating arrays
+        State.spatialHash.forEachNearby(ctrl.x, ctrl.y, connectRange, (idx) => {
+            target = objects[idx];
+            
+            // Skip invalid targets
+            if (!target || !target.active) return;
+            if (!canConnect('controller', target.cat)) return;
+            if (!target.modInput) return;
+            
+            // Check if another LFO already owns this target (but allow if we own it)
+            if (!LFOConnectionMutex.canConnect(idx, engine.id)) return;
+            
+            // Check distance - find closest
+            const tdx = ctrl.x - target.x;
+            const tdy = ctrl.y - target.y;
+            d = Math.sqrt(tdx * tdx + tdy * tdy);
+            if (d >= closestDist) return;
+            
+            closestDist = d;
+            closestIdx = idx;
+        });
+        
+        // Mark the closest valid target (syncConnections will handle disconnect/connect)
+        if (closestIdx >= 0) {
+            engine.markTarget(closestIdx);
+            ctrl.controlConnections.add(closestIdx);
+        }
+        // If no target found, don't mark anything - syncConnections will disconnect
+    }
+    
+    // Sync LFO connections (only if initialized)
+    if (LFOEngine.initialized) {
+        LFOEngine.syncConnections(objects);
+    }
+    if (LFO2Engine.initialized) {
+        LFO2Engine.syncConnections(objects);
+    }
     
     // ─── EFFECT CONNECTIONS (GENERATOR -> EFFECT) ───
     const centerX = 0.5;
     const centerY = 0.5;
+    const targetEffects = RenderCache.targetEffects;
     
-    for (const gen of generators) {
+    for (i = 0; i < generators.length; i++) {
+        gen = generators[i];
         if (!gen.outputNode) continue;
         
-        // Calculate which effects should be connected this frame
-        const targetEffects = new Set();
-        
-        // Clear visual connection tracking
+        // Reuse same Set (clear and refill)
+        targetEffects.clear();
         gen.audioConnections.clear();
         
-        // Check each active effect if it's between this generator and center
-        for (const fx of effects) {
+        // Check each active effect using classic for loop
+        for (j = 0; j < effects.length; j++) {
+            fx = effects[j];
             if (isEffectBetween(gen, fx, centerX, centerY, CFG.betweenTolerance)) {
                 targetEffects.add(fx.type);
                 gen.audioConnections.add(fx.index);
             }
         }
         
-        // Use AudioConnectionManager to sync connections
-        // This will: 
-        // 1. Disconnect effects that are no longer in targetEffects
-        // 2. Connect effects that are newly in targetEffects
-        // 3. Leave existing correct connections unchanged
+        // Sync connections
         AudioConnectionManager.syncConnections(gen, targetEffects);
     }
     
     // ─── DISCONNECT INACTIVE GENERATORS ───
-    // Make sure inactive generators have no effect connections
-    for (const obj of State.objects) {
+    for (i = 0; i < objCount; i++) {
+        obj = objects[i];
         if (obj.cat === 'generator' && !obj.active) {
             AudioConnectionManager.disconnectAll(obj);
             obj.audioConnections.clear();
@@ -1912,68 +2693,142 @@ function drawWaveformLine(ctx, x1, y1, x2, y2, waveData, color, intensity) {
     ctx.restore();
 }
 
-function drawLFODataBars(ctx, x1, y1, x2, y2, color, intensity) {
+function drawLFODataBars(ctx, x1, y1, x2, y2, color, intensity, lfoRate) {
     const dx = x2 - x1;
     const dy = y2 - y1;
     const len = Math.sqrt(dx * dx + dy * dy);
     if (len < 20) return;
     
-    // Perpendicular direction
-    const perpX = -dy / len;
-    const perpY = dx / len;
-    
     const time = performance.now() / 1000;
-    const numBars = 32; // More bars
-    const barWidth = Math.max(10, len / numBars * 0.85); // Much wider bars
-    const maxBarHeight = 45 * intensity; // Taller bars
+    const angle = Math.atan2(dy, dx);
     
-    // LFO wave speed synced to rate
-    const lfoSpeed = LFOEngine.rate || 2;
-    const phase = (time * lfoSpeed) % 1;
+    // Direction along the line (normalized) - FROM LFO TO TARGET
+    const dirX = dx / len;
+    const dirY = dy / len;
+    
+    // Perpendicular direction for packet width
+    const perpX = -dirY;
+    const perpY = dirX;
+    
+    // LFO speed for animation - use passed rate or default
+    const lfoSpeed = lfoRate || 2;
     
     ctx.save();
+    
+    // ═══════════════════════════════════════════════════════════════
+    // 1. THICK TRANSLUCENT BASE LINE (the "ribbon") with STRONG GLOW
+    // ═══════════════════════════════════════════════════════════════
+    const lineWidth = 38 * intensity;  // Wider line
+    
+    // Strong outer glow layer
     ctx.shadowColor = color;
-    ctx.shadowBlur = 20; // More glow
-    
-    for (let i = 0; i < numBars; i++) {
-        const t = (i + 0.5) / numBars;
-        const px = x1 + dx * t;
-        const py = y1 + dy * t;
-        
-        // Create wave pattern moving along the line - faster waves
-        const wavePhase = (phase * 3 + i / numBars * 2) * PI2;
-        const barHeight = (0.25 + Math.abs(Math.sin(wavePhase)) * 0.75) * maxBarHeight;
-        
-        // Gradient opacity - brighter in middle, fade at edges
-        const edgeFade = Math.sin(t * PI);
-        ctx.globalAlpha = 0.95 * intensity * edgeFade;
-        ctx.fillStyle = color;
-        
-        // Draw bar centered on the line, perpendicular to it
-        const halfH = barHeight / 2;
-        
-        ctx.save();
-        ctx.translate(px, py);
-        ctx.rotate(Math.atan2(dy, dx) + PI / 2);
-        
-        // Draw rounded bar - wider
-        ctx.beginPath();
-        ctx.roundRect(-barWidth / 2, -halfH, barWidth, barHeight, barWidth / 3);
-        ctx.fill();
-        
-        ctx.restore();
-    }
-    
-    // Draw base line - more visible
-    ctx.globalAlpha = 0.4 * intensity;
+    ctx.shadowBlur = 35;  // Strong glow
+    ctx.globalAlpha = 0.35 * intensity;
     ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
-    ctx.setLineDash([6, 4]);
+    ctx.lineWidth = lineWidth * 1.4;
+    ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
     ctx.stroke();
-    ctx.setLineDash([]);
+    
+    // Main line with glow (removed ctx.filter for performance)
+    ctx.shadowBlur = 25;
+    ctx.globalAlpha = 0.5 * intensity;
+    ctx.lineWidth = lineWidth;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    
+    // Bright inner highlight line with glow
+    ctx.shadowBlur = 15;
+    ctx.globalAlpha = 0.4 * intensity;
+    ctx.lineWidth = lineWidth * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    
+    // ═══════════════════════════════════════════════════════════════
+    // 2. MOVING SQUARE PACKETS - Always moving TOWARD target (x2, y2)
+    // ═══════════════════════════════════════════════════════════════
+    const packetSize = 14;
+    const packetSpacing = 20;
+    const packetsPerGroup = 3;
+    const groupSpacing = 5;
+    
+    const groupLength = (packetsPerGroup * packetSize) + ((packetsPerGroup - 1) * groupSpacing);
+    const totalGroupWidth = groupLength + packetSpacing;
+    const numGroups = Math.ceil(len / totalGroupWidth) + 2;
+    
+    // Animation moves FROM x1,y1 TO x2,y2 (toward target object)
+    const moveSpeed = lfoSpeed * 60;
+    const offset = (time * moveSpeed) % totalGroupWidth;
+    
+    // Strong glow on packets
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 15;
+    
+    for (let g = -1; g < numGroups; g++) {
+        // Offset makes packets flow TOWARD the target
+        const groupStart = g * totalGroupWidth + offset;
+        
+        for (let p = 0; p < packetsPerGroup; p++) {
+            const packetPos = groupStart + p * (packetSize + groupSpacing);
+            
+            // Skip if outside the line
+            if (packetPos < -packetSize || packetPos > len + packetSize) continue;
+            
+            // Calculate position along line (0 = LFO, 1 = target)
+            const t = packetPos / len;
+            
+            // Fade at edges
+            let alpha = 1;
+            if (t < 0.1) alpha = t / 0.1;
+            else if (t > 0.9) alpha = (1 - t) / 0.1;
+            alpha = Math.max(0, Math.min(1, alpha));
+            
+            // Position along the line
+            const px = x1 + dirX * packetPos;
+            const py = y1 + dirY * packetPos;
+            
+            // Draw square packet with blur
+            ctx.save();
+            ctx.translate(px, py);
+            ctx.rotate(angle);
+            
+            // Blurred colored square - NO white center dot
+            ctx.globalAlpha = 0.85 * intensity * alpha;
+            ctx.fillStyle = color;
+            
+            const halfSize = packetSize / 2;
+            ctx.fillRect(-halfSize, -halfSize, packetSize, packetSize);
+            
+            ctx.restore();
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════
+    // 3. GLOWING EDGE LINES
+    // ═══════════════════════════════════════════════════════════════
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 12;
+    ctx.globalAlpha = 0.5 * intensity;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.5;
+    
+    const edgeOffset = lineWidth * 0.45;
+    ctx.beginPath();
+    ctx.moveTo(x1 + perpX * edgeOffset, y1 + perpY * edgeOffset);
+    ctx.lineTo(x2 + perpX * edgeOffset, y2 + perpY * edgeOffset);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.moveTo(x1 - perpX * edgeOffset, y1 - perpY * edgeOffset);
+    ctx.lineTo(x2 - perpX * edgeOffset, y2 - perpY * edgeOffset);
+    ctx.stroke();
     
     ctx.restore();
 }
@@ -2125,6 +2980,27 @@ function drawObject(ctx, obj, w, h, minDim) {
     ctx.font = 'bold 8px system-ui';
     ctx.fillText(obj.name, 0, 6);
     
+    // Draw BPM tag for TEMPO object (bottom right side)
+    if (obj.type === 'tempo' && obj.active) {
+        const bpmX = size + 8;
+        const bpmY = size - 8;
+        const bpmValue = Math.round(Tempo.bpm);
+        
+        ctx.font = 'bold 11px "Courier New", monospace';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        
+        // Gold/yellow style matching tempo object
+        ctx.fillStyle = 'rgba(251, 191, 36, 0.95)';
+        ctx.shadowColor = '#fbbf24';
+        ctx.shadowBlur = 8;
+        
+        ctx.fillText(`${bpmValue}`, bpmX, bpmY);
+        ctx.fillText('BPM', bpmX, bpmY + 12);
+        
+        ctx.shadowBlur = 0;
+    }
+    
     // Draw terminal-style debug info for generators (bottom right)
     if (obj.cat === 'generator' && obj.active) {
         const debugX = size + 8;
@@ -2205,84 +3081,145 @@ function drawHand(ctx, hs, w, h) {
 }
 
 function render(results) {
-    const { canvas, ctx } = State;
+    const time = performance.now();
+    
+    // ═══════════════════════════════════════════════════════════════
+    // FPS LIMITER: Skip rendering if we're ahead of schedule
+    // This frees CPU/GPU cycles for audio processing
+    // MediaPipe still processes hands, but we skip the expensive draw
+    // ═══════════════════════════════════════════════════════════════
+    if (!State.frameBudget.shouldDraw(time)) {
+        // Still process hands to maintain responsive controls
+        if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+            const numHands = Math.min(results.multiHandLandmarks.length, 2);
+            for (let i = 0; i < numHands; i++) {
+                processHand(results.multiHandLandmarks[i], i);
+            }
+        }
+        // Update objects minimally (physics only, no drawing)
+        const dtSkip = Math.min((time - State.lastTime) / 1000, 0.1);
+        for (let i = 0; i < State.objects.length; i++) {
+            State.objects[i].update(dtSkip);
+        }
+        State.lastTime = time;
+        Audio.frameReceived();
+        return; // Skip full render
+    }
+    
+    const canvas = State.canvas;
+    const ctx = State.ctx;
     const w = canvas.width;
     const h = canvas.height;
     const minDim = Math.min(w, h);
     const cx = w * 0.5;
     const cy = h * 0.5;
-    const time = performance.now();
+    const objects = State.objects;
+    const objCount = objects.length;
     
-    const dt = Math.min((time - State.lastTime) / 1000, 0.1);
+    // Calculate delta time in ms for FrameBudget, then convert to seconds for physics
+    const dtMs = time - State.lastTime;
+    const dt = Math.min(dtMs / 1000, 0.1);
     State.lastTime = time;
+    
+    // Update frame budget for accurate FPS tracking
+    State.frameBudget.update(dtMs, time);
     
     Tempo.update(time);
     
     // Draw video (selfieMode already mirrors the image from MediaPipe)
-    ctx.drawImage(results.image, 0, 0, w, h);
+    // If noVideoMode is enabled, skip drawing the video and just fill with black
+    if (noVideoMode) {
+        ctx.fillStyle = '#0a0a0f';
+        ctx.fillRect(0, 0, w, h);
+    } else {
+        ctx.drawImage(results.image, 0, 0, w, h);
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.fillRect(0, 0, w, h);
+    }
     
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.fillRect(0, 0, w, h);
+    // Reuse pre-allocated array for active hands
+    const activeHands = RenderCache.activeHands;
+    activeHands.length = 0;
     
-    const activeHands = [];
+    let i, j, obj, hs, fx, target, waveData, ox, oy, prevX, prevY, fxX, fxY, tx, ty;
     
-    if (results.multiHandLandmarks) {
-        for (let i = 0; i < Math.min(results.multiHandLandmarks.length, 2); i++) {
-            const hs = processHand(results.multiHandLandmarks[i], i);
+    // Notify watchdog that we received a frame
+    Audio.frameReceived();
+    
+    if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        const numHands = Math.min(results.multiHandLandmarks.length, 2);
+        for (i = 0; i < numHands; i++) {
+            hs = processHand(results.multiHandLandmarks[i], i);
             activeHands.push(hs);
         }
     }
     
-    for (let i = activeHands.length; i < 2; i++) {
+    // Clean up hands that are no longer active
+    for (i = activeHands.length; i < 2; i++) {
         if (State.grabbed[i] >= 0) {
-            State.objects[State.grabbed[i]].heldBy = -1;
+            objects[State.grabbed[i]].heldBy = -1;
             State.grabbed[i] = -1;
         }
         State.handStates[i] = {};
     }
     
-    for (const obj of State.objects) {
-        obj.update(dt);
+    // AUTO-RESET removed - now manual via "R" key
+    
+    // Update all objects (classic for loop)
+    for (i = 0; i < objCount; i++) {
+        objects[i].update(dt);
     }
     
-    updateConnections();
-    State.spatialHash.rebuild(State.objects);
+    // Only update connections at 10Hz to prevent micro-lags
+    // Note: spatialHash rebuild moved to END of render for better accuracy
+    if (ConnectionTiming.shouldUpdate(time)) {
+        updateConnections();
+    }
     
     drawCentralOutput(ctx, w, h);
     
-    // Draw connections: generators -> effects -> center
-    for (const obj of State.objects) {
+    // "Esperando manos" message removed - manual reset via "R" key
+    
+    // Pre-allocated array for sorting effects
+    const sortedFx = RenderCache.sortedFx;
+    
+    // Draw connections: generators -> effects -> center (classic for loop)
+    for (i = 0; i < objCount; i++) {
+        obj = objects[i];
         if (!obj.active) continue;
         
-        const ox = obj.x * w;
-        const oy = obj.y * h;
+        ox = obj.x * w;
+        oy = obj.y * h;
         
         if (obj.cat === 'generator') {
-            const waveData = obj.getWaveData();
+            waveData = obj.getWaveData();
             
             if (obj.audioConnections.size > 0) {
-                // Draw: Generator -> Effect(s) -> Center
-                // Sort effects by distance to generator (closest first)
-                const sortedFx = Array.from(obj.audioConnections)
-                    .map(idx => State.objects[idx])
-                    .filter(fx => fx.active)
-                    .sort((a, b) => {
-                        const da = Math.hypot(obj.x - a.x, obj.y - a.y);
-                        const db = Math.hypot(obj.x - b.x, obj.y - b.y);
-                        return da - db;
-                    });
+                // Collect and sort effects by distance (reuse array)
+                sortedFx.length = 0;
+                
+                // Iterate over audioConnections without creating new arrays
+                for (const idx of obj.audioConnections) {
+                    fx = objects[idx];
+                    if (fx.active) {
+                        // Calculate distance for sorting
+                        fx._sortDist = Math.hypot(obj.x - fx.x, obj.y - fx.y);
+                        sortedFx.push(fx);
+                    }
+                }
+                
+                // Sort in place (no new array created)
+                sortedFx.sort((a, b) => a._sortDist - b._sortDist);
                 
                 if (sortedFx.length > 0) {
-                    // Draw generator -> first effect
-                    let prevX = ox;
-                    let prevY = oy;
+                    prevX = ox;
+                    prevY = oy;
                     
-                    for (let i = 0; i < sortedFx.length; i++) {
-                        const fx = sortedFx[i];
-                        const fxX = fx.x * w;
-                        const fxY = fx.y * h;
+                    for (j = 0; j < sortedFx.length; j++) {
+                        fx = sortedFx[j];
+                        fxX = fx.x * w;
+                        fxY = fx.y * h;
                         
-                        // Draw line from previous point to this effect
                         drawWaveformLine(ctx, prevX, prevY, fxX, fxY, waveData, obj.color, obj.intensity * 0.8);
                         
                         prevX = fxX;
@@ -2298,39 +3235,50 @@ function render(results) {
             }
         }
         
-        // Controller (LFO) connections
-        if (obj.cat === 'controller' && obj.controlConnections.size > 0) {
-            for (const targetIdx of obj.controlConnections) {
-                const target = State.objects[targetIdx];
-                if (!target.active) continue;
-                
-                const tx = target.x * w;
-                const ty = target.y * h;
-                // Use LFO data bars instead of simple dashed line
-                drawLFODataBars(ctx, ox, oy, tx, ty, obj.color, obj.intensity);
+        // Controller (LFO) connections - SIMPLIFIED: only 1 connection per LFO
+        if (obj.cat === 'controller') {
+            const engine = obj.type === 'lfo' ? LFOEngine : LFO2Engine;
+            
+            // Only draw if actually connected
+            if (engine.connectedObjIndex >= 0) {
+                target = objects[engine.connectedObjIndex];
+                if (target && target.active) {
+                    tx = target.x * w;
+                    ty = target.y * h;
+                    drawLFODataBars(ctx, ox, oy, tx, ty, obj.color, obj.intensity, engine.rate);
+                }
             }
         }
     }
     
-    // Control connections are cleared after being drawn
-    // Audio connections are managed by AudioConnectionManager (persistent)
-    
-    for (const obj of State.objects) {
-        drawObject(ctx, obj, w, h, minDim);
+    // Draw all objects (classic for loop)
+    for (i = 0; i < objCount; i++) {
+        drawObject(ctx, objects[i], w, h, minDim);
     }
     
-    for (const hs of activeHands) {
+    // Draw hands (classic for loop)
+    for (i = 0; i < activeHands.length; i++) {
+        hs = activeHands[i];
         if (hs.x !== undefined) {
             drawHand(ctx, hs, w, h);
         }
     }
+    
+    // FIX: Rebuild spatial hash at END of render for better accuracy
+    // This ensures the hash reflects the latest object positions
+    // before the next frame's connection updates
+    if (ConnectionTiming.lastUpdate === time) {
+        State.spatialHash.rebuild(objects);
+    }
+    
+
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // INITIALIZATION
 // ═══════════════════════════════════════════════════════════════════════════════
 function createObjects() {
-    const types = ['pad', 'fm', 'bells', 'delay', 'reverb', 'filter', 'distort', 'bitcrush', 'lfo', 'lfo2'];
+    const types = ['pad', 'fm', 'bells', 'pulse', 'delay', 'reverb', 'lfo', 'lfo2', 'tempo'];
     const count = types.length;
     
     for (let i = 0; i < count; i++) {
@@ -2338,7 +3286,11 @@ function createObjects() {
         State.objects.push(new TangibleObject(types[i], i, angle));
     }
     
+    // Initial spatial hash build
     State.spatialHash.rebuild(State.objects);
+    
+    // Force initial connection timing update
+    ConnectionTiming.lastUpdate = 0;
 }
 
 function resize() {
@@ -2359,6 +3311,21 @@ function setStep(id, state) {
 }
 
 async function start() {
+    // FIX: Guard against multiple clicks - disable button immediately
+    const startBtn = document.getElementById('startBtn');
+    if (startBtn.disabled) return; // Already starting
+    startBtn.disabled = true;
+    startBtn.style.opacity = '0.5';
+    startBtn.style.cursor = 'not-allowed';
+    
+    // FIX: Clean up any previous session to prevent orphan AudioContext
+    if (State.camera || Audio.ctx) {
+        console.log('Cleaning up previous session...');
+        cleanup();
+        // Wait for cleanup to complete
+        await new Promise(r => setTimeout(r, 100));
+    }
+    
     document.getElementById('intro').style.display = 'none';
     document.getElementById('loading').classList.add('show');
     
@@ -2375,23 +3342,26 @@ async function start() {
             locateFile: file => `./mediapipe/hands/${file}`
         });
         
-        State.hands.setOptions({
-            maxNumHands: 2,
-            modelComplexity: 1,
-            minDetectionConfidence: 0.7,
-            minTrackingConfidence: 0.6,
-            selfieMode: true
-        });
+                State.hands.setOptions({
+                    maxNumHands: 2,
+                    modelComplexity: 1,
+                    minDetectionConfidence: 0.5,  // Lowered for dynamic/stage lighting
+                    minTrackingConfidence: 0.5,   // Lowered for better tracking in low light
+                    selfieMode: true
+                });
         
         State.hands.onResults(render);
         
-        // Configure camera with selected device
+        // Configure camera with selected device and resolution
+        // Use requestVideoFrameCallback for better sync when available
+        const useVideoFrameCallback = 'requestVideoFrameCallback' in HTMLVideoElement.prototype;
+        
         const cameraConstraints = {
             onFrame: async () => {
                 await State.hands.send({ image: State.video });
             },
-            width: 1280,
-            height: 720
+            width: selectedResolution.width,
+            height: selectedResolution.height
         };
         
         // If a specific camera is selected, use it
@@ -2401,7 +3371,16 @@ async function start() {
         
         State.camera = new Camera(State.video, cameraConstraints);
         
+        // If requestVideoFrameCallback is available, use it for better frame sync
+        if (useVideoFrameCallback) {
+            console.log('Using requestVideoFrameCallback for improved frame sync');
+        }
+        
         await State.camera.start();
+        
+        // Start camera watchdog for automatic recovery
+        Audio.startWatchdog();
+        
         setStep('step-camera', 'done');
         
         setStep('step-ai', 'active');
@@ -2461,6 +3440,10 @@ window.onload = function() {
         isMirrored = e.target.checked;
     });
     
+    document.getElementById('noVideoToggle').addEventListener('change', (e) => {
+        noVideoMode = e.target.checked;
+    });
+    
     document.getElementById('scaleSelect').addEventListener('change', (e) => {
         currentScale = e.target.value;
     });
@@ -2473,12 +3456,30 @@ window.onload = function() {
         enumerateCameras(true); // Request permission when refreshing
     });
     
+    document.getElementById('resolutionSelect').addEventListener('change', (e) => {
+        const [w, h] = e.target.value.split('x').map(Number);
+        selectedResolution = { width: w, height: h };
+    });
+    
     // Enumerate cameras on page load (without requesting permission)
     enumerateCameras(false);
     
     document.getElementById('startBtn').addEventListener('click', start);
     document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
+    
+    // ═══════════════════════════════════════════════════════════════
+    // KEYBOARD SHORTCUTS
+    // ═══════════════════════════════════════════════════════════════
+    document.addEventListener('keydown', (e) => {
+        // "R" key - Reset all objects to home positions
+        if (e.key === 'r' || e.key === 'R') {
+            resetAllObjects();
+        }
+    });
+
 };
+
+
 </script>
 </body>
 </html>
