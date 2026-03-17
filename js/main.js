@@ -1,53 +1,64 @@
-// MENU
-// Constante para el botón de menú
-const menuToggle = document.getElementById('menu-toggle');
+/**
+ * Main Application Entry Point
+ * CINEMATRONIC Portfolio
+ * © Intermosh 2025
+ */
 
-// Función para ocultar el menú móvil suavemente
-function hideMobileMenu() {
-    const menu = document.querySelector('.menu');
-    if (menuToggle.checked) {
-        setTimeout(() => {
-            menu.style.opacity = '1'; // Restaura la opacidad del menú a 1 después de un breve retraso
-            menuToggle.checked = false; // Desmarca el interruptor del menú móvil
-        }, 300); // Tiempo de espera para que se complete la transición (300 milisegundos)
+import { initNavigation } from './modules/navigation.js';
+import { initAnimations, initParallax, initTiltEffect } from './modules/animations.js';
+import { initCarousel } from './modules/carousel.js';
+
+/**
+ * Initialize all modules when DOM is ready
+ */
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('%c CINEMATRONIC ', 'background: #00ff88; color: #000; font-weight: bold; padding: 4px 8px;');
+    console.log('%c © Intermosh 2025 ', 'color: #888; font-size: 10px;');
+
+    // Core modules
+    initNavigation();
+    initAnimations();
+    
+    // Carousel
+    initCarousel({
+        trackSelector: '.commercial-track',
+        slideSelector: '.commercial-slide',
+        prevBtnId: 'prevBtn',
+        nextBtnId: 'nextBtn',
+        dotsContainerId: 'carouselDots'
+    });
+
+    // Optional effects
+    initParallax();
+    initTiltEffect();
+
+    // Log initialization
+    console.log('All modules initialized ✓');
+});
+
+/**
+ * Handle page visibility changes
+ * Pause/resume animations when tab is not visible
+ */
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        document.body.classList.add('paused');
+    } else {
+        document.body.classList.remove('paused');
     }
+});
+
+/**
+ * Performance: Lazy load images
+ */
+if ('loading' in HTMLImageElement.prototype) {
+    const images = document.querySelectorAll('img[loading="lazy"]');
+    images.forEach(img => {
+        img.src = img.dataset.src || img.src;
+    });
+} else {
+    // Fallback for browsers that don't support native lazy loading
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js';
+    document.body.appendChild(script);
 }
-
-menuToggle.addEventListener('change', () => {
-    if (!menuToggle.checked) {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    }
-});
-
-// Smooth scrolling y ocultar el menú móvil después de hacer clic en un enlace
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        document.querySelector(this.getAttribute('href')).scrollIntoView({
-            behavior: 'smooth'
-        });
-        hideMobileMenu(); // Oculta el menú móvil después de hacer clic en un enlace
-    });
-});
-
-// ANIMATIONS
-// FADEIN 
-const faders = document.querySelectorAll('.fade-in-section');
-const appearOptions = {
-    threshold: 0.6,
-};
-
-const appearOnScroll = new IntersectionObserver((entries, observer) => {
-    entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        entry.target.classList.add('appear');
-        observer.unobserve(entry.target);
-    });
-}, appearOptions);
-
-faders.forEach(fader => {
-    appearOnScroll.observe(fader);
-});

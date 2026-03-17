@@ -3,827 +3,458 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ciro - Developer Portfolio</title>
-    <meta name="description" content="Soy desarrollador y construyo soluciones digitales para humanos">
+    <title>Ciro · Cinematronic · Chiptune Artist & Creative Developer</title>
+    <meta name="description" content="Artista chiptune, desarrollador creativo y cofundador de Blipblop. Creo experiencias audiovisuales con tecnología obsoleta, Game Boy y sintetizadores 8-bit.">
+    <meta name="keywords" content="chiptune, 8bit, Game Boy, chipmusic, Buenos Aires, Blipblop, arte digital, desarrollador creativo, KRANK, Fuzzytronic, Cinematronic, Ciro Mendoza">
     
+    <!-- Open Graph -->
+    <meta property="og:title" content="Ciro · Cinematronic · Chiptune Artist">
+    <meta property="og:description" content="Artista chiptune y desarrollador creativo. Game Boy, sintetizadores 8-bit y experiencias audiovisuales.">
+    <meta property="og:type" content="website">
+    
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
-    <style>
-        :root {
-            --primary-color: #47b3fe; 
-            --secondary-color: #6a15f6; 
-            --background-color: #161617; 
-            --text-color: #f0f0f0;
-            --card-bg: #1e1e1f;
-            --card-hover: #2a2a2b;
-        }
-
-        /* --- ESTRUCTURA GENERAL --- */
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            overflow-x: hidden; /* Evita scroll horizontal indeseado */
-        }
-
-        section {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 80px 20px 40px;
-            text-align: center;
-            transition: all 0.3s ease-in-out;
-            box-sizing: border-box;
-        }
-
-        /* --- TIPOGRAFÍA --- */
-        h1 {
-            font-size: 68px;
-            line-height: 1.2;
-            font-weight: 600;
-            text-align: left;
-            padding: 0.1em;
-            margin: 0;
-        }
-
-        h2 {
-            font-size: 32px;
-            line-height: 1.125;
-            font-weight: 600;
-            text-align: left;
-            padding: 0.1em;
-            margin-bottom: 20px;
-        }
-
-        /* --- HEADER Y NAVEGACIÓN --- */
-        header {
-            position: fixed;
-            width: 100%;
-            background: #000;
-            padding: 10px 0;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            z-index: 100;
-        }
-
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 20px;
-        }
-
-        .logo {
-            font-size: 1.2em;
-            font-weight: bold;
-            background: transparent;
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-image: linear-gradient(to right, #23029b, #6a15f6, #47b3fe);
-            display: inline-block;
-        }
-
-        nav input[type="checkbox"] {
-            display: none;
-        }
-
-        nav .hamburger {
-            display: block;
-            cursor: pointer;
-            z-index: 101;
-        }
-
-        nav .menu {
-            list-style: none;
-            display: flex;
-            gap: 20px;
-            transition: all 0.3s ease-in-out;
-            margin: 0;
-            padding: 0;
-        }
-
-        nav .menu a {
-            text-decoration: none;
-            color: #f0f0f0;
-            transition: color 0.3s, transform 0.3s;
-            position: relative;
-            overflow: hidden;
-            display: block;
-        }
-
-        nav .menu a:hover {
-            color: #aaa;
-            transform: scale(1.1);
-        }
-
-        /* --- BOTONES --- */
-        .main-button {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 12px 24px;
-            background-color: var(--primary-color);
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-            text-decoration: none;
-            border-radius: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-            transition: background-color 0.3s ease;
-        }
-
-        .main-button:hover {
-            background-color: var(--secondary-color);
-        }
-
-        .main-button:active {
-            transform: translateY(0);
-        }
-
-        /* Efecto Ripple en botones y links */
-        button, .menu a {
-            position: relative;
-            overflow: hidden;
-        }
-
-        button:after, .menu a:after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 300%;
-            height: 300%;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            transition: transform 0.6s, opacity 0.6s;
-        }
-
-        /* --- INTRO --- */
-        #intro {
-            padding-top: 100px;
-        }
-
-        .intro-content {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .intro-text {
-            margin: 0;
-            font-size: clamp(1.8rem, 5vw, 2.5rem);
-            line-height: 1.3;
-            flex-grow: 1;
-            max-width: 800px;
-        }
-
-        /* --- CARRUSEL --- */
-        #past-works {
-            padding-top: 100px;
-            padding-bottom: 60px;
-        }
-
-        .carousel {
-            position: relative;
-            width: 100%;
-            overflow: hidden;
-            margin: 0 auto;
-            max-width: 500px;
-        }
-
-        .carousel-container {
-            display: flex;
-            transition: transform 0.5s ease;
-            cursor: grab;
-        }
-        
-        .carousel-container:active {
-            cursor: grabbing;
-        }
-
-        .carousel-item {
-            flex: 0 0 100%;
-            box-sizing: border-box;
-            text-align: center;
-            padding: 10px;
-        }
-
-        .carousel-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .carousel-image-container {
-            position: relative;
-            width: 100%;
-            height: 50vh;
-            max-height: 400px;
-            min-height: 250px;
-            background-color: #000;
-            border-radius: 20px;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .carousel-image-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 20px;
-            /* Evitar arrastre nativo de imágenes */
-            user-select: none;
-            -webkit-user-drag: none;
-            pointer-events: none;
-        }
-
-        .carousel-caption {
-            color: #fff;
-            font-size: 0.95rem;
-            text-align: left;
-            line-height: 1.6;
-            width: 100%;
-            padding: 10px 5px;
-            min-height: 60px;
-        }
-
-        .carousel-caption p { margin: 0; }
-
-        .carousel-controls {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .carousel-button {
-            background-color: rgb(51, 51, 54);
-            color: #fff;
-            border: none;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            flex-shrink: 0;
-        }
-
-        .carousel-button:hover {
-            background-color: #37373a;
-            transform: scale(1.1);
-        }
-
-        .carousel-button:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-            transform: scale(1);
-        }
-
-        .carousel-button svg {
-            fill: white;
-            width: 24px;
-            height: 24px;
-        }
-
-        /* --- HERRAMIENTAS --- */
-        .tools-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 30px;
-            width: 100%;
-            max-width: 800px;
-            margin: 30px auto;
-            padding: 0 20px;
-            box-sizing: border-box;
-        }
-
-        .tools-card {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 20px;
-            background-color: var(--card-bg);
-            border-radius: 12px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .tools-card:hover {
-            transform: translateY(-5px);
-            background-color: var(--card-hover);
-        }
-
-        .tools-card i {
-            font-size: 2.5em; /* Tamaño base iconos */
-            margin-bottom: 10px;
-        }
-
-        .tools-card p {
-            margin: 0;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: #ddd;
-        }
-
-        /* --- SECCIONES DE TEXTO --- */
-        #skills, #aboutme {
-            max-width: 800px;
-            margin: 0 auto;
-            padding-left: 40px;
-            padding-right: 40px;
-        }
-
-        #skills p, #aboutme p {
-            text-align: left;
-            line-height: 1.7;
-            font-size: 1rem;
-            max-width: 600px;
-        }
-
-        /* --- ANIMACIONES --- */
-        .fade-in-section {
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-        }
-
-        .fade-in-section.appear {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* --- RESPONSIVE / MEDIA QUERIES --- */
-        @media (min-width: 1024px) {
-            .carousel { max-width: 550px; }
-            .carousel-image-container { height: 55vh; max-height: 450px; }
-            .carousel-caption { font-size: 1rem; padding: 15px 10px; }
-        }
-
-        @media (max-width: 768px) {
-            section {
-                padding: 100px 15px 40px;
-            }
-
-            h1 {
-                font-size: 36px;
-                padding: 10px;
-            }
-
-            h2 {
-                font-size: 24px;
-                text-align: center;
-            }
-
-            /* Navegación Móvil */
-            nav .menu {
-                display: flex;
-                flex-direction: column;
-                background: #000;
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                justify-content: center;
-                align-items: center;
-                height: 100vh;
-                opacity: 0;
-                transform: translateY(-100%);
-                transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
-                z-index: 99;
-            }
-
-            nav input[type="checkbox"]:checked ~ .menu {
-                transform: translateY(0);
-                opacity: 1;
-            }
-
-            nav .menu li {
-                padding: 10px 0;
-                opacity: 0;
-                transition: opacity 0.5s ease-in-out 0.5s;
-            }
-
-            nav input[type="checkbox"]:checked ~ .menu li {
-                opacity: 1;
-            }
-
-            nav .menu a {
-                padding: 10px 20px;
-                font-size: 1.5em;
-            }
-
-            /* Icono Hamburguesa Animado */
-            nav .hamburger .bar {
-                width: 25px;
-                height: 3px;
-                background-color: #fff;
-                margin: 5px 0;
-                transition: 0.4s;
-            }
-
-            nav input[type="checkbox"]:checked + .hamburger .bar:nth-child(1) {
-                transform: rotate(-45deg) translate(-5px, 6px);
-            }
-
-            nav input[type="checkbox"]:checked + .hamburger .bar:nth-child(2) {
-                opacity: 0;
-            }
-
-            nav input[type="checkbox"]:checked + .hamburger .bar:nth-child(3) {
-                transform: rotate(45deg) translate(-5px, -6px);
-            }
-
-            /* Intro Móvil */
-            .intro-content {
-                flex-direction: column;
-                align-items: flex-start;
-                text-align: left;
-                width: 100%;
-            }
-            
-            #intro {
-                padding-top: 80px;
-                justify-content: center;
-            }
-
-            .intro-text {
-                font-size: 1.6rem;
-                text-align: left;
-            }
-
-            /* Carrusel Móvil */
-            #past-works { padding-top: 80px; }
-            .carousel { max-width: 100%; }
-            .carousel-image-container {
-                height: 45vh;
-                max-height: 350px;
-                min-height: 200px;
-                border-radius: 15px;
-            }
-            .carousel-image-container img { border-radius: 15px; }
-            .carousel-caption {
-                font-size: 0.85rem;
-                padding: 8px 10px;
-                min-height: 50px;
-            }
-            .carousel-button { width: 40px; height: 40px; }
-            .carousel-button svg { width: 20px; height: 20px; }
-
-            /* Tools Móvil */
-            .tools-grid {
-                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-                gap: 12px;
-                padding: 0 10px;
-            }
-            .tools-card { padding: 15px 10px; }
-            .tools-card i { font-size: 32px; }
-            .tools-card p { font-size: 0.75rem; }
-
-            /* Textos Móvil */
-            #skills, #aboutme {
-                padding-left: 20px;
-                padding-right: 20px;
-            }
-            #skills p, #aboutme p { font-size: 0.9rem; }
-            
-            .main-button {
-                padding: 10px 20px;
-                font-size: 14px;
-                margin-top: 15px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            h1 { font-size: 28px; }
-            .intro-text { font-size: 1.6rem; }
-            .carousel-image-container { height: 40vh; min-height: 180px; }
-            .tools-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+    <!-- Header -->
     <header>
         <nav>
-            <div class="logo"><b><</b> &#10084; <b>></b></div>
-            <input type="checkbox" id="menu-toggle">
-            <label for="menu-toggle" class="hamburger">
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <div class="bar"></div>
-            </label>
-            <ul class="menu">
-                <li><a href="#intro">Intro</a></li>
-                <li><a href="#past-works">Trabajos</a></li>
+            <a href="#hero" class="logo">
+                <!-- <span class="logo-icon">C</span> -->
+                CIRO MENDOZA
+            </a>
+            
+            <!-- Mobile Menu Toggle -->
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            
+            <!-- Navigation Menu (debe estar antes del hamburger para CSS ~) -->
+            <ul class="nav-menu">
+                <li><a href="#projects">Proyectos</a></li>
+                <!-- <li><a href="https://intermosh.github.io/playground" target="_blank">ART LAB</a></li> -->
+                <li><a href="#story">Historia</a></li>
                 <li><a href="#tools">Herramientas</a></li>
-                <li><a href="#skills">Formación</a></li>
-                <li><a href="#aboutme">About me</a></li>
+                <li><a href="#commercial">Trabajos</a></li>
+                <li><a href="#contact">Contacto</a></li>
             </ul>
+            
+            <!-- Hamburger Button -->
+            <label for="nav-toggle" class="hamburger" aria-label="Menú">
+                <span></span>
+                <span></span>
+                <span></span>
+            </label>
         </nav>
     </header>
 
-    <section id="intro" class="fade-in-section">
-        <div class="intro-content">
-            <h1 class="intro-text">Hola, soy Ciro<br/>y este es mi Porfolio de Desarrollador</h1>
-        </div>
-        <a href="#past-works" class="main-button">Ver mis trabajos</a>
-    </section>
-
-    <section id="past-works" class="fade-in-section">
-        <h2>Trabajos.</h2>
-        <div class="carousel">
-            <div class="carousel-container">
-                <div class="carousel-item">
-                    <div class="carousel-content">
-                        <div class="carousel-image-container">
-                            <img src="assets/portfolio/ituzaingo.jpg" alt="Ituzaingó Ciudad Paraíso" />
-                        </div>
-                        <div class="carousel-caption">
-                            <p><b>Ituzaingó Ciudad Paraíso.</b> App de información turística de la ciudad de Ituzaingó, Corrientes.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="carousel-item">
-                    <div class="carousel-content">
-                        <div class="carousel-image-container">
-                            <img src="assets/portfolio/movilfest.jpg" alt="Festival Movil Fest" loading="lazy" />
-                        </div>
-                        <div class="carousel-caption">
-                            <p><b>Festival Movil Fest 2020.</b> Web animada. Ciudad de Misiones.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="carousel-item">
-                    <div class="carousel-content">
-                        <div class="carousel-image-container">
-                            <img src="assets/portfolio/geely.jpg" alt="Geely Argentina" loading="lazy" />
-                        </div>
-                        <div class="carousel-caption">
-                            <p><b>Geely Argentina.</b> Página web con catálogo de fotos en 360°.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="carousel-item">
-                    <div class="carousel-content">
-                        <div class="carousel-image-container">
-                            <img src="assets/portfolio/somosn.jpg" alt="Somos Naturaleza" loading="lazy" />
-                        </div>
-                        <div class="carousel-caption">
-                            <p><b>Somos Naturaleza.</b> Web Interactiva con contenido educativo.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="carousel-item">
-                    <div class="carousel-content">
-                        <div class="carousel-image-container">
-                            <img src="assets/portfolio/iac_parana.jpg" alt="IAC Paraná" loading="lazy" />
-                        </div>
-                        <div class="carousel-caption">
-                            <p><b>IAC Paraná.</b> Página web informativa para instituto de informática.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="carousel-item">
-                    <div class="carousel-content">
-                        <div class="carousel-image-container">
-                            <img src="assets/portfolio/proyecto6.jpg" alt="Proyecto 6" loading="lazy" />
-                        </div>
-                        <div class="carousel-caption">
-                            <p><b>Nombre del Proyecto.</b> Descripción breve del proyecto y tecnologías utilizadas.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="carousel-item">
-                    <div class="carousel-content">
-                        <div class="carousel-image-container">
-                            <img src="assets/portfolio/proyecto7.jpg" alt="Proyecto 7" loading="lazy" />
-                        </div>
-                        <div class="carousel-caption">
-                            <p><b>Nombre del Proyecto.</b> Descripción breve del proyecto y tecnologías utilizadas.</p>
-                        </div>
-                    </div>
+    <!-- HERO -->
+    <section id="hero" class="section">
+        <div class="container">
+            <div class="hero-content fade-in">
+                <span class="hero-eyebrow">Chiptune Artist · Creative Developer</span>
+                <h1 class="hero-title">
+                    <span class="text-gradient glitch">Ciro</span><br>
+                    <span style="font-size: 0.5em; color: var(--text-secondary);">aka</span> 
+                    <span class="text-gradient-pink">Cinematronic</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Creo <strong>experiencias audiovisuales</strong> con tecnología obsoleta. 
+                    Game Boy, sintetizadores 8-bit y hardware vintage convertidos en 
+                    <strong>instrumentos de arte experimental</strong>.
+                </p>
+                <p class="hero-subtitle" style="font-size: 0.95rem; margin-top: -1rem;">
+                    Cofundador del colectivo <strong style="color: var(--secondary);">Blipblop</strong> (Buenos Aires, 2008-2019).
+                </p>
+                <div class="hero-cta">
+                    <a href="https://www.youtube.com/@ciberdelia.telnet" target="_blank" class="btn btn-primary">
+                        <i class="fab fa-youtube"></i> Ver en YouTube
+                    </a>
+                    <a href="#projects" class="btn btn-outline">
+                        Explorar proyectos <i class="fas fa-arrow-down"></i>
+                    </a>
                 </div>
             </div>
         </div>
+    </section>
+
+    <!-- PROYECTOS ARTÍSTICOS -->
+    <section id="projects" class="section">
+        <div class="container">
+            <span class="label">Proyectos artísticos</span>
+            <h2>Sonido 8-bit, <span class="text-gradient">Máquinas Obsoletas</span></h2>
+            
+            <div class="projects-grid">
+                <!-- PROYECTO DESTACADO: Fuzzytronic -->
+                <article class="project-card featured fade-in">
+                    <div class="project-media">
+                        <span class="project-badge badge-bottom-right">Nuevo 2026</span>
+                        <iframe 
+                            src="https://www.youtube.com/embed/9Q2xk7TML4M" 
+                            title="Fuzzytronic - Game Boy + Batería en vivo"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen
+                            loading="lazy">
+                        </iframe>
+                    </div>
+                    <div class="project-info">
+                        <div class="project-tags">
+                            <span class="project-tag">Live Performance</span>
+                            <span class="project-tag">Game Boy</span>
+                            <span class="project-tag">Drums</span>
+                            <span class="project-tag">LSDJ</span>
+                        </div>
+                        <h3 class="project-title text-gradient-pink">Fuzzytronic</h3>
+                        <p class="project-description">
+                            Proyecto que combina <strong>Game Boy</strong> como sintetizador con 
+                            <strong>batería acústica real</strong>. Una fusión entre el sonido crudo 
+                            del chip de 8-bit y la energía física de la percusión en vivo.
+                            <br><br>
+                            El Game Boy corre LSDJ, controlando secuencias y síntesis mientras 
+                            la batería añade la capa orgánica y humana que el chip no puede dar.
+                        </p>
+                        <div class="project-links">
+                            <a href="https://www.youtube.com/@ciberdelia.telnet" target="_blank" class="project-link">
+                                <i class="fab fa-youtube"></i> Ver videos
+                            </a>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Cinematronic - Entrevista Latinchip -->
+                <article class="project-card fade-in">
+                    <div class="project-media">
+                        <iframe 
+                            src="https://www.youtube.com/embed/_bcEIuQt6B8" 
+                            title="Cinematronic - Entrevista Latinchip"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen
+                            loading="lazy">
+                        </iframe>
+                    </div>
+                    <div class="project-info">
+                        <div class="project-tags">
+                            <span class="project-tag">Chiptune</span>
+                            <span class="project-tag">8-bit</span>
+                            <span class="project-tag">Entrevista</span>
+                        </div>
+                        <h3 class="project-title">Cinematronic</h3>
+                        <p class="project-description">
+                            Proyecto solista de chipmusic usando hardware vintage: Game Boy, 
+                            Commodore 64, NES y sintetizadores modificados. Entrevista en el 
+                            programa <strong>Latinchip</strong> sobre la escena chiptune latinoamericana.
+                        </p>
+                        <div class="project-links">
+                            <a href="https://www.youtube.com/@ciberdelia.telnet" target="_blank" class="project-link">
+                                <i class="fab fa-youtube"></i> Más videos
+                            </a>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- KRANK - Juegos Experimentales -->
+                <article class="project-card fade-in">
+                    <div class="project-media">
+                        <img src="assets/portfolio/krank-games.jpg" alt="KRANK - Juegos Experimentales" 
+                             onerror="this.src='https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&h=400&fit=crop'">
+                    </div>
+                    <div class="project-info">
+                        <div class="project-tags">
+                            <span class="project-tag">Game Dev</span>
+                            <span class="project-tag">Experimental</span>
+                            <span class="project-tag">Itch.io</span>
+                        </div>
+                        <h3 class="project-title">KRANK</h3>
+                        <p class="project-description">
+                            Mi alter ego para crear <strong>juegos experimentales</strong>. 
+                            Proyectos que exploran mecánicas no convencionales, narrativas 
+                            alternativas y estéticas retro con un enfoque artístico.
+                        </p>
+                        <div class="project-links">
+                            <a href="https://daskrank.itch.io/" target="_blank" class="project-link">
+                                <i class="fab fa-itch-io"></i> Ver juegos
+                            </a>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Blipblop Legacy -->
+                <article class="project-card fade-in">
+                    <div class="project-media">
+                        <img src="assets/portfolio/blipblop.jpg" alt="Blipblop Colectivo" 
+                             onerror="this.src='https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&h=400&fit=crop'">
+                    </div>
+                    <div class="project-info">
+                        <div class="project-tags">
+                            <span class="project-tag">Colectivo</span>
+                            <span class="project-tag">Buenos Aires</span>
+                            <span class="project-tag">2008-2019</span>
+                        </div>
+                        <h3 class="project-title">Blipblop</h3>
+                        <p class="project-description">
+                            Colectivo pionero de la escena chiptune en Argentina. Organizamos 
+                            eventos, talleres y conectamos a la comunidad latinoamericana de 
+                            chipmusic durante más de una década.
+                        </p>
+                        <div class="project-links">
+                            <a href="https://blipblop8bit.bandcamp.com/" target="_blank" class="project-link">
+                                <i class="fab fa-bandcamp"></i> Netlabel
+                            </a>
+                            <a href="https://www.youtube.com/@blipblop8bit" target="_blank" class="project-link">
+                                <i class="fab fa-youtube"></i> Más videos
+                            </a>
+
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- ART LAB PREVIEW -->
+    <section id="art-lab-preview" class="section section-compact">
+        <div class="artlab-grid-bg"></div>
         
-        <div class="carousel-controls">
-            <button class="carousel-button prev" aria-label="Anterior">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36"><path d="M21.559,12.062 L15.618,17.984 L21.5221,23.944 C22.105,24.533 22.1021,25.482 21.5131,26.065 C21.2211,26.355 20.8391,26.4999987 20.4571,26.4999987 C20.0711,26.4999987 19.6851,26.352 19.3921,26.056 L12.4351,19.034 C11.8531,18.446 11.8551,17.4999987 12.4411,16.916 L19.4411,9.938 C20.0261,9.353 20.9781,9.354 21.5621,9.941 C22.1471,10.528 22.1451,11.478 21.5591,12.062 L21.559,12.062 Z"></path></svg>
-            </button>
-            <button class="carousel-button next" aria-label="Siguiente">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36"><path d="M23.5587,16.916 C24.1447,17.4999987 24.1467,18.446 23.5647,19.034 L16.6077,26.056 C16.3147,26.352 15.9287,26.4999987 15.5427,26.4999987 C15.1607,26.4999987 14.7787,26.355 14.4867,26.065 C13.8977,25.482 13.8947,24.533 14.4777,23.944 L20.3818,17.984 L14.4408,12.062 C13.8548,11.478 13.8528,10.5279 14.4378,9.941 C15.0218,9.354 15.9738,9.353 16.5588,9.938 L23.5588,16.916 L23.5587,16.916 Z"></path></svg>
-            </button>
+        <div class="container" style="position: relative; z-index: 2; text-align: center;">
+            <span class="label" style="color: #ff0033;">[ EXPERIMENTAL ]</span>
+            <h2 style="font-size: clamp(2rem, 6vw, 4rem); margin-bottom: 1.5rem;">
+                <span class="text-gradient">ART</span> <span style="color: #333;">///</span> LAB
+            </h2>
+            <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto 2rem; font-size: 1.1rem; line-height: 1.8;">
+                Un laboratorio de experimentos en <strong style="color: #fff;">new media</strong>. 
+                Arcade holográfico, síntesis gestual, visualizadores reactivos y más. 
+                <br><br>
+                <em style="color: #666;">6 proyectos activos en desarrollo.</em>
+            </p>
+            
+            <!-- Preview cards -->
+            <div class="artlab-preview-grid">
+                <div class="artlab-preview-card">
+                    <div style="font-size: 0.6rem; color: #444; letter-spacing: 0.2em; margin-bottom: 10px;">EXP_001</div>
+                    <div style="font-family: 'Space Mono', monospace; font-weight: 700; font-size: 0.9rem;">HOLOGRAPHIC ARCADE</div>
+                </div>
+                <div class="artlab-preview-card">
+                    <div style="font-size: 0.6rem; color: #444; letter-spacing: 0.2em; margin-bottom: 10px;">EXP_003</div>
+                    <div style="font-family: 'Space Mono', monospace; font-weight: 700; font-size: 0.9rem;">GESTURE SYNTH</div>
+                </div>
+                <div class="artlab-preview-card">
+                    <div style="font-size: 0.6rem; color: #444; letter-spacing: 0.2em; margin-bottom: 10px;">EXP_004</div>
+                    <div style="font-family: 'Space Mono', monospace; font-weight: 700; font-size: 0.9rem;">LIVE VISUALIZER</div>
+                </div>
+            </div>
+
+            <a href="https://intermosh.github.io/playground" target="_blank" class="btn" style="background: transparent; border: 1px solid #fff; color: #fff; padding: 15px 40px; font-size: 0.85rem; letter-spacing: 0.15em;">
+                ENTRAR AL LABORATORIO →
+            </a>
         </div>
     </section>
 
-    <section id="tools" class="fade-in-section">
-        <h2>Uso estas herramientas.</h2>
-        <div class="tools-grid">
-            <div class="tools-card">
-                <i class="fab fa-html5"></i>
-                <p>HTML5</p>
-            </div>
-            <div class="tools-card">
-                <i class="fab fa-css3-alt"></i>
-                <p>CSS3</p>
-            </div>
-            <div class="tools-card">
-                <i class="fab fa-js"></i>
-                <p>JavaScript</p>
-            </div>
-            <div class="tools-card">
-                <i class="fab fa-figma"></i>
-                <p>Figma</p>
-            </div>
-            <div class="tools-card">
-                <i class="fab fa-unity"></i>
-                <p>Unity</p>
-            </div>
-            <div class="tools-card">
-                <i class="fas fa-bolt"></i>
-                <p>Bolt</p>
-            </div>
-            <div class="tools-card">
-                <i class="fas fa-vr-cardboard"></i>
-                <p>MindAR</p>
-            </div>
-            <div class="tools-card">
-                <i class="fab fa-adobe"></i> 
-                <p>Photoshop</p>
+    <!-- HISTORIA / ABOUT -->
+    <section id="story" class="section">
+        <div class="container">
+            <div class="story-grid">
+                <div class="story-content fade-in">
+                    <span class="label">Mi historia</span>
+                    <h2>Del <span class="text-gradient">Chip</span> al <span class="text-gradient-pink">Código</span></h2>
+                    
+                    <p>
+                        Empecé haciendo música con lo que otros consideraban basura electrónica. 
+                        Game Boys rotos, Commodores olvidados, cables que nadie quería. 
+                        <strong>La limitación se convirtió en mi estética.</strong>
+                    </p>
+                    
+                    <p>
+                        En 2008 cofundé <strong>Blipblop</strong>, el primer colectivo de chiptune 
+                        de Buenos Aires. Durante 11 años organizamos fiestas, talleres y conectamos 
+                        a artistas de toda Latinoamérica. Fue una escuela de comunidad y autogestión.
+                    </p>
+
+                    <div class="story-highlight">
+                        <p>
+                            "El error no es el enemigo. El glitch, el ruido, la imperfección 
+                            son parte del mensaje. Las máquinas viejas tienen algo que decir."
+                        </p>
+                    </div>
+                    
+                    <p>
+                        Hoy combino esa filosofía con desarrollo web, AR y diseño interactivo. 
+                        Mis herramientas cambiaron, pero el objetivo es el mismo: 
+                        <strong>crear experiencias que conecten tecnología con emoción</strong>.
+                    </p>
+
+                    <a href="assets/portfolio/CV_Ciro.pdf" download class="btn btn-outline" style="margin-top: 1rem;">
+                        <i class="fas fa-file-pdf"></i> Descargar CV
+                    </a>
+                </div>
+                
+                <div class="story-visual fade-in">
+                    <img src="assets/portfolio/profile.jpg" alt="Ciro - Cinematronic" class="story-image"
+                         onerror="this.src='https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=600&h=700&fit=crop'">
+                </div>
             </div>
         </div>
     </section>
 
-    <section id="skills" class="fade-in-section">
-        <h2>Tecnologías y Formación</h2>
-        <p>Me formé en producción audiovisual, game design, audio y fundamentos de Inteligencia Artificial, con especial interés en la aplicación de Generative AI.
-        En el ámbito personal investigo tecnologías como realidad aumentada, realidad virtual y usos artísticos del game design. 
-        Mi experiencia laboral abarca la redacción, el diseño y la programación, con el objetivo de unir lo funcional con lo creativo.</p>
-        <p>Más detalles en mi CV:</p>
-        <a href="assets/portfolio/CV_Ciro.pdf" download class="main-button">Descargar CV</a>
-    </section>
+    <!-- HERRAMIENTAS -->
+    <section id="tools" class="section section-compact">
+        <div class="container">
+            <span class="label">Stack técnico</span>
+            <h2>Herramientas que <span class="text-gradient">uso</span></h2>
+            
+            <div class="tools-container fade-in">
+                <div class="tools-category">
+                    <h4 class="tools-category-title">Música / Audio</h4>
+                    <div class="tools-grid">
+                        <div class="tool-item"><i class="fas fa-gamepad"></i><span>LSDJ</span></div>
+                        <div class="tool-item"><i class="fas fa-microchip"></i><span>Game Boy</span></div>
+                        <!-- <div class="tool-item"><i class="fas fa-music"></i><span>Ableton Live</span></div> -->
+                        <!-- <div class="tool-item"><i class="fas fa-drum"></i><span>Batería</span></div> -->
+                        <div class="tool-item"><i class="fas fa-wave-square"></i><span>PSP</span></div>
+                    </div>
+                </div>
 
-    <section id="aboutme" class="fade-in-section">
-        <h2>Sobre mi</h2>
-        <p>Tengo un proyecto de música con consolas de videojuegos 8bit y reutilización de tecnologías obsoletas.</p>
-        <div style="margin-top: 20px;">
-            <a href="#" class="main-button">Youtube</a>
-            <a href="#" class="main-button">Itch.io</a>
+                <div class="tools-category">
+                    <h4 class="tools-category-title">Desarrollo Web</h4>
+                    <div class="tools-grid">
+                        <div class="tool-item"><i class="fab fa-html5"></i><span>HTML5</span></div>
+                        <div class="tool-item"><i class="fab fa-css3-alt"></i><span>CSS3</span></div>
+                        <div class="tool-item"><i class="fab fa-js"></i><span>JavaScript</span></div>
+                        <div class="tool-item"><i class="fas fa-vr-cardboard"></i><span>MindAR</span></div>
+                        <div class="tool-item"><i class="fas fa-cube"></i><span>Three.js</span></div>
+                    </div>
+                </div>
+
+                <div class="tools-category">
+                    <h4 class="tools-category-title">Diseño / Interactivo</h4>
+                    <div class="tools-grid">
+                        <div class="tool-item"><i class="fab fa-figma"></i><span>Figma</span></div>
+                        <div class="tool-item"><i class="fab fa-unity"></i><span>Unity</span></div>
+                        <div class="tool-item"><i class="fas fa-bolt"></i><span>Bolt</span></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
-    <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // --- VARIABLES GLOBALES ---
-        const menuToggle = document.getElementById('menu-toggle');
-        const faders = document.querySelectorAll('.fade-in-section');
-        const carouselContainer = document.querySelector(".carousel-container");
-        const carouselItems = document.querySelectorAll(".carousel-item");
-        const prevButton = document.querySelector(".prev");
-        const nextButton = document.querySelector(".next");
-        
-        let currentIndex = 0;
-        let startX = 0;
-        let isDragging = false;
-        let isTouchDevice = 'ontouchstart' in window;
+    <!-- TRABAJOS COMERCIALES -->
+    <section id="commercial" class="section section-compact">
+        <div class="container" style="text-align: center;">
+            <span class="label">Trabajos por encargo</span>
+            <h2>Desarrollo <span class="text-gradient">Profesional</span></h2>
+            <p class="commercial-intro" style="margin: 0 auto 3rem;">
+                Además del trabajo artístico, desarrollo proyectos web y aplicaciones 
+                para clientes comerciales e institucionales.
+            </p>
 
-        // --- MENU LOGIC ---
-        // Ocultar menú móvil
-        function hideMobileMenu() {
-            const menu = document.querySelector('.menu');
-            if (menuToggle.checked) {
-                setTimeout(() => {
-                    menu.style.opacity = '1'; 
-                    menuToggle.checked = false; 
-                }, 300);
-            }
-        }
+            <div class="commercial-carousel fade-in">
+                <div class="commercial-track">
+                    <div class="commercial-slide">
+                        <div class="commercial-card">
+                            <img src="assets/portfolio/ituzaingo.jpg" alt="Ituzaingó Ciudad Paraíso" class="commercial-image"
+                                 onerror="this.src='https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=500&h=280&fit=crop'">
+                            <div class="commercial-info">
+                                <h3>Ituzaingó Ciudad Paraíso</h3>
+                                <p>App de información turística. Corrientes, Argentina.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="commercial-slide">
+                        <div class="commercial-card">
+                            <img src="assets/portfolio/movilfest.jpg" alt="Movil Fest" class="commercial-image"
+                                 onerror="this.src='https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&h=280&fit=crop'">
+                            <div class="commercial-info">
+                                <h3>Festival Móvil Fest 2020</h3>
+                                <p>Web animada para festival. Misiones, Argentina.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="commercial-slide">
+                        <div class="commercial-card">
+                            <img src="assets/portfolio/geely.jpg" alt="Geely Argentina" class="commercial-image"
+                                 onerror="this.src='https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=500&h=280&fit=crop'">
+                            <div class="commercial-info">
+                                <h3>Geely Argentina</h3>
+                                <p>Web con catálogo de fotos en 360°.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="commercial-slide">
+                        <div class="commercial-card">
+                            <img src="assets/portfolio/somosn.jpg" alt="Somos Naturaleza" class="commercial-image"
+                                 onerror="this.src='https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=500&h=280&fit=crop'">
+                            <div class="commercial-info">
+                                <h3>Somos Naturaleza</h3>
+                                <p>Web interactiva educativa.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="commercial-slide">
+                        <div class="commercial-card">
+                            <img src="assets/portfolio/ibera-museo.png" alt="Iberá AR Museo" class="commercial-image"
+                                 onerror="this.src='https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=500&h=280&fit=crop'">
+                            <div class="commercial-info">
+                                <h3>Iberá AR - Museo Interactivo</h3>
+                                <p>Experiencia AR 3D para paneles del museo Casa Iberá, Corrientes.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-        // Scroll al inicio si se cierra el menú manualmente
-        menuToggle.addEventListener('change', () => {
-            if (!menuToggle.checked) {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        });
+            <div class="carousel-nav">
+                <button class="carousel-btn" id="prevBtn" aria-label="Anterior">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="carousel-dots" id="carouselDots"></div>
+                <button class="carousel-btn" id="nextBtn" aria-label="Siguiente">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </section>
 
-        // Smooth scroll para links del menú
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if(target) {
-                    target.scrollIntoView({ behavior: 'smooth' });
-                    hideMobileMenu();
-                }
-            });
-        });
+    <!-- CONTACTO -->
+    <section id="contact" class="section section-compact">
+        <div class="container">
+            <span class="label" style="text-align: center; display: block;">Conectemos</span>
+            <h2 style="text-align: center;">Let's <span class="text-gradient">work</span> togheter</h2>
+            
+            <p class="contact-statement fade-in">
+                Si buscás a alguien que entienda tanto de código como de creatividad, 
+                que haya vivido la escena y conozca las herramientas, 
+                <strong>hablemos</strong>.
+            </p>
 
-        // --- FADE IN ANIMATION ---
-        const appearOptions = { threshold: 0.4 };
-        const appearOnScroll = new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
-                if (!entry.isIntersecting) return;
-                entry.target.classList.add('appear');
-                observer.unobserve(entry.target);
-            });
-        }, appearOptions);
+            <div class="social-links fade-in">
+                <a href="https://www.youtube.com/@ciberdelia.telnet" target="_blank" class="social-link">
+                    <i class="fab fa-youtube"></i> YouTube
+                </a>
+                <a href="https://www.instagram.com/ciro.cinematronic" target="_blank" class="social-link">
+                    <i class="fab fa-instagram"></i> Instagram
+                </a>
+                <a href="https://daskrank.itch.io/" target="_blank" class="social-link">
+                    <i class="fab fa-itch-io"></i> Itch.io
+                </a>
+            </div>
+        </div>
+    </section>
 
-        faders.forEach(fader => appearOnScroll.observe(fader));
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">
+                <span>&lt;</span><span class="footer-heart">♥</span><span>/&gt;</span>
+            </div>
+            <p class="footer-text">© Intermosh 2026</p>
+        </div>
+    </footer>
 
-        // --- CARRUSEL LOGIC ---
-        function showCurrentItem() {
-            carouselContainer.style.transform = `translateX(-${currentIndex * 100}%)`;
-            updateButtonStates();
-        }
-
-        function updateButtonStates() {
-            if(!prevButton || !nextButton) return;
-            prevButton.disabled = currentIndex === 0;
-            nextButton.disabled = currentIndex === carouselItems.length - 1;
-        }
-
-        if(prevButton && nextButton) {
-            prevButton.addEventListener("click", () => {
-                if (currentIndex > 0) {
-                    currentIndex--;
-                    showCurrentItem();
-                }
-            });
-
-            nextButton.addEventListener("click", () => {
-                if (currentIndex < carouselItems.length - 1) {
-                    currentIndex++;
-                    showCurrentItem();
-                }
-            });
-            updateButtonStates();
-        }
-
-        // Deslizamiento (Drag/Swipe)
-        function handleStart(e) {
-            isDragging = true;
-            startX = isTouchDevice ? e.touches[0].pageX : e.pageX;
-            carouselContainer.style.cursor = "grabbing";
-        }
-
-        function handleMove(e) {
-            if (!isDragging) return;
-            const currentX = isTouchDevice ? e.touches[0].pageX : e.pageX;
-            const deltaX = currentX - startX;
-            // Movimiento visual temporal
-            carouselContainer.style.transition = "none";
-            carouselContainer.style.transform = `translateX(calc(-${currentIndex * 100}% + ${deltaX}px))`;
-        }
-
-        function handleEnd(e) {
-            if (!isDragging) return;
-            isDragging = false;
-            carouselContainer.style.cursor = "grab";
-            carouselContainer.style.transition = "transform 0.5s ease";
-
-            const endX = isTouchDevice ? e.changedTouches[0].pageX : e.pageX;
-            const deltaX = endX - startX;
-
-            // Umbral de 50px para cambiar de slide
-            if (deltaX > 50 && currentIndex > 0) {
-                currentIndex--; 
-            } else if (deltaX < -50 && currentIndex < carouselItems.length - 1) {
-                currentIndex++; 
-            }
-            showCurrentItem();
-        }
-
-        // Event Listeners Carrusel
-        if (isTouchDevice) {
-            carouselContainer.addEventListener("touchstart", handleStart, {passive: true});
-            carouselContainer.addEventListener("touchmove", handleMove, {passive: true});
-            carouselContainer.addEventListener("touchend", handleEnd);
-        } else {
-            carouselContainer.addEventListener("mousedown", handleStart);
-            carouselContainer.addEventListener("mousemove", handleMove);
-            carouselContainer.addEventListener("mouseup", handleEnd);
-            carouselContainer.addEventListener("mouseleave", handleEnd);
-        }
-    });
-    </script>
+    <!-- Scripts (ES6 Modules) -->
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>
