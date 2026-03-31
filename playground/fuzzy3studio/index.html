@@ -1,0 +1,1935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fuzzy 3D Flyer Studio</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#0a0a0f;--panel:#12121a;--accent:#00ff88;--accent2:#00ccff;
+--danger:#ff3366;--text:#e0e0e0;--text2:#888;--border:#1e1e2e;
+--radius:8px;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden;height:100vh;display:flex}
+#sidebar{width:340px;min-width:340px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;overflow:hidden;z-index:10}
+#sidebar-scroll{flex:1;overflow-y:auto;padding:12px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+#sidebar-scroll::-webkit-scrollbar{width:5px}
+#sidebar-scroll::-webkit-scrollbar-track{background:transparent}
+#sidebar-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+#canvas-wrap{flex:1;position:relative;display:flex;align-items:center;justify-content:center;background:#050508}
+#renderCanvas{display:block;border-radius:4px}
+.logo{padding:16px;border-bottom:1px solid var(--border);text-align:center}
+.logo h1{font-size:18px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo small{color:var(--text2);font-size:11px}
+.section{margin-bottom:8px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.section-header{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#1a1a25;cursor:pointer;user-select:none;font-size:13px;font-weight:600}
+.section-header:hover{background:#1e1e2a}
+.section-header .arrow{transition:transform .2s;font-size:10px}
+.section-header.collapsed .arrow{transform:rotate(-90deg)}
+.section-body{padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.section-body.hidden{display:none}
+.ctrl{display:flex;flex-direction:column;gap:3px}
+.ctrl label{font-size:11px;color:var(--text2);display:flex;justify-content:space-between}
+.ctrl label span.val{color:var(--accent);font-weight:600}
+.ctrl input[type=range]{-webkit-appearance:none;width:100%;height:6px;border-radius:3px;background:#1e1e2e;outline:none}
+.ctrl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer}
+.ctrl input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;border:none}
+.ctrl select,.ctrl input[type=text],.ctrl input[type=number],.ctrl input[type=color]{background:#1a1a25;border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:5px;font-size:12px;outline:none}
+.ctrl select:focus,.ctrl input:focus{border-color:var(--accent)}
+.row{display:flex;gap:6px;align-items:center}
+.row>*{flex:1}
+.btn{padding:8px 12px;border:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:600;transition:all .15s;text-align:center}
+.btn-primary{background:var(--accent);color:#000}
+.btn-primary:hover{background:#00ffaa;transform:translateY(-1px)}
+.btn-secondary{background:#1e1e2e;color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--accent)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-danger:hover{background:#ff4477}
+.btn-export{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;padding:12px;font-size:14px}
+.btn-export:hover{transform:translateY(-1px);box-shadow:0 4px 15px rgba(0,255,136,.3)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:2px 0}
+.toggle-row span{font-size:12px}
+.toggle{position:relative;width:36px;height:20px;cursor:pointer}
+.toggle input{opacity:0;width:0;height:0}
+.toggle .slider{position:absolute;inset:0;background:#1e1e2e;border-radius:10px;transition:.2s}
+.toggle .slider:before{content:'';position:absolute;height:14px;width:14px;left:3px;bottom:3px;background:#555;border-radius:50%;transition:.2s}
+.toggle input:checked+.slider{background:var(--accent)}
+.toggle input:checked+.slider:before{transform:translateX(16px);background:#000}
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:24px;text-align:center;cursor:pointer;transition:all .2s}
+.upload-zone:hover{border-color:var(--accent);background:rgba(0,255,136,.03)}
+.upload-zone.dragover{border-color:var(--accent);background:rgba(0,255,136,.08)}
+.upload-zone p{font-size:12px;color:var(--text2);margin-top:6px}
+.upload-zone .icon{font-size:28px}
+.text-item{background:#1a1a25;border:1px solid var(--border);border-radius:5px;padding:8px;position:relative;margin-top:8px}
+.text-item .remove-text{position:absolute;top:4px;right:6px;background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px}
+#progress-bar{position:fixed;top:0;left:0;height:3px;background:var(--accent);z-index:999;transition:width .1s;display:none}
+#export-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:100;flex-direction:column;gap:16px}
+#export-overlay.show{display:flex}
+#export-overlay .export-info{color:var(--text);font-size:14px}
+#export-overlay .progress-ring{width:80px;height:80px}
+.color-preview{width:20px;height:20px;border-radius:4px;border:1px solid var(--border);cursor:pointer;flex-shrink:0}
+#format-info{background:#1a1a25;border-radius:5px;padding:8px;margin-top:4px}
+#format-info p{font-size:11px;color:var(--text2);line-height:1.4}
+.badge{display:inline-block;padding:2px 6px;border-radius:3px;font-size:9px;font-weight:700;text-transform:uppercase;margin-left:6px}
+.badge-gpu{background:rgba(0,204,255,.15);color:var(--accent2)}
+.badge-worker{background:rgba(0,255,136,.15);color:var(--accent)}
+#text-overlay-container{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.text-overlay-el{position:absolute;white-space:pre;pointer-events:none}
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<div id="sidebar">
+<div class="logo">
+<h1>⚡ Fuzzy 3D Studio</h1>
+<small>Animated Flyer Creator for Instagram</small>
+</div>
+<div id="sidebar-scroll">
+
+<!-- UPLOAD -->
+<div class="section">
+<div class="section-header" onclick="toggleSection(this)">
+📁 Model Upload <span class="arrow">▼</span>
+</div>
+<div class="section-body">
+<div class="upload-zone" id="uploadZone">
+<div class="icon">📦</div>
+<p>Drop .GLB file here or click to browse</p>
+</div>
+<input type="file" id="fileInput" accept=".glb,.gltf" style="display:none">
+<div id="model-info" style="font-size:11px;color:var(--text2);margin-top:8px"></div>
+</div>
+</div>
+
+<!-- CANVAS SIZE -->
+<div class="section">
+<div class="section-header" onclick="toggleSection(this)">
+📐 Canvas / Format <span class="arrow">▼</span>
+</div>
+<div class="section-body">
+<div class="ctrl">
+<label>Preset</label>
+<select id="canvasPreset" onchange="applyPreset()">
+<option value="1080x1080">Instagram Post (1080×1080)</option>
+<option value="1080x1350">Instagram Portrait (1080×1350)</option>
+<option value="1080x1920">Instagram Story/Reel (1080×1920)</option>
+<option value="custom">Custom</option>
+</select>
+</div>
+<div class="row">
+<div class="ctrl"><label>Width</label><input type="number" id="canvasW" value="1080" min="200" max="2000" onchange="resizeCanvas()"></div>
+<div class="ctrl"><label>Height</label><input type="number" id="canvasH" value="1080" min="200" max="2000" onchange="resizeCanvas()"></div>
+</div>
+<div class="ctrl">
+<label>Background Color</label>
+<div class="row">
+<input type="color" id="bgColor" value="#0a0a0f" onchange="updateBgColor()">
+<input type="text" id="bgColorText" value="#0a0a0f" onchange="this.previousElementSibling.value=this.value;updateBgColor()" style="flex:3">
+</div>
+</div>
+</div>
+</div>
+
+<!-- POINT CLOUD / LIDAR -->
+<div class="section">
+<div class="section-header" onclick="toggleSection(this)">
+🔴 LiDAR Point Cloud <span class="badge badge-worker">WORKER</span> <span class="arrow">▼</span>
+</div>
+<div class="section-body">
+<div class="toggle-row">
+<span>Enable Point Cloud</span>
+<label class="toggle"><input type="checkbox" id="enablePoints" checked onchange="togglePointCloud()"><span class="slider"></span></label>
+</div>
+<div class="ctrl">
+<label>Point Density <span class="val" id="densityVal">15000</span></label>
+<input type="range" id="pointDensity" min="1000" max="150000" step="1000" value="15000" oninput="updateDensity()">
+</div>
+<div class="ctrl">
+<label>Point Size <span class="val" id="ptSizeVal">0.8</span></label>
+<input type="range" id="pointSize" min="0.05" max="15" step="0.05" value="0.8" oninput="updatePointSize()">
+</div>
+<div class="ctrl">
+<label>Color Mode</label>
+<select id="pointColorMode" onchange="updatePointColor()">
+<option value="lidar">LiDAR Green</option>
+<option value="lidar-multi">LiDAR Multi</option>
+<option value="heat">Heatmap</option>
+<option value="cyan">Cyan</option>
+<option value="custom">Custom Color</option>
+</select>
+</div>
+<div class="ctrl">
+<label>Custom Color</label>
+<input type="color" id="pointCustomColor" value="#00ff88" onchange="updatePointColor()">
+</div>
+<div class="toggle-row">
+<span>Show Original Mesh</span>
+<label class="toggle"><input type="checkbox" id="showMesh" onchange="toggleMesh()"><span class="slider"></span></label>
+</div>
+</div>
+</div>
+
+<!-- LIDAR SCAN -->
+<div class="section">
+<div class="section-header" onclick="toggleSection(this)">
+📡 LiDAR Scan Animation <span class="badge badge-gpu">GPU</span> <span class="arrow">▼</span>
+</div>
+<div class="section-body">
+<div class="toggle-row">
+<span>Enable Scan Effect</span>
+<label class="toggle"><input type="checkbox" id="enableScan" onchange="toggleScan()"><span class="slider"></span></label>
+</div>
+<div class="ctrl">
+<label>Scan Direction</label>
+<select id="scanDir">
+<option value="y">Vertical (Y)</option>
+<option value="x">Horizontal (X)</option>
+<option value="z">Depth (Z)</option>
+<option value="radial">Radial</option>
+</select>
+</div>
+<div class="ctrl">
+<label>Scan Speed <span class="val" id="scanSpeedVal">1.0</span></label>
+<input type="range" id="scanSpeed" min="0.1" max="5" step="0.1" value="1" oninput="d3('scanSpeedVal',this.value)">
+</div>
+<div class="ctrl">
+<label>Scan Width <span class="val" id="scanWidthVal">0.3</span></label>
+<input type="range" id="scanWidth" min="0.05" max="1" step="0.01" value="0.3" oninput="d3('scanWidthVal',this.value)">
+</div>
+<div class="ctrl">
+<label>Scan Brightness <span class="val" id="scanBrightVal">2.0</span></label>
+<input type="range" id="scanBright" min="1" max="5" step="0.1" value="2" oninput="d3('scanBrightVal',this.value)">
+</div>
+</div>
+</div>
+
+<!-- EFFECTS -->
+<div class="section">
+<div class="section-header" onclick="toggleSection(this)">
+🎛️ Post Effects <span class="badge badge-gpu">GPU</span> <span class="arrow">▼</span>
+</div>
+<div class="section-body">
+<div class="toggle-row">
+<span>VHS Mode</span>
+<label class="toggle"><input type="checkbox" id="enableVHS" onchange="updateEffects()"><span class="slider"></span></label>
+</div>
+<div class="ctrl">
+<label>VHS Intensity <span class="val" id="vhsIntVal">0.5</span></label>
+<input type="range" id="vhsIntensity" min="0" max="1" step="0.01" value="0.5" oninput="d3('vhsIntVal',this.value);updateEffects()">
+</div>
+<hr style="border-color:var(--border);margin:4px 0">
+<div class="toggle-row">
+<span>CRT Scanlines</span>
+<label class="toggle"><input type="checkbox" id="enableCRT" onchange="updateEffects()"><span class="slider"></span></label>
+</div>
+<div class="ctrl">
+<label>CRT Intensity <span class="val" id="crtIntVal">0.5</span></label>
+<input type="range" id="crtIntensity" min="0" max="1" step="0.01" value="0.5" oninput="d3('crtIntVal',this.value);updateEffects()">
+</div>
+<hr style="border-color:var(--border);margin:4px 0">
+<div class="toggle-row">
+<span>Point Glitch</span>
+<label class="toggle"><input type="checkbox" id="enableGlitch" onchange="updateEffects()"><span class="slider"></span></label>
+</div>
+<div class="ctrl">
+<label>Glitch Intensity <span class="val" id="glitchIntVal">0.3</span></label>
+<input type="range" id="glitchIntensity" min="0" max="1" step="0.01" value="0.3" oninput="d3('glitchIntVal',this.value);updateEffects()">
+</div>
+<hr style="border-color:var(--border);margin:4px 0">
+<div class="toggle-row">
+<span>Bloom/Glow</span>
+<label class="toggle"><input type="checkbox" id="enableBloom" checked onchange="updateEffects()"><span class="slider"></span></label>
+</div>
+<div class="ctrl">
+<label>Bloom Strength <span class="val" id="bloomStrVal">1.0</span></label>
+<input type="range" id="bloomStr" min="0" max="3" step="0.05" value="1" oninput="d3('bloomStrVal',this.value);updateEffects()">
+</div>
+<hr style="border-color:var(--border);margin:4px 0">
+<div class="toggle-row">
+<span>Chromatic Aberration</span>
+<label class="toggle"><input type="checkbox" id="enableChroma" onchange="updateEffects()"><span class="slider"></span></label>
+</div>
+<div class="ctrl">
+<label>Aberration <span class="val" id="chromaVal">0.005</span></label>
+<input type="range" id="chromaAmount" min="0" max="0.02" step="0.001" value="0.005" oninput="d3('chromaVal',this.value);updateEffects()">
+</div>
+<hr style="border-color:var(--border);margin:4px 0">
+<div class="toggle-row">
+<span>Vignette</span>
+<label class="toggle"><input type="checkbox" id="enableVignette" checked onchange="updateEffects()"><span class="slider"></span></label>
+</div>
+<div class="ctrl">
+<label>Vignette Darkness <span class="val" id="vigVal">0.6</span></label>
+<input type="range" id="vigDarkness" min="0" max="1.5" step="0.05" value="0.6" oninput="d3('vigVal',this.value);updateEffects()">
+</div>
+</div>
+</div>
+
+<!-- ANIMATION -->
+<div class="section">
+<div class="section-header" onclick="toggleSection(this)">
+🔄 Animation <span class="arrow">▼</span>
+</div>
+<div class="section-body">
+<div class="toggle-row">
+<span>Auto Rotate</span>
+<label class="toggle"><input type="checkbox" id="autoRotate" checked onchange="updateAnim()"><span class="slider"></span></label>
+</div>
+<div class="ctrl">
+<label>Rotate Speed <span class="val" id="rotSpeedVal">1.0</span></label>
+<input type="range" id="rotSpeed" min="-5" max="5" step="0.1" value="1" oninput="d3('rotSpeedVal',this.value);updateAnim()">
+</div>
+<div class="ctrl">
+<label>Rotate Axis</label>
+<select id="rotAxis" onchange="updateAnim()">
+<option value="y">Y (Turntable)</option>
+<option value="x">X (Pitch)</option>
+<option value="z">Z (Roll)</option>
+<option value="xy">X+Y</option>
+</select>
+</div>
+<div class="toggle-row">
+<span>Float/Bob</span>
+<label class="toggle"><input type="checkbox" id="enableFloat" onchange="updateAnim()"><span class="slider"></span></label>
+</div>
+<div class="ctrl">
+<label>Float Amplitude <span class="val" id="floatAmpVal">0.2</span></label>
+<input type="range" id="floatAmp" min="0" max="1" step="0.01" value="0.2" oninput="d3('floatAmpVal',this.value)">
+</div>
+<div class="ctrl">
+<label>Float Speed <span class="val" id="floatSpVal">1.0</span></label>
+<input type="range" id="floatSpeed" min="0.1" max="3" step="0.1" value="1" oninput="d3('floatSpVal',this.value)">
+</div>
+<div class="ctrl">
+<label>Camera Distance <span class="val" id="zoomVal">1.0</span></label>
+<input type="range" id="cameraZoom" min="0.3" max="3" step="0.05" value="1" oninput="d3('zoomVal',this.value);updateCamera()">
+</div>
+</div>
+</div>
+
+<!-- TEXT OVERLAYS -->
+<div class="section">
+<div class="section-header" onclick="toggleSection(this)">
+✏️ Text Overlays <span class="arrow">▼</span>
+</div>
+<div class="section-body" id="textSection">
+<button class="btn btn-secondary" onclick="addTextOverlay()" style="width:100%">+ Add Text</button>
+<div id="textList"></div>
+</div>
+</div>
+
+<!-- EXPORT -->
+<div class="section">
+<div class="section-header" onclick="toggleSection(this)">
+💾 Export <span class="arrow">▼</span>
+</div>
+<div class="section-body">
+<div class="ctrl">
+<label>Format</label>
+<select id="exportFormat">
+<option value="mp4">MP4 Video (H.264)</option>
+<option value="webm">WebM Video</option>
+<option value="gif">GIF (Loop)</option>
+</select>
+</div>
+<div class="ctrl">
+<label>Duration (seconds) <span class="val" id="durVal">3</span></label>
+<input type="range" id="exportDuration" min="1" max="15" step="0.5" value="3" oninput="d3('durVal',this.value)">
+</div>
+<div class="ctrl">
+<label>FPS <span class="val" id="fpsVal">30</span></label>
+<input type="range" id="exportFPS" min="10" max="60" step="5" value="30" oninput="d3('fpsVal',this.value)">
+</div>
+<div class="ctrl">
+<label>Quality</label>
+<select id="exportQuality">
+<option value="0.95">High</option>
+<option value="0.8" selected>Medium</option>
+<option value="0.6">Low (smaller file)</option>
+</select>
+</div>
+<div id="format-info">
+<p>📌 MP4/WebM: Best for Instagram feed. GIF: Universal loop support but larger files.</p>
+</div>
+<button class="btn btn-export" id="exportBtn" onclick="startExport()" disabled style="width:100%;margin-top:8px">
+🎬 Export Animation
+</button>
+</div>
+</div>
+
+</div>
+</div>
+
+<div id="canvas-wrap">
+<canvas id="renderCanvas"></canvas>
+<div id="text-overlay-container"></div>
+</div>
+
+<div id="export-overlay">
+<svg class="progress-ring" viewBox="0 0 80 80">
+<circle cx="40" cy="40" r="35" stroke="#1e1e2e" stroke-width="6" fill="none"/>
+<circle id="progress-circle" cx="40" cy="40" r="35" stroke="var(--accent)" stroke-width="6" fill="none"
+stroke-dasharray="220" stroke-dashoffset="220" stroke-linecap="round" transform="rotate(-90 40 40)"/>
+</svg>
+<div class="export-info" id="export-info">Preparing export...</div>
+<button class="btn btn-danger" onclick="cancelExport()">Cancel</button>
+</div>
+
+<!-- Three.js + Dependencies -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+
+<script>
+// ============================================
+// GEOMETRY PROCESSING WORKER (inline)
+// ============================================
+const geometryWorkerCode = `
+self.onmessage = function(e) {
+  const { type, data } = e.data;
+  
+  if (type === 'samplePoints') {
+    const { positions, normals, density, bounds } = data;
+    const posArr = new Float32Array(positions);
+    const normArr = normals ? new Float32Array(normals) : null;
+    const triCount = Math.floor(posArr.length / 9);
+    
+    if (triCount === 0) {
+      self.postMessage({ type: 'error', message: 'No triangles found' });
+      return;
+    }
+    
+    const areas = new Float32Array(triCount);
+    let totalArea = 0;
+    
+    for (let i = 0; i < triCount; i++) {
+      const i9 = i * 9;
+      const ax = posArr[i9], ay = posArr[i9+1], az = posArr[i9+2];
+      const bx = posArr[i9+3], by = posArr[i9+4], bz = posArr[i9+5];
+      const cx = posArr[i9+6], cy = posArr[i9+7], cz = posArr[i9+8];
+      
+      const abx = bx-ax, aby = by-ay, abz = bz-az;
+      const acx = cx-ax, acy = cy-ay, acz = cz-az;
+      
+      const crossX = aby*acz - abz*acy;
+      const crossY = abz*acx - abx*acz;
+      const crossZ = abx*acy - aby*acx;
+      
+      areas[i] = 0.5 * Math.sqrt(crossX*crossX + crossY*crossY + crossZ*crossZ);
+      totalArea += areas[i];
+    }
+    
+    const actualDensity = Math.min(density, 150000);
+    const outPos = new Float32Array(actualDensity * 3);
+    const outCol = new Float32Array(actualDensity * 3);
+    const outNorm = new Float32Array(actualDensity * 3);
+    
+    let seed = 12345;
+    function rand() {
+      seed = (seed * 16807 + 0) % 2147483647;
+      return (seed - 1) / 2147483646;
+    }
+    
+    for (let p = 0; p < actualDensity; p++) {
+      let r = rand() * totalArea;
+      let triIdx = 0;
+      let cumArea = 0;
+      for (let t = 0; t < triCount; t++) {
+        cumArea += areas[t];
+        if (cumArea >= r) { triIdx = t; break; }
+      }
+      
+      const i9 = triIdx * 9;
+      const ax = posArr[i9], ay = posArr[i9+1], az = posArr[i9+2];
+      const bx = posArr[i9+3], by = posArr[i9+4], bz = posArr[i9+5];
+      const cx = posArr[i9+6], cy = posArr[i9+7], cz = posArr[i9+8];
+      
+      let u = rand(), v = rand();
+      if (u + v > 1) { u = 1 - u; v = 1 - v; }
+      const w = 1 - u - v;
+      
+      const px = ax*w + bx*u + cx*v;
+      const py = ay*w + by*u + cy*v;
+      const pz = az*w + bz*u + cz*v;
+      
+      outPos[p*3] = px;
+      outPos[p*3+1] = py;
+      outPos[p*3+2] = pz;
+      
+      if (normArr && normArr.length >= i9 + 9) {
+        const nax = normArr[i9], nay = normArr[i9+1], naz = normArr[i9+2];
+        const nbx = normArr[i9+3], nby = normArr[i9+4], nbz = normArr[i9+5];
+        const ncx = normArr[i9+6], ncy = normArr[i9+7], ncz = normArr[i9+8];
+        outNorm[p*3] = nax*w + nbx*u + ncx*v;
+        outNorm[p*3+1] = nay*w + nby*u + ncy*v;
+        outNorm[p*3+2] = naz*w + nbz*u + ncz*v;
+      }
+      
+      const range = bounds.maxY - bounds.minY || 1;
+      const normalizedY = (py - bounds.minY) / range;
+      outCol[p*3] = normalizedY;
+      outCol[p*3+1] = normalizedY;
+      outCol[p*3+2] = normalizedY;
+    }
+    
+    self.postMessage({
+      type: 'pointsReady',
+      positions: outPos.buffer,
+      colors: outCol.buffer,
+      normals: outNorm.buffer
+    }, [outPos.buffer, outCol.buffer, outNorm.buffer]);
+  }
+};
+`;
+
+const geometryWorkerBlob = new Blob([geometryWorkerCode], {type:'application/javascript'});
+const geometryWorkerURL = URL.createObjectURL(geometryWorkerBlob);
+let geometryWorker = null;
+
+function createGeometryWorker() {
+  if (geometryWorker) geometryWorker.terminate();
+  geometryWorker = new Worker(geometryWorkerURL);
+  return geometryWorker;
+}
+
+// ============================================
+// GLOBAL STATE
+// ============================================
+let scene, camera, renderer, composer, controls;
+let modelContainer = null; // Container for model + point cloud (for rotation)
+let currentModel = null;
+let pointCloud = null;
+let originalMeshes = [];
+let clock = new THREE.Clock();
+let animationId = null;
+let modelBounds = { minX:0, maxX:0, minY:0, maxY:0, minZ:0, maxZ:0 };
+let localBounds = { minX:0, maxX:0, minY:0, maxY:0, minZ:0, maxZ:0 };
+let modelCenter = new THREE.Vector3();
+let modelSize = 1;
+let isExporting = false;
+let exportCancelled = false;
+let textOverlays = [];
+let textIdCounter = 0;
+let densityUpdateTimeout = null;
+
+// Animation state
+let lastFrameTime = 0;
+const targetFPS = 60;
+const frameInterval = 1000 / targetFPS;
+
+// Post-processing passes
+let renderPass, bloomPass, vhsPass, crtPass, chromaPass, vignettePass;
+
+// ============================================
+// HELPERS
+// ============================================
+function d3(id, val) { document.getElementById(id).textContent = val; }
+function $(id) { return document.getElementById(id); }
+
+function toggleSection(header) {
+  header.classList.toggle('collapsed');
+  const body = header.nextElementSibling;
+  body.classList.toggle('hidden');
+}
+
+// ============================================
+// INIT THREE.JS
+// ============================================
+function init() {
+  if (typeof THREE === 'undefined') {
+    console.error('THREE.js not loaded!');
+    alert('Error: THREE.js library failed to load. Please refresh.');
+    return;
+  }
+  
+  if (typeof THREE.GLTFLoader === 'undefined') {
+    console.error('GLTFLoader not loaded!');
+    alert('Error: GLTFLoader failed to load. Please refresh.');
+    return;
+  }
+  
+  console.log('Three.js version:', THREE.REVISION);
+  
+  const canvas = $('renderCanvas');
+  const w = parseInt($('canvasW').value);
+  const h = parseInt($('canvasH').value);
+  
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color($('bgColor').value);
+  
+  camera = new THREE.PerspectiveCamera(45, w/h, 0.01, 1000);
+  camera.position.set(0, 0, 4);
+  
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true, alpha: false });
+  renderer.setSize(w, h);
+  renderer.setPixelRatio(1);
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+  
+  fitCanvasInView(w, h);
+  
+  // Controls
+  controls = new THREE.OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+  controls.autoRotate = false; // We handle rotation manually
+  
+  // Lights
+  const amb = new THREE.AmbientLight(0x404050, 0.8);
+  scene.add(amb);
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+  dirLight.position.set(5, 5, 5);
+  scene.add(dirLight);
+  
+  // Grid helper
+  const grid = new THREE.GridHelper(10, 20, 0x111122, 0x111122);
+  grid.position.y = -1.5;
+  scene.add(grid);
+  
+  setupPostProcessing(w, h);
+  setupFileUpload();
+  animate(0);
+}
+
+function setupFileUpload() {
+  const uploadZone = $('uploadZone');
+  const fileInput = $('fileInput');
+  
+  if (!uploadZone || !fileInput) {
+    console.error('Upload elements not found!');
+    return;
+  }
+  
+  uploadZone.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    fileInput.click();
+  });
+  
+  fileInput.addEventListener('change', function(e) {
+    if (e.target.files && e.target.files[0]) {
+      loadModel(e.target.files[0]);
+    }
+  });
+  
+  uploadZone.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    uploadZone.classList.add('dragover');
+  });
+  
+  uploadZone.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    uploadZone.classList.remove('dragover');
+  });
+  
+  uploadZone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    uploadZone.classList.remove('dragover');
+    
+    const file = e.dataTransfer.files[0];
+    if (file && (file.name.toLowerCase().endsWith('.glb') || file.name.toLowerCase().endsWith('.gltf'))) {
+      loadModel(file);
+    } else {
+      alert('Please drop a .GLB or .GLTF file');
+    }
+  });
+  
+  console.log('File upload handlers initialized');
+}
+
+function fitCanvasInView(w, h) {
+  const wrap = $('canvas-wrap');
+  const maxW = wrap.clientWidth - 40;
+  const maxH = wrap.clientHeight - 40;
+  const scale = Math.min(maxW / w, maxH / h, 1);
+  const canvas = $('renderCanvas');
+  canvas.style.width = (w * scale) + 'px';
+  canvas.style.height = (h * scale) + 'px';
+  
+  const container = $('text-overlay-container');
+  container.style.width = (w * scale) + 'px';
+  container.style.height = (h * scale) + 'px';
+  container.style.position = 'absolute';
+  container.style.left = '50%';
+  container.style.top = '50%';
+  container.style.transform = 'translate(-50%,-50%)';
+}
+
+// ============================================
+// POST PROCESSING SHADERS
+// ============================================
+const VHSShader = {
+  uniforms: {
+    tDiffuse: { value: null },
+    time: { value: 0 },
+    intensity: { value: 0.5 },
+    enabled: { value: 0 }
+  },
+  vertexShader: `varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+  fragmentShader: `
+    uniform sampler2D tDiffuse;
+    uniform float time;
+    uniform float intensity;
+    uniform float enabled;
+    varying vec2 vUv;
+    
+    float rand(vec2 co){return fract(sin(dot(co,vec2(12.9898,78.233)))*43758.5453);}
+    
+    void main(){
+      if(enabled < 0.5){gl_FragColor=texture2D(tDiffuse,vUv);return;}
+      vec2 uv = vUv;
+      
+      float trackLine = step(0.99, rand(vec2(floor(time*10.),floor(uv.y*100.))));
+      uv.x += trackLine * 0.02 * intensity;
+      
+      uv.x += sin(uv.y * 50.0 + time * 5.0) * 0.001 * intensity;
+      uv.y += sin(uv.x * 30.0 + time * 3.0) * 0.0005 * intensity;
+      
+      float r = texture2D(tDiffuse, uv + vec2(0.002 * intensity, 0.0)).r;
+      float g = texture2D(tDiffuse, uv).g;
+      float b = texture2D(tDiffuse, uv - vec2(0.002 * intensity, 0.0)).b;
+      
+      vec3 col = vec3(r, g, b);
+      
+      float noise = rand(uv + time) * 0.08 * intensity;
+      col += noise;
+      col *= vec3(1.0, 0.95, 0.9);
+      
+      float bar = smoothstep(0.0, 0.02, abs(fract(uv.y + time * 0.1) - 0.5) - 0.48);
+      col = mix(col, col * 0.3, bar * intensity * 0.5);
+      
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `
+};
+
+const CRTShader = {
+  uniforms: {
+    tDiffuse: { value: null },
+    resolution: { value: new THREE.Vector2(1080, 1080) },
+    intensity: { value: 0.5 },
+    time: { value: 0 },
+    enabled: { value: 0 }
+  },
+  vertexShader: `varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+  fragmentShader: `
+    uniform sampler2D tDiffuse;
+    uniform vec2 resolution;
+    uniform float intensity;
+    uniform float time;
+    uniform float enabled;
+    varying vec2 vUv;
+    
+    void main(){
+      if(enabled < 0.5){gl_FragColor=texture2D(tDiffuse,vUv);return;}
+      vec2 uv = vUv;
+      
+      vec2 dc = uv - 0.5;
+      float d = length(dc);
+      uv = 0.5 + dc * (1.0 + d * d * 0.1 * intensity);
+      
+      vec3 col = texture2D(tDiffuse, uv).rgb;
+      
+      float scanline = sin(uv.y * resolution.y * 1.5) * 0.5 + 0.5;
+      scanline = pow(scanline, 1.5) * intensity * 0.3;
+      col -= scanline;
+      
+      float px = mod(gl_FragCoord.x, 3.0);
+      vec3 mask = vec3(
+        step(0.5, 1.0 - abs(px - 0.0)),
+        step(0.5, 1.0 - abs(px - 1.0)),
+        step(0.5, 1.0 - abs(px - 2.0))
+      );
+      col = mix(col, col * (0.7 + 0.3 * mask), intensity * 0.4);
+      
+      float vig = 1.0 - d * 0.5 * intensity;
+      float flicker = 0.98 + 0.02 * sin(time * 8.0);
+      col *= vig * flicker;
+      
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `
+};
+
+const ChromaShader = {
+  uniforms: {
+    tDiffuse: { value: null },
+    amount: { value: 0.005 },
+    enabled: { value: 0 }
+  },
+  vertexShader: `varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+  fragmentShader: `
+    uniform sampler2D tDiffuse;
+    uniform float amount;
+    uniform float enabled;
+    varying vec2 vUv;
+    void main(){
+      if(enabled < 0.5){gl_FragColor=texture2D(tDiffuse,vUv);return;}
+      vec2 dir = vUv - 0.5;
+      float r = texture2D(tDiffuse, vUv + dir * amount).r;
+      float g = texture2D(tDiffuse, vUv).g;
+      float b = texture2D(tDiffuse, vUv - dir * amount).b;
+      gl_FragColor = vec4(r, g, b, 1.0);
+    }
+  `
+};
+
+const VignetteShader = {
+  uniforms: {
+    tDiffuse: { value: null },
+    darkness: { value: 0.6 },
+    enabled: { value: 1 }
+  },
+  vertexShader: `varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+  fragmentShader: `
+    uniform sampler2D tDiffuse;
+    uniform float darkness;
+    uniform float enabled;
+    varying vec2 vUv;
+    void main(){
+      vec4 col = texture2D(tDiffuse, vUv);
+      if(enabled < 0.5){gl_FragColor=col;return;}
+      float d = distance(vUv, vec2(0.5));
+      float vig = smoothstep(0.8, 0.2, d);
+      col.rgb *= mix(1.0, vig, darkness);
+      gl_FragColor = col;
+    }
+  `
+};
+
+function setupPostProcessing(w, h) {
+  composer = new THREE.EffectComposer(renderer);
+  
+  renderPass = new THREE.RenderPass(scene, camera);
+  composer.addPass(renderPass);
+  
+  bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(w, h), 1.0, 0.4, 0.85);
+  composer.addPass(bloomPass);
+  
+  vhsPass = new THREE.ShaderPass(VHSShader);
+  composer.addPass(vhsPass);
+  
+  crtPass = new THREE.ShaderPass(CRTShader);
+  crtPass.uniforms.resolution.value.set(w, h);
+  composer.addPass(crtPass);
+  
+  chromaPass = new THREE.ShaderPass(ChromaShader);
+  composer.addPass(chromaPass);
+  
+  vignettePass = new THREE.ShaderPass(VignetteShader);
+  composer.addPass(vignettePass);
+  
+  updateEffects();
+}
+
+function updateEffects() {
+  if (!bloomPass) return;
+  
+  bloomPass.enabled = $('enableBloom').checked;
+  bloomPass.strength = parseFloat($('bloomStr').value);
+  
+  vhsPass.uniforms.enabled.value = $('enableVHS').checked ? 1 : 0;
+  vhsPass.uniforms.intensity.value = parseFloat($('vhsIntensity').value);
+  
+  crtPass.uniforms.enabled.value = $('enableCRT').checked ? 1 : 0;
+  crtPass.uniforms.intensity.value = parseFloat($('crtIntensity').value);
+  
+  chromaPass.uniforms.enabled.value = $('enableChroma').checked ? 1 : 0;
+  chromaPass.uniforms.amount.value = parseFloat($('chromaAmount').value);
+  
+  vignettePass.uniforms.enabled.value = $('enableVignette').checked ? 1 : 0;
+  vignettePass.uniforms.darkness.value = parseFloat($('vigDarkness').value);
+}
+
+// ============================================
+// POINT CLOUD SHADER MATERIAL
+// ============================================
+function createPointCloudMaterial() {
+  const colorMode = $('pointColorMode').value;
+  const customColor = $('pointCustomColor').value;
+  const cr = parseInt(customColor.slice(1,3),16)/255;
+  const cg = parseInt(customColor.slice(3,5),16)/255;
+  const cb = parseInt(customColor.slice(5,7),16)/255;
+  
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      pointSize: { value: parseFloat($('pointSize').value) },
+      colorMode: { value: ['lidar','lidar-multi','heat','cyan','custom'].indexOf(colorMode) },
+      customColor: { value: new THREE.Vector3(cr, cg, cb) },
+      time: { value: 0 },
+      scanEnabled: { value: 0 },
+      scanPos: { value: 0 },
+      scanWidth: { value: 0.3 },
+      scanDir: { value: 0 },
+      scanBrightness: { value: 2.0 },
+      glitchEnabled: { value: 0 },
+      glitchIntensity: { value: 0.3 },
+      boundsMin: { value: new THREE.Vector3(localBounds.minX, localBounds.minY, localBounds.minZ) },
+      boundsMax: { value: new THREE.Vector3(localBounds.maxX, localBounds.maxY, localBounds.maxZ) },
+      opacity: { value: 1.0 }
+    },
+    vertexShader: `
+      uniform float pointSize;
+      uniform float time;
+      uniform float scanEnabled;
+      uniform float scanPos;
+      uniform float scanWidth;
+      uniform float scanDir;
+      uniform float scanBrightness;
+      uniform float glitchEnabled;
+      uniform float glitchIntensity;
+      uniform vec3 boundsMin;
+      uniform vec3 boundsMax;
+      
+      attribute vec3 aColor;
+      attribute vec3 aNormal;
+      
+      varying vec3 vColor;
+      varying float vNormalizedHeight;
+      varying float vScanFactor;
+      varying vec3 vPos;
+      
+      float rand(vec2 co){return fract(sin(dot(co,vec2(12.9898,78.233)))*43758.5453);}
+      
+      void main() {
+        vec3 pos = position;
+        vec3 range = boundsMax - boundsMin;
+        
+        if (glitchEnabled > 0.5) {
+          float g = rand(vec2(floor(time * 3.0), floor(pos.y * 10.0)));
+          if (g > (1.0 - glitchIntensity * 0.15)) {
+            pos.x += (rand(pos.xy + time) - 0.5) * glitchIntensity * range.x * 0.3;
+            pos.z += (rand(pos.yz + time) - 0.5) * glitchIntensity * range.z * 0.3;
+          }
+        }
+        
+        vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
+        gl_Position = projectionMatrix * mvPos;
+        
+        // Smaller base size with better distance scaling
+        float dist = -mvPos.z;
+        float distanceFactor = clamp(50.0 / dist, 0.2, 30.0);
+        gl_PointSize = pointSize * distanceFactor;
+        
+        vNormalizedHeight = range.y > 0.0 ? (pos.y - boundsMin.y) / range.y : 0.5;
+        vColor = aColor;
+        vPos = pos;
+        
+        vScanFactor = 0.0;
+        if (scanEnabled > 0.5) {
+          float coord;
+          if (scanDir < 0.5) coord = (pos.y - boundsMin.y) / max(range.y, 0.001);
+          else if (scanDir < 1.5) coord = (pos.x - boundsMin.x) / max(range.x, 0.001);
+          else if (scanDir < 2.5) coord = (pos.z - boundsMin.z) / max(range.z, 0.001);
+          else {
+            vec2 center = (boundsMin.xz + boundsMax.xz) * 0.5;
+            coord = length(pos.xz - center) / max(length(range.xz) * 0.5, 0.001);
+          }
+          
+          float dst = abs(coord - scanPos);
+          vScanFactor = 1.0 - smoothstep(0.0, scanWidth, dst);
+          vScanFactor *= scanBrightness;
+        }
+      }
+    `,
+    fragmentShader: `
+      uniform int colorMode;
+      uniform vec3 customColor;
+      uniform float opacity;
+      
+      varying vec3 vColor;
+      varying float vNormalizedHeight;
+      varying float vScanFactor;
+      varying vec3 vPos;
+      
+      void main() {
+        vec2 center = gl_PointCoord - 0.5;
+        float len = length(center);
+        if (len > 0.5) discard;
+        
+        vec3 col;
+        float h = vNormalizedHeight;
+        
+        if (colorMode == 0) {
+          col = vec3(0.0, 0.4 + h * 0.6, 0.1 + h * 0.2);
+        } else if (colorMode == 1) {
+          col = mix(vec3(0.0, 0.2, 1.0), vec3(0.0, 1.0, 0.3), h);
+          col = mix(col, vec3(1.0, 0.3, 0.0), smoothstep(0.7, 1.0, h));
+        } else if (colorMode == 2) {
+          col = mix(vec3(0.0, 0.0, 0.5), vec3(1.0, 0.0, 0.0), h);
+          col = mix(col, vec3(1.0, 1.0, 0.0), smoothstep(0.7, 1.0, h));
+        } else if (colorMode == 3) {
+          col = vec3(0.0, h * 0.8, 0.5 + h * 0.5);
+        } else {
+          col = customColor * (0.5 + h * 0.5);
+        }
+        
+        col += vScanFactor * vec3(0.3, 0.6, 1.0);
+        
+        float edge = 1.0 - smoothstep(0.3, 0.5, len);
+        
+        gl_FragColor = vec4(col * edge, opacity * edge);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
+  });
+}
+
+// ============================================
+// MODEL LOADING
+// ============================================
+function loadModel(file) {
+  console.log('loadModel called with:', file.name, file.size);
+  
+  $('model-info').textContent = 'Loading...';
+  $('exportBtn').disabled = true;
+  
+  disposeModel();
+  
+  const url = URL.createObjectURL(file);
+  const loader = new THREE.GLTFLoader();
+  
+  loader.load(
+    url,
+    function(gltf) {
+      console.log('GLTF loaded successfully');
+      URL.revokeObjectURL(url);
+      
+      // Create container for model and point cloud
+      modelContainer = new THREE.Group();
+      scene.add(modelContainer);
+      
+      currentModel = gltf.scene;
+      
+      // Compute bounds before any transform
+      const box = new THREE.Box3().setFromObject(currentModel);
+      box.getCenter(modelCenter);
+      modelSize = box.getSize(new THREE.Vector3()).length();
+      
+      // Center the model
+      currentModel.position.sub(modelCenter);
+      
+      // Scale to fit nicely in view
+      const scale = 2.0 / modelSize;
+      currentModel.scale.setScalar(scale);
+      
+      // Update world matrices
+      currentModel.updateMatrixWorld(true);
+      
+      // Compute bounds in local space (after centering and scaling)
+      const scaledBox = new THREE.Box3().setFromObject(currentModel);
+      localBounds = {
+        minX: scaledBox.min.x, maxX: scaledBox.max.x,
+        minY: scaledBox.min.y, maxY: scaledBox.max.y,
+        minZ: scaledBox.min.z, maxZ: scaledBox.max.z
+      };
+      
+      // Add model to container
+      modelContainer.add(currentModel);
+      
+      // Store mesh references
+      originalMeshes = [];
+      currentModel.traverse(child => {
+        if (child.isMesh) {
+          originalMeshes.push(child);
+          child.visible = $('showMesh').checked;
+        }
+      });
+      
+      console.log('Found meshes:', originalMeshes.length);
+      
+      // Build point cloud
+      extractAndBuildPointCloud();
+      
+      // Setup camera
+      camera.position.set(0, 0, 4);
+      controls.target.set(0, 0, 0);
+      controls.update();
+      
+      $('model-info').innerHTML = `✅ <b>${file.name}</b> (${(file.size/1024/1024).toFixed(2)}MB) - ${originalMeshes.length} mesh(es)`;
+      $('exportBtn').disabled = false;
+    },
+    function(progress) {
+      const pct = progress.total ? Math.round(progress.loaded/progress.total*100) : '...';
+      $('model-info').textContent = `Loading: ${pct}%`;
+    },
+    function(error) {
+      console.error('GLTF Load Error:', error);
+      URL.revokeObjectURL(url);
+      $('model-info').textContent = `❌ Error: ${error.message || 'Failed to load model'}`;
+    }
+  );
+}
+
+function disposeModel() {
+  if (pointCloud) {
+    if (pointCloud.geometry) pointCloud.geometry.dispose();
+    if (pointCloud.material) pointCloud.material.dispose();
+    if (pointCloud.parent) pointCloud.parent.remove(pointCloud);
+    pointCloud = null;
+  }
+  if (currentModel) {
+    currentModel.traverse(child => {
+      if (child.isMesh) {
+        if (child.geometry) child.geometry.dispose();
+        if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+        else if (child.material) child.material.dispose();
+      }
+    });
+    if (currentModel.parent) currentModel.parent.remove(currentModel);
+    currentModel = null;
+  }
+  if (modelContainer) {
+    scene.remove(modelContainer);
+    modelContainer = null;
+  }
+  originalMeshes = [];
+}
+
+function extractAndBuildPointCloud() {
+  const allPositions = [];
+  const allNormals = [];
+  
+  currentModel.traverse(child => {
+    if (child.isMesh && child.geometry) {
+      const geo = child.geometry;
+      const posAttr = geo.getAttribute('position');
+      const normAttr = geo.getAttribute('normal');
+      const idx = geo.index;
+      
+      // Get the world matrix for this mesh relative to currentModel
+      const matrix = new THREE.Matrix4();
+      child.updateWorldMatrix(true, false);
+      matrix.copy(child.matrixWorld);
+      
+      // We need to transform positions to model-local space
+      // Since currentModel is our reference, get inverse of currentModel's world matrix
+      const invModelMatrix = new THREE.Matrix4().copy(currentModel.matrixWorld).invert();
+      matrix.premultiply(invModelMatrix);
+      
+      const normalMatrix = new THREE.Matrix3().getNormalMatrix(matrix);
+      
+      const tempVec = new THREE.Vector3();
+      const tempNorm = new THREE.Vector3();
+      
+      if (idx) {
+        for (let i = 0; i < idx.count; i++) {
+          const vi = idx.getX(i);
+          tempVec.set(posAttr.getX(vi), posAttr.getY(vi), posAttr.getZ(vi));
+          tempVec.applyMatrix4(matrix);
+          allPositions.push(tempVec.x, tempVec.y, tempVec.z);
+          
+          if (normAttr) {
+            tempNorm.set(normAttr.getX(vi), normAttr.getY(vi), normAttr.getZ(vi));
+            tempNorm.applyMatrix3(normalMatrix).normalize();
+            allNormals.push(tempNorm.x, tempNorm.y, tempNorm.z);
+          }
+        }
+      } else {
+        for (let i = 0; i < posAttr.count; i++) {
+          tempVec.set(posAttr.getX(i), posAttr.getY(i), posAttr.getZ(i));
+          tempVec.applyMatrix4(matrix);
+          allPositions.push(tempVec.x, tempVec.y, tempVec.z);
+          
+          if (normAttr) {
+            tempNorm.set(normAttr.getX(i), normAttr.getY(i), normAttr.getZ(i));
+            tempNorm.applyMatrix3(normalMatrix).normalize();
+            allNormals.push(tempNorm.x, tempNorm.y, tempNorm.z);
+          }
+        }
+      }
+    }
+  });
+  
+  console.log('Extracted positions:', allPositions.length / 3, 'vertices');
+  
+  if (allPositions.length === 0) {
+    console.warn('No geometry found in model');
+    $('model-info').textContent += ' (No geometry found)';
+    return;
+  }
+  
+  const density = parseInt($('pointDensity').value);
+  const posF32 = new Float32Array(allPositions);
+  const normF32 = allNormals.length > 0 ? new Float32Array(allNormals) : null;
+  
+  // Compute bounds from extracted positions
+  let minX = Infinity, maxX = -Infinity;
+  let minY = Infinity, maxY = -Infinity;
+  let minZ = Infinity, maxZ = -Infinity;
+  
+  for (let i = 0; i < allPositions.length; i += 3) {
+    const x = allPositions[i], y = allPositions[i+1], z = allPositions[i+2];
+    if (x < minX) minX = x; if (x > maxX) maxX = x;
+    if (y < minY) minY = y; if (y > maxY) maxY = y;
+    if (z < minZ) minZ = z; if (z > maxZ) maxZ = z;
+  }
+  
+  localBounds = { minX, maxX, minY, maxY, minZ, maxZ };
+  
+  const worker = createGeometryWorker();
+  
+  worker.onmessage = (e) => {
+    if (e.data.type === 'pointsReady') {
+      buildPointCloudFromData(
+        new Float32Array(e.data.positions),
+        new Float32Array(e.data.colors),
+        new Float32Array(e.data.normals)
+      );
+      worker.terminate();
+    } else if (e.data.type === 'error') {
+      console.error('Worker error:', e.data.message);
+      worker.terminate();
+    }
+  };
+  
+  worker.onerror = (err) => {
+    console.error('Worker error:', err);
+    worker.terminate();
+  };
+  
+  // Clone arrays for transfer
+  const posBuffer = posF32.buffer.slice(0);
+  const normBuffer = normF32 ? normF32.buffer.slice(0) : null;
+  
+  const transferables = [posBuffer];
+  if (normBuffer) transferables.push(normBuffer);
+  
+  worker.postMessage({
+    type: 'samplePoints',
+    data: {
+      positions: posBuffer,
+      normals: normBuffer,
+      density,
+      bounds: localBounds
+    }
+  }, transferables);
+}
+
+function buildPointCloudFromData(positions, colors, normals) {
+  if (pointCloud) {
+    if (pointCloud.geometry) pointCloud.geometry.dispose();
+    if (pointCloud.material) pointCloud.material.dispose();
+    if (pointCloud.parent) pointCloud.parent.remove(pointCloud);
+    pointCloud = null;
+  }
+  
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('aColor', new THREE.BufferAttribute(colors, 3));
+  geo.setAttribute('aNormal', new THREE.BufferAttribute(normals, 3));
+  
+  const mat = createPointCloudMaterial();
+  pointCloud = new THREE.Points(geo, mat);
+  
+  // Add point cloud to the same container as the model so they rotate together
+  if (modelContainer) {
+    modelContainer.add(pointCloud);
+  } else {
+    scene.add(pointCloud);
+  }
+  
+  if (!$('enablePoints').checked) pointCloud.visible = false;
+  
+  console.log('Point cloud created with', positions.length / 3, 'points');
+}
+
+// ============================================
+// CONTROLS UPDATE HANDLERS
+// ============================================
+function togglePointCloud() {
+  if (pointCloud) pointCloud.visible = $('enablePoints').checked;
+}
+
+function toggleMesh() {
+  originalMeshes.forEach(m => m.visible = $('showMesh').checked);
+}
+
+function updateDensity() {
+  d3('densityVal', $('pointDensity').value);
+  
+  // Debounce: wait 300ms after user stops sliding
+  if (densityUpdateTimeout) clearTimeout(densityUpdateTimeout);
+  densityUpdateTimeout = setTimeout(() => {
+    if (currentModel) extractAndBuildPointCloud();
+  }, 300);
+}
+
+function updatePointSize() {
+  const val = parseFloat($('pointSize').value);
+  d3('ptSizeVal', val.toFixed(2));
+  if (pointCloud && pointCloud.material && pointCloud.material.uniforms) {
+    pointCloud.material.uniforms.pointSize.value = val;
+  }
+}
+
+function updatePointColor() {
+  if (!pointCloud) return;
+  const oldMat = pointCloud.material;
+  const mat = createPointCloudMaterial();
+  
+  // Copy time-dependent uniforms
+  if (oldMat && oldMat.uniforms) {
+    mat.uniforms.time.value = oldMat.uniforms.time.value;
+    mat.uniforms.scanEnabled.value = oldMat.uniforms.scanEnabled.value;
+    mat.uniforms.scanPos.value = oldMat.uniforms.scanPos.value;
+  }
+  
+  pointCloud.material = mat;
+  if (oldMat) oldMat.dispose();
+}
+
+function toggleScan() {
+  if (pointCloud && pointCloud.material && pointCloud.material.uniforms) {
+    pointCloud.material.uniforms.scanEnabled.value = $('enableScan').checked ? 1 : 0;
+  }
+}
+
+function updateAnim() {
+  // Animation settings are read directly in updateScene
+}
+
+function updateCamera() {
+  const z = parseFloat($('cameraZoom').value);
+  const currentDist = camera.position.length();
+  camera.position.normalize().multiplyScalar(4 / z);
+  controls.update();
+}
+
+function updateBgColor() {
+  const c = $('bgColor').value;
+  $('bgColorText').value = c;
+  scene.background = new THREE.Color(c);
+}
+
+function resizeCanvas() {
+  const w = parseInt($('canvasW').value);
+  const h = parseInt($('canvasH').value);
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  composer.setSize(w, h);
+  if (crtPass) crtPass.uniforms.resolution.value.set(w, h);
+  fitCanvasInView(w, h);
+}
+
+function applyPreset() {
+  const v = $('canvasPreset').value;
+  if (v === 'custom') return;
+  const [w, h] = v.split('x').map(Number);
+  $('canvasW').value = w;
+  $('canvasH').value = h;
+  resizeCanvas();
+}
+
+// ============================================
+// TEXT OVERLAYS
+// ============================================
+function addTextOverlay() {
+  const id = textIdCounter++;
+  const overlay = {
+    id,
+    text: 'YOUR TEXT',
+    x: 50, y: 85,
+    fontSize: 32,
+    fontFamily: 'Arial Black',
+    color: '#00ff88',
+    opacity: 1,
+    bold: true,
+    italic: false,
+    shadow: true,
+    letterSpacing: 2
+  };
+  textOverlays.push(overlay);
+  renderTextOverlayList();
+  renderTextOverlaysOnScreen();
+}
+
+function removeTextOverlay(id) {
+  textOverlays = textOverlays.filter(t => t.id !== id);
+  renderTextOverlayList();
+  renderTextOverlaysOnScreen();
+}
+
+function updateTextOverlay(id, key, value) {
+  const t = textOverlays.find(o => o.id === id);
+  if (t) {
+    t[key] = value;
+    renderTextOverlaysOnScreen();
+  }
+}
+
+function renderTextOverlayList() {
+  const list = $('textList');
+  list.innerHTML = '';
+  textOverlays.forEach(t => {
+    const div = document.createElement('div');
+    div.className = 'text-item';
+    div.innerHTML = `
+      <button class="remove-text" onclick="removeTextOverlay(${t.id})">✕</button>
+      <div class="ctrl"><label>Text</label><input type="text" value="${t.text}" onchange="updateTextOverlay(${t.id},'text',this.value)"></div>
+      <div class="row">
+        <div class="ctrl"><label>X% <span class="val">${t.x}</span></label><input type="range" min="0" max="100" value="${t.x}" oninput="updateTextOverlay(${t.id},'x',+this.value);this.previousElementSibling.querySelector('.val').textContent=this.value"></div>
+        <div class="ctrl"><label>Y% <span class="val">${t.y}</span></label><input type="range" min="0" max="100" value="${t.y}" oninput="updateTextOverlay(${t.id},'y',+this.value);this.previousElementSibling.querySelector('.val').textContent=this.value"></div>
+      </div>
+      <div class="row">
+        <div class="ctrl"><label>Size</label><input type="number" value="${t.fontSize}" min="8" max="200" onchange="updateTextOverlay(${t.id},'fontSize',+this.value)"></div>
+        <div class="ctrl"><label>Color</label><input type="color" value="${t.color}" onchange="updateTextOverlay(${t.id},'color',this.value)"></div>
+      </div>
+      <div class="ctrl"><label>Font</label>
+        <select onchange="updateTextOverlay(${t.id},'fontFamily',this.value)">
+          <option ${t.fontFamily==='Arial Black'?'selected':''}>Arial Black</option>
+          <option ${t.fontFamily==='Impact'?'selected':''}>Impact</option>
+          <option ${t.fontFamily==='Courier New'?'selected':''}>Courier New</option>
+          <option ${t.fontFamily==='Georgia'?'selected':''}>Georgia</option>
+          <option ${t.fontFamily==='Verdana'?'selected':''}>Verdana</option>
+          <option ${t.fontFamily==='monospace'?'selected':''}>monospace</option>
+        </select>
+      </div>
+      <div class="row">
+        <div class="ctrl"><label>Letter Spacing</label><input type="number" value="${t.letterSpacing}" min="0" max="20" onchange="updateTextOverlay(${t.id},'letterSpacing',+this.value)"></div>
+        <div class="ctrl"><label>Opacity</label><input type="range" min="0" max="1" step="0.05" value="${t.opacity}" oninput="updateTextOverlay(${t.id},'opacity',+this.value)"></div>
+      </div>
+      <div class="row" style="margin-top:4px">
+        <div class="toggle-row"><span>Bold</span><label class="toggle"><input type="checkbox" ${t.bold?'checked':''} onchange="updateTextOverlay(${t.id},'bold',this.checked)"><span class="slider"></span></label></div>
+        <div class="toggle-row"><span>Shadow</span><label class="toggle"><input type="checkbox" ${t.shadow?'checked':''} onchange="updateTextOverlay(${t.id},'shadow',this.checked)"><span class="slider"></span></label></div>
+      </div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function renderTextOverlaysOnScreen() {
+  const container = $('text-overlay-container');
+  container.innerHTML = '';
+  textOverlays.forEach(t => {
+    const el = document.createElement('div');
+    el.className = 'text-overlay-el';
+    el.textContent = t.text;
+    el.style.left = t.x + '%';
+    el.style.top = t.y + '%';
+    el.style.transform = 'translate(-50%, -50%)';
+    el.style.fontSize = t.fontSize + 'px';
+    el.style.fontFamily = t.fontFamily;
+    el.style.color = t.color;
+    el.style.opacity = t.opacity;
+    el.style.fontWeight = t.bold ? '900' : '400';
+    el.style.fontStyle = t.italic ? 'italic' : 'normal';
+    el.style.letterSpacing = t.letterSpacing + 'px';
+    if (t.shadow) el.style.textShadow = `0 0 20px ${t.color}, 0 0 40px ${t.color}44`;
+    container.appendChild(el);
+  });
+}
+
+// ============================================
+// ANIMATION LOOP
+// ============================================
+function animate(time) {
+  if (isExporting) return;
+  animationId = requestAnimationFrame(animate);
+  
+  // Throttle to target FPS
+  const delta = time - lastFrameTime;
+  if (delta < frameInterval) return;
+  lastFrameTime = time - (delta % frameInterval);
+  
+  const dt = clock.getDelta();
+  const elapsed = clock.getElapsedTime();
+  
+  updateScene(elapsed, dt);
+  
+  composer.render();
+}
+
+function updateScene(elapsed, dt) {
+  // Auto rotate - rotate the container which holds both model and point cloud
+  if (modelContainer && $('autoRotate').checked) {
+    const speed = parseFloat($('rotSpeed').value) * 0.5;
+    const axis = $('rotAxis').value;
+    
+    if (axis === 'y' || axis === 'xy') {
+      modelContainer.rotation.y += speed * dt;
+    }
+    if (axis === 'x' || axis === 'xy') {
+      modelContainer.rotation.x += speed * dt * 0.7;
+    }
+    if (axis === 'z') {
+      modelContainer.rotation.z += speed * dt;
+    }
+  }
+  
+  // Float/bob animation
+  if (modelContainer && $('enableFloat').checked) {
+    const amp = parseFloat($('floatAmp').value);
+    const spd = parseFloat($('floatSpeed').value);
+    modelContainer.position.y = Math.sin(elapsed * spd * 2) * amp;
+  } else if (modelContainer) {
+    modelContainer.position.y = 0;
+  }
+  
+  // Update point cloud uniforms
+  if (pointCloud && pointCloud.material && pointCloud.material.uniforms) {
+    const u = pointCloud.material.uniforms;
+    u.time.value = elapsed;
+    u.pointSize.value = parseFloat($('pointSize').value);
+    
+    // Scan effect
+    if ($('enableScan').checked) {
+      u.scanEnabled.value = 1;
+      const scanSpeed = parseFloat($('scanSpeed').value);
+      u.scanPos.value = (Math.sin(elapsed * scanSpeed) * 0.5 + 0.5);
+      u.scanWidth.value = parseFloat($('scanWidth').value);
+      u.scanBrightness.value = parseFloat($('scanBright').value);
+      const dirs = {y:0, x:1, z:2, radial:3};
+      u.scanDir.value = dirs[$('scanDir').value] || 0;
+    } else {
+      u.scanEnabled.value = 0;
+    }
+    
+    // Glitch
+    u.glitchEnabled.value = $('enableGlitch').checked ? 1 : 0;
+    u.glitchIntensity.value = parseFloat($('glitchIntensity').value);
+  }
+  
+  // Post-processing time uniforms
+  if (vhsPass) vhsPass.uniforms.time.value = elapsed;
+  if (crtPass) crtPass.uniforms.time.value = elapsed;
+  
+  controls.update();
+}
+
+// ============================================
+// EXPORT SYSTEM
+// ============================================
+// ============================================
+// EXPORT SYSTEM
+// ============================================
+async function startExport() {
+  if (isExporting || !modelContainer) {
+    alert('Please load a model first');
+    return;
+  }
+  
+  const format = $('exportFormat').value;
+  const duration = parseFloat($('exportDuration').value);
+  const fps = parseInt($('exportFPS').value);
+  const quality = parseFloat($('exportQuality').value);
+  const totalFrames = Math.floor(duration * fps);
+  
+  isExporting = true;
+  exportCancelled = false;
+  $('exportBtn').disabled = true;
+  $('export-overlay').classList.add('show');
+  
+  // Stop live animation
+  cancelAnimationFrame(animationId);
+  
+  // Save current state
+  const savedState = {
+    rotX: modelContainer.rotation.x,
+    rotY: modelContainer.rotation.y,
+    rotZ: modelContainer.rotation.z,
+    posY: modelContainer.position.y
+  };
+  
+  const w = parseInt($('canvasW').value);
+  const h = parseInt($('canvasH').value);
+  
+  try {
+    if (format === 'gif') {
+      await exportGIF(totalFrames, fps, duration, w, h);
+    } else {
+      await exportVideo(totalFrames, fps, duration, w, h);
+    }
+  } catch (err) {
+    console.error('Export error:', err);
+    alert('Export failed: ' + err.message);
+  }
+  
+  // Restore state
+  if (modelContainer) {
+    modelContainer.rotation.x = savedState.rotX;
+    modelContainer.rotation.y = savedState.rotY;
+    modelContainer.rotation.z = savedState.rotZ;
+    modelContainer.position.y = savedState.posY;
+  }
+  
+  isExporting = false;
+  $('exportBtn').disabled = false;
+  $('export-overlay').classList.remove('show');
+  
+  // Resume live animation
+  clock = new THREE.Clock();
+  lastFrameTime = 0;
+  animate(0);
+}
+
+async function exportVideo(totalFrames, fps, duration, w, h) {
+  updateExportProgress(0, totalFrames, 'Preparing video...');
+  
+  // Collect all frames as blobs first
+  const frames = [];
+  const frameDelay = 1000 / fps;
+  
+  for (let i = 0; i < totalFrames; i++) {
+    if (exportCancelled) return;
+    
+    const t = (i / totalFrames) * duration;
+    renderExportFrame(t);
+    
+    // Wait for render to complete
+    await waitForRender();
+    
+    // Capture frame as blob
+    const blob = await new Promise(resolve => {
+      $('renderCanvas').toBlob(resolve, 'image/webp', 0.9);
+    });
+    frames.push(blob);
+    
+    updateExportProgress(i + 1, totalFrames, 'Capturing frames...');
+  }
+  
+  if (exportCancelled || frames.length === 0) return;
+  
+  updateExportProgress(totalFrames, totalFrames, 'Encoding video...');
+  
+  // Now encode video using MediaRecorder with a virtual canvas
+  const videoCanvas = document.createElement('canvas');
+  videoCanvas.width = w;
+  videoCanvas.height = h;
+  const videoCtx = videoCanvas.getContext('2d');
+  
+  const stream = videoCanvas.captureStream(fps);
+  
+  let mimeType = 'video/webm;codecs=vp9';
+  if (!MediaRecorder.isTypeSupported(mimeType)) {
+    mimeType = 'video/webm;codecs=vp8';
+    if (!MediaRecorder.isTypeSupported(mimeType)) {
+      mimeType = 'video/webm';
+    }
+  }
+  
+  const recorder = new MediaRecorder(stream, { 
+    mimeType,
+    videoBitsPerSecond: 8000000 
+  });
+  
+  const chunks = [];
+  recorder.ondataavailable = e => {
+    if (e.data.size > 0) chunks.push(e.data);
+  };
+  
+  const recordingDone = new Promise(resolve => {
+    recorder.onstop = resolve;
+  });
+  
+  recorder.start();
+  
+  // Play back frames to the video canvas
+  for (let i = 0; i < frames.length; i++) {
+    if (exportCancelled) break;
+    
+    const img = await createImageBitmap(frames[i]);
+    videoCtx.clearRect(0, 0, w, h);
+    videoCtx.drawImage(img, 0, 0);
+    
+    // Draw text overlays
+    drawTextOverlaysToCanvas(videoCtx, w, h);
+    
+    // Wait for frame duration
+    await new Promise(r => setTimeout(r, frameDelay));
+    
+    updateExportProgress(i + 1, frames.length, 'Encoding video...');
+  }
+  
+  // Add a small delay before stopping to ensure last frame is captured
+  await new Promise(r => setTimeout(r, 100));
+  recorder.stop();
+  await recordingDone;
+  
+  if (!exportCancelled && chunks.length > 0) {
+    const blob = new Blob(chunks, { type: mimeType });
+    downloadBlob(blob, `lidar-flyer-${Date.now()}.webm`);
+  }
+  
+  // Clean up
+  frames.length = 0;
+}
+
+async function exportGIF(totalFrames, fps, duration, w, h) {
+  // Scale down for GIF to manage file size
+  const maxGifSize = 540;
+  const scale = Math.min(1, maxGifSize / Math.max(w, h));
+  const gw = Math.round(w * scale);
+  const gh = Math.round(h * scale);
+  
+  updateExportProgress(0, totalFrames, 'Preparing GIF...');
+  
+  // Create temporary canvas for scaled frames
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = gw;
+  tempCanvas.height = gh;
+  const tempCtx = tempCanvas.getContext('2d');
+  
+  // Initialize GIF encoder
+  const gif = new GIF({
+    workers: 4,
+    quality: 8,
+    width: gw,
+    height: gh,
+    workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js',
+    dither: false
+  });
+  
+  const delay = Math.round(1000 / fps);
+  
+  // Capture all frames
+  for (let i = 0; i < totalFrames; i++) {
+    if (exportCancelled) {
+      gif.abort();
+      return;
+    }
+    
+    const t = (i / totalFrames) * duration;
+    renderExportFrame(t);
+    
+    // Wait for WebGL to finish rendering
+    await waitForRender();
+    
+    // Draw to temp canvas (scaled)
+    tempCtx.clearRect(0, 0, gw, gh);
+    tempCtx.drawImage($('renderCanvas'), 0, 0, gw, gh);
+    
+    // Draw text overlays
+    drawTextOverlaysToCanvas(tempCtx, gw, gh);
+    
+    // Add frame to GIF
+    gif.addFrame(tempCtx, { copy: true, delay: delay });
+    
+    updateExportProgress(i + 1, totalFrames, 'Capturing frames...');
+    
+    // Small yield to prevent UI freeze
+    if (i % 2 === 0) {
+      await new Promise(r => setTimeout(r, 0));
+    }
+  }
+  
+  if (exportCancelled) return;
+  
+  // Render GIF
+  updateExportProgress(totalFrames, totalFrames, 'Encoding GIF...');
+  
+  return new Promise((resolve, reject) => {
+    gif.on('finished', blob => {
+      downloadBlob(blob, `lidar-flyer-${Date.now()}.gif`);
+      resolve();
+    });
+    
+    gif.on('progress', p => {
+      const pct = Math.round(p * 100);
+      $('export-info').textContent = `Encoding GIF: ${pct}%`;
+      const circle = $('progress-circle');
+      circle.style.strokeDashoffset = 220 * (1 - p);
+    });
+    
+    gif.on('error', err => {
+      console.error('GIF error:', err);
+      reject(err);
+    });
+    
+    gif.render();
+  });
+}
+
+// Helper to wait for WebGL render to complete
+function waitForRender() {
+  return new Promise(resolve => {
+    // Force WebGL to finish
+    renderer.domElement.getContext('webgl') || renderer.domElement.getContext('webgl2');
+    
+    // Use requestAnimationFrame to ensure render is complete
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        resolve();
+      });
+    });
+  });
+}
+
+function renderExportFrame(time) {
+  // Apply animations based on time
+  if (modelContainer) {
+    // Reset rotations first
+    modelContainer.rotation.set(0, 0, 0);
+    modelContainer.position.y = 0;
+    
+    // Apply rotation animation
+    if ($('autoRotate').checked) {
+      const speed = parseFloat($('rotSpeed').value);
+      const axis = $('rotAxis').value;
+      
+      if (axis === 'y') {
+        modelContainer.rotation.y = speed * time;
+      } else if (axis === 'x') {
+        modelContainer.rotation.x = speed * time;
+      } else if (axis === 'z') {
+        modelContainer.rotation.z = speed * time;
+      } else if (axis === 'xy') {
+        modelContainer.rotation.y = speed * time;
+        modelContainer.rotation.x = speed * time * 0.7;
+      }
+    }
+    
+    // Apply float animation
+    if ($('enableFloat').checked) {
+      const amp = parseFloat($('floatAmp').value);
+      const spd = parseFloat($('floatSpeed').value);
+      modelContainer.position.y = Math.sin(time * spd * 2) * amp;
+    }
+  }
+  
+  // Update point cloud uniforms
+  if (pointCloud && pointCloud.material && pointCloud.material.uniforms) {
+    const u = pointCloud.material.uniforms;
+    u.time.value = time;
+    
+    if ($('enableScan').checked) {
+      u.scanEnabled.value = 1;
+      const scanSpeed = parseFloat($('scanSpeed').value);
+      u.scanPos.value = (Math.sin(time * scanSpeed) * 0.5 + 0.5);
+      u.scanWidth.value = parseFloat($('scanWidth').value);
+      u.scanBrightness.value = parseFloat($('scanBright').value);
+      const dirs = { y: 0, x: 1, z: 2, radial: 3 };
+      u.scanDir.value = dirs[$('scanDir').value] || 0;
+    } else {
+      u.scanEnabled.value = 0;
+    }
+    
+    u.glitchEnabled.value = $('enableGlitch').checked ? 1 : 0;
+    u.glitchIntensity.value = parseFloat($('glitchIntensity').value);
+  }
+  
+  // Update post-processing time
+  if (vhsPass) vhsPass.uniforms.time.value = time;
+  if (crtPass) crtPass.uniforms.time.value = time;
+  
+  // Update model matrices
+  if (modelContainer) modelContainer.updateMatrixWorld(true);
+  
+  // Render the scene
+  composer.render();
+  
+  // Force WebGL to execute commands
+  renderer.getContext().finish();
+}
+
+function drawTextOverlaysToCanvas(ctx, w, h) {
+  const originalW = parseInt($('canvasW').value);
+  const scale = w / originalW;
+  
+  textOverlays.forEach(t => {
+    ctx.save();
+    
+    ctx.globalAlpha = t.opacity;
+    const fontSize = Math.round(t.fontSize * scale);
+    ctx.font = `${t.bold ? '900' : '400'} ${fontSize}px ${t.fontFamily}`;
+    ctx.fillStyle = t.color;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    if (t.shadow) {
+      ctx.shadowColor = t.color;
+      ctx.shadowBlur = 20 * scale;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+    }
+    
+    const x = (t.x / 100) * w;
+    const y = (t.y / 100) * h;
+    
+    if (t.letterSpacing > 0) {
+      const spacing = t.letterSpacing * scale;
+      const chars = t.text.split('');
+      
+      // Calculate total width
+      let totalWidth = 0;
+      chars.forEach(c => {
+        totalWidth += ctx.measureText(c).width + spacing;
+      });
+      totalWidth -= spacing; // Remove last spacing
+      
+      // Draw characters
+      let currentX = x - totalWidth / 2;
+      chars.forEach(c => {
+        const charWidth = ctx.measureText(c).width;
+        ctx.fillText(c, currentX + charWidth / 2, y);
+        currentX += charWidth + spacing;
+      });
+    } else {
+      ctx.fillText(t.text, x, y);
+    }
+    
+    ctx.restore();
+  });
+}
+
+function updateExportProgress(current, total, message) {
+  const pct = total > 0 ? current / total : 0;
+  const circle = $('progress-circle');
+  const circumference = 220;
+  circle.style.strokeDashoffset = circumference * (1 - pct);
+  $('export-info').textContent = `${message} ${Math.round(pct * 100)}%`;
+}
+
+function cancelExport() {
+  exportCancelled = true;
+  $('export-info').textContent = 'Cancelling...';
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  
+  // Cleanup URL after download starts
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+// ============================================
+// WINDOW RESIZE
+// ============================================
+window.addEventListener('resize', () => {
+  const w = parseInt($('canvasW').value);
+  const h = parseInt($('canvasH').value);
+  fitCanvasInView(w, h);
+});
+
+// ============================================
+// INIT
+// ============================================
+init();
+</script>
+</body>
+</html>
