@@ -1,1431 +1,170 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ART LAB | Cinematronic</title>
-    <meta name="description" content="Laboratorio de experimentos en new media, arte generativo y tecnología obsoleta">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet">
-    <style>
-        /* ═══════════════════════════════════════════
-           ART LAB - Cinematronic
-           Experimental New Media Laboratory
-        ═══════════════════════════════════════════ */
-        
-        :root {
-            --black: #000000;
-            --dark: #0a0a0a;
-            --darker: #050505;
-            --accent: #ffffff;
-            --accent-dim: #333333;
-            --accent-glow: rgba(255, 255, 255, 0.1);
-            --red: #ff0033;
-            --green: #00ff41;
-            --cyan: #00d4ff;
-            --magenta: #ff00ff;
-            --noise-opacity: 0.03;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            font-family: 'JetBrains Mono', monospace;
-            background: var(--black);
-            color: var(--accent);
-            overflow-x: hidden;
-            cursor: crosshair;
-        }
-
-        ::selection {
-            background: var(--red);
-            color: var(--black);
-        }
-
-        /* ═══════════════════════════════════════════
-           GENERATIVE BACKGROUND CANVAS
-        ═══════════════════════════════════════════ */
-        
-        #bg-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -2;
-            opacity: 0.6;
-        }
-
-        /* ═══════════════════════════════════════════
-           NOISE OVERLAY
-        ═══════════════════════════════════════════ */
-        
-        .noise-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            pointer-events: none;
-            opacity: var(--noise-opacity);
-        }
-
-        .noise-overlay::before {
-            content: "";
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-            animation: noiseMove 0.5s steps(10) infinite;
-        }
-
-        @keyframes noiseMove {
-            0%, 100% { transform: translate(0, 0); }
-            10% { transform: translate(-2%, -2%); }
-            20% { transform: translate(2%, 2%); }
-            30% { transform: translate(-1%, 1%); }
-            40% { transform: translate(1%, -1%); }
-            50% { transform: translate(-2%, 2%); }
-            60% { transform: translate(2%, -2%); }
-            70% { transform: translate(0, 1%); }
-            80% { transform: translate(-1%, 0); }
-            90% { transform: translate(1%, 1%); }
-        }
-
-        /* ═══════════════════════════════════════════
-           SCANLINES
-        ═══════════════════════════════════════════ */
-        
-        .scanlines {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 9999;
-            pointer-events: none;
-            background: repeating-linear-gradient(
-                0deg,
-                rgba(0, 0, 0, 0.1) 0px,
-                rgba(0, 0, 0, 0.1) 1px,
-                transparent 1px,
-                transparent 2px
-            );
-            opacity: 0.3;
-        }
-
-        /* ═══════════════════════════════════════════
-           CURSOR TRACKER
-        ═══════════════════════════════════════════ */
-        
-        .cursor-glow {
-            position: fixed;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: -1;
-            transform: translate(-50%, -50%);
-            transition: opacity 0.3s;
-        }
-
-        /* ═══════════════════════════════════════════
-           HEADER / NAV
-        ═══════════════════════════════════════════ */
-        
-        header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            padding: 20px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 1000;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, transparent 100%);
-        }
-
-        .logo {
-            font-size: 0.75rem;
-            font-weight: 300;
-            letter-spacing: 0.3em;
-            text-transform: uppercase;
-            color: var(--accent-dim);
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-
-        .logo:hover {
-            color: var(--accent);
-            text-shadow: 0 0 20px var(--accent-glow);
-        }
-
-        .logo span {
-            color: var(--red);
-        }
-
-        .nav-status {
-            font-size: 0.65rem;
-            color: var(--accent-dim);
-            letter-spacing: 0.2em;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .status-dot {
-            width: 6px;
-            height: 6px;
-            background: var(--green);
-            border-radius: 50%;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; box-shadow: 0 0 5px var(--green); }
-            50% { opacity: 0.3; box-shadow: none; }
-        }
-
-        .back-link {
-            font-size: 0.7rem;
-            color: var(--accent-dim);
-            text-decoration: none;
-            letter-spacing: 0.1em;
-            transition: all 0.3s;
-            border: 1px solid var(--accent-dim);
-            padding: 8px 16px;
-        }
-
-        .back-link:hover {
-            color: var(--accent);
-            border-color: var(--accent);
-            background: rgba(255,255,255,0.05);
-        }
-
-        /* ═══════════════════════════════════════════
-           HERO SECTION
-        ═══════════════════════════════════════════ */
-        
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 100px 40px;
-            text-align: center;
-            position: relative;
-        }
-
-        .hero-title {
-            font-size: clamp(3rem, 12vw, 10rem);
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            line-height: 0.9;
-            margin-bottom: 30px;
-            position: relative;
-        }
-
-        .hero-title .line {
-            display: block;
-            opacity: 0;
-            transform: translateY(50px);
-            animation: revealLine 1s forwards;
-        }
-
-        .hero-title .line:nth-child(1) { animation-delay: 0.2s; }
-        .hero-title .line:nth-child(2) { animation-delay: 0.4s; }
-
-        @keyframes revealLine {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .hero-title .glitch {
-            position: relative;
-            display: inline-block;
-        }
-
-        .hero-title .glitch::before,
-        .hero-title .glitch::after {
-            content: attr(data-text);
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0.8;
-        }
-
-        .hero-title .glitch::before {
-            color: var(--cyan);
-            animation: glitch1 3s infinite;
-            clip-path: polygon(0 0, 100% 0, 100% 33%, 0 33%);
-        }
-
-        .hero-title .glitch::after {
-            color: var(--red);
-            animation: glitch2 3s infinite;
-            clip-path: polygon(0 66%, 100% 66%, 100% 100%, 0 100%);
-        }
-
-        @keyframes glitch1 {
-            0%, 90%, 100% { transform: translate(0); }
-            92% { transform: translate(-3px, 1px); }
-            94% { transform: translate(3px, -1px); }
-            96% { transform: translate(-2px, 0); }
-        }
-
-        @keyframes glitch2 {
-            0%, 90%, 100% { transform: translate(0); }
-            91% { transform: translate(3px, 1px); }
-            93% { transform: translate(-3px, -1px); }
-            95% { transform: translate(2px, 0); }
-        }
-
-        .hero-subtitle {
-            font-size: 0.75rem;
-            font-weight: 300;
-            letter-spacing: 0.5em;
-            text-transform: uppercase;
-            color: var(--accent-dim);
-            margin-bottom: 50px;
-            opacity: 0;
-            animation: fadeIn 1s 0.8s forwards;
-        }
-
-        @keyframes fadeIn {
-            to { opacity: 1; }
-        }
-
-        .hero-description {
-            max-width: 600px;
-            font-size: 0.85rem;
-            line-height: 1.8;
-            color: var(--accent-dim);
-            opacity: 0;
-            animation: fadeIn 1s 1s forwards;
-        }
-
-        .scroll-indicator {
-            position: absolute;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            opacity: 0;
-            animation: fadeIn 1s 1.5s forwards;
-        }
-
-        .scroll-indicator span {
-            font-size: 0.6rem;
-            letter-spacing: 0.3em;
-            color: var(--accent-dim);
-        }
-
-        .scroll-line {
-            width: 1px;
-            height: 60px;
-            background: linear-gradient(to bottom, var(--accent-dim), transparent);
-            animation: scrollPulse 2s ease-in-out infinite;
-        }
-
-        @keyframes scrollPulse {
-            0%, 100% { transform: scaleY(1); opacity: 1; }
-            50% { transform: scaleY(0.5); opacity: 0.5; }
-        }
-
-        /* ═══════════════════════════════════════════
-           EXPERIMENTS SECTION
-        ═══════════════════════════════════════════ */
-        
-        .experiments {
-            padding: 100px 40px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            margin-bottom: 80px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--accent-dim);
-        }
-
-        .section-title {
-            font-size: 0.7rem;
-            font-weight: 300;
-            letter-spacing: 0.4em;
-            text-transform: uppercase;
-            color: var(--accent-dim);
-        }
-
-        .section-count {
-            font-size: 0.65rem;
-            color: var(--accent-dim);
-            letter-spacing: 0.2em;
-        }
-
-        /* ═══════════════════════════════════════════
-           EXPERIMENT CARDS
-        ═══════════════════════════════════════════ */
-        
-        .experiments-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 2px;
-            background: var(--accent-dim);
-        }
-
-        .experiment-card {
-            background: var(--black);
-            padding: 60px 40px;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-            cursor: pointer;
-            min-height: 400px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .experiment-card::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.02) 100%);
-            opacity: 0;
-            transition: opacity 0.5s;
-        }
-
-        .experiment-card:hover::before {
-            opacity: 1;
-        }
-
-        .experiment-card:hover {
-            background: var(--darker);
-        }
-
-        .experiment-card:hover .card-number {
-            transform: translateX(10px);
-            color: var(--accent);
-        }
-
-        .experiment-card:hover .card-title {
-            transform: translateX(10px);
-        }
-
-        .experiment-card:hover .card-visual {
-            opacity: 0.3;
-            transform: scale(1.1);
-        }
-
-        .experiment-card:hover .card-status {
-            color: var(--green);
-        }
-
-        .card-header {
-            position: relative;
-            z-index: 2;
-        }
-
-        .card-number {
-            font-size: 0.65rem;
-            font-weight: 300;
-            letter-spacing: 0.3em;
-            color: var(--accent-dim);
-            margin-bottom: 20px;
-            transition: all 0.5s;
-        }
-
-        .card-title {
-            font-size: clamp(1.5rem, 3vw, 2.5rem);
-            font-weight: 700;
-            line-height: 1.1;
-            margin-bottom: 15px;
-            transition: all 0.5s;
-        }
-
-        .card-subtitle {
-            font-size: 0.75rem;
-            font-weight: 300;
-            color: var(--accent-dim);
-            letter-spacing: 0.1em;
-            line-height: 1.6;
-            max-width: 400px;
-        }
-
-        .card-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            position: relative;
-            z-index: 2;
-        }
-
-        .card-tags {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .card-tag {
-            font-size: 0.55rem;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            color: var(--accent-dim);
-            border: 1px solid var(--accent-dim);
-            padding: 5px 10px;
-            transition: all 0.3s;
-        }
-
-        .experiment-card:hover .card-tag {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
-        .card-status {
-            font-size: 0.6rem;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            color: var(--accent-dim);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s;
-        }
-
-        .card-status::before {
-            content: "";
-            width: 6px;
-            height: 6px;
-            background: currentColor;
-            border-radius: 50%;
-        }
-
-        /* Card Visual Elements */
-        .card-visual {
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 50%;
-            height: 100%;
-            opacity: 0.1;
-            transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
-            pointer-events: none;
-        }
-
-        /* Visual patterns for each card */
-        .visual-hologram {
-            background: 
-                repeating-linear-gradient(
-                    0deg,
-                    transparent,
-                    transparent 2px,
-                    var(--cyan) 2px,
-                    var(--cyan) 4px
-                );
-            mask-image: linear-gradient(to left, black, transparent);
-            -webkit-mask-image: linear-gradient(to left, black, transparent);
-        }
-
-        .visual-reactable {
-            background: 
-                radial-gradient(circle at 30% 30%, var(--magenta) 0%, transparent 30%),
-                radial-gradient(circle at 70% 60%, var(--cyan) 0%, transparent 25%),
-                radial-gradient(circle at 50% 80%, var(--green) 0%, transparent 20%);
-            mask-image: linear-gradient(to left, black, transparent);
-            -webkit-mask-image: linear-gradient(to left, black, transparent);
-        }
-
-        .visual-gesture {
-            background: 
-                conic-gradient(from 0deg at 50% 50%, 
-                    transparent 0deg, 
-                    var(--accent) 10deg, 
-                    transparent 20deg,
-                    transparent 90deg,
-                    var(--accent) 100deg,
-                    transparent 110deg,
-                    transparent 180deg,
-                    var(--accent) 190deg,
-                    transparent 200deg,
-                    transparent 270deg,
-                    var(--accent) 280deg,
-                    transparent 290deg
-                );
-            mask-image: linear-gradient(to left, black, transparent);
-            -webkit-mask-image: linear-gradient(to left, black, transparent);
-            animation: rotateVisual 20s linear infinite;
-        }
-
-        @keyframes rotateVisual {
-            to { transform: rotate(360deg); }
-        }
-
-        .visual-visualizer {
-            background: repeating-linear-gradient(
-                90deg,
-                var(--green) 0px,
-                var(--green) 3px,
-                transparent 3px,
-                transparent 8px
-            );
-            mask-image: linear-gradient(to left, black, transparent);
-            -webkit-mask-image: linear-gradient(to left, black, transparent);
-            animation: visualizerPulse 1s ease-in-out infinite;
-        }
-
-        @keyframes visualizerPulse {
-            0%, 100% { transform: scaleY(0.5); }
-            50% { transform: scaleY(1); }
-        }
-
-        .visual-neural {
-            background: 
-                radial-gradient(circle at 20% 20%, var(--red) 0%, transparent 10%),
-                radial-gradient(circle at 80% 30%, var(--red) 0%, transparent 8%),
-                radial-gradient(circle at 40% 70%, var(--red) 0%, transparent 12%),
-                radial-gradient(circle at 70% 80%, var(--red) 0%, transparent 6%),
-                linear-gradient(45deg, transparent 40%, var(--red) 40.5%, var(--red) 41%, transparent 41.5%),
-                linear-gradient(-30deg, transparent 60%, var(--red) 60.5%, var(--red) 61%, transparent 61.5%);
-            mask-image: linear-gradient(to left, black, transparent);
-            -webkit-mask-image: linear-gradient(to left, black, transparent);
-        }
-
-        .visual-datascape {
-            background: 
-                linear-gradient(180deg, 
-                    transparent 0%, 
-                    var(--cyan) 50%, 
-                    transparent 50.5%,
-                    transparent 100%
-                ),
-                linear-gradient(180deg, 
-                    transparent 25%, 
-                    var(--magenta) 25.5%, 
-                    transparent 26%
-                ),
-                linear-gradient(180deg, 
-                    transparent 75%, 
-                    var(--green) 75.5%, 
-                    transparent 76%
-                );
-            mask-image: linear-gradient(to left, black, transparent);
-            -webkit-mask-image: linear-gradient(to left, black, transparent);
-            animation: dataPulse 3s ease-in-out infinite;
-        }
-
-        @keyframes dataPulse {
-            0%, 100% { background-position: 0 0; }
-            50% { background-position: 0 20px; }
-        }
-
-        /* ═══════════════════════════════════════════
-           FEATURED EXPERIMENT (Large Card)
-        ═══════════════════════════════════════════ */
-        
-        .experiment-card.featured {
-            grid-column: span 2;
-            min-height: 500px;
-            background: linear-gradient(135deg, var(--black) 0%, var(--darker) 100%);
-        }
-
-        .experiment-card.featured .card-title {
-            font-size: clamp(2rem, 5vw, 4rem);
-        }
-
-        .experiment-card.featured .card-visual {
-            width: 60%;
-            opacity: 0.15;
-        }
-
-        /* ═══════════════════════════════════════════
-           MANIFESTO SECTION
-        ═══════════════════════════════════════════ */
-        
-        .manifesto {
-            padding: 150px 40px;
-            max-width: 900px;
-            margin: 0 auto;
-            text-align: center;
-        }
-
-        .manifesto-text {
-            font-size: clamp(1.2rem, 3vw, 2rem);
-            font-weight: 300;
-            line-height: 1.8;
-            color: var(--accent-dim);
-        }
-
-        .manifesto-text strong {
-            color: var(--accent);
-            font-weight: 400;
-        }
-
-        .manifesto-signature {
-            margin-top: 60px;
-            font-size: 0.7rem;
-            letter-spacing: 0.3em;
-            color: var(--accent-dim);
-        }
-
-        /* ═══════════════════════════════════════════
-           TECH STACK
-        ═══════════════════════════════════════════ */
-        
-        .tech-stack {
-            padding: 100px 40px;
-            border-top: 1px solid var(--accent-dim);
-            border-bottom: 1px solid var(--accent-dim);
-        }
-
-        .tech-content {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 80px;
-            align-items: start;
-        }
-
-        .tech-label {
-            font-size: 0.65rem;
-            letter-spacing: 0.4em;
-            text-transform: uppercase;
-            color: var(--accent-dim);
-        }
-
-        .tech-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .tech-item {
-            font-size: 0.75rem;
-            letter-spacing: 0.1em;
-            color: var(--accent-dim);
-            border: 1px solid var(--accent-dim);
-            padding: 10px 20px;
-            transition: all 0.3s;
-            cursor: default;
-        }
-
-        .tech-item:hover {
-            color: var(--accent);
-            border-color: var(--accent);
-            background: rgba(255,255,255,0.03);
-        }
-
-        /* ═══════════════════════════════════════════
-           FOOTER
-        ═══════════════════════════════════════════ */
-        
-        footer {
-            padding: 80px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .footer-left {
-            font-size: 0.65rem;
-            color: var(--accent-dim);
-            letter-spacing: 0.2em;
-        }
-
-        .footer-links {
-            display: flex;
-            gap: 30px;
-        }
-
-        .footer-link {
-            font-size: 0.7rem;
-            color: var(--accent-dim);
-            text-decoration: none;
-            letter-spacing: 0.15em;
-            transition: all 0.3s;
-            position: relative;
-        }
-
-        .footer-link::after {
-            content: "";
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 0;
-            height: 1px;
-            background: var(--accent);
-            transition: width 0.3s;
-        }
-
-        .footer-link:hover {
-            color: var(--accent);
-        }
-
-        .footer-link:hover::after {
-            width: 100%;
-        }
-
-        /* ═══════════════════════════════════════════
-           LOADING SCREEN
-        ═══════════════════════════════════════════ */
-        
-        .loader {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--black);
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            transition: opacity 0.5s, visibility 0.5s;
-        }
-
-        .loader.hidden {
-            opacity: 0;
-            visibility: hidden;
-        }
-
-        .loader-text {
-            font-size: 0.7rem;
-            letter-spacing: 0.4em;
-            color: var(--accent-dim);
-            margin-bottom: 30px;
-        }
-
-        .loader-bar {
-            width: 200px;
-            height: 1px;
-            background: var(--accent-dim);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .loader-bar::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 0;
-            height: 100%;
-            background: var(--accent);
-            animation: loading 2s forwards;
-        }
-
-        @keyframes loading {
-            to { width: 100%; }
-        }
-
-        .loader-glitch {
-            font-size: 0.6rem;
-            color: var(--accent-dim);
-            margin-top: 20px;
-            letter-spacing: 0.2em;
-            opacity: 0;
-            animation: blinkIn 0.1s 1.5s forwards;
-        }
-
-        @keyframes blinkIn {
-            to { opacity: 1; }
-        }
-
-        /* ═══════════════════════════════════════════
-           RESPONSIVE
-        ═══════════════════════════════════════════ */
-        
-        @media (max-width: 1024px) {
-            .experiments-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .experiment-card.featured {
-                grid-column: span 1;
-            }
-
-            .tech-content {
-                grid-template-columns: 1fr;
-                gap: 40px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            header {
-                padding: 15px 20px;
-            }
-
-            .hero {
-                padding: 80px 20px;
-            }
-
-            .hero-title {
-                font-size: clamp(2rem, 15vw, 4rem);
-            }
-
-            .experiments {
-                padding: 60px 20px;
-            }
-
-            .experiment-card {
-                padding: 40px 25px;
-                min-height: 350px;
-            }
-
-            .section-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-
-            .manifesto {
-                padding: 80px 20px;
-            }
-
-            .tech-stack {
-                padding: 60px 20px;
-            }
-
-            footer {
-                flex-direction: column;
-                gap: 30px;
-                text-align: center;
-                padding: 60px 20px;
-            }
-
-            .footer-links {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-
-            .nav-status {
-                display: none;
-            }
-
-            .card-visual {
-                width: 100%;
-                opacity: 0.05;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .card-tags {
-                display: none;
-            }
-
-            .card-title {
-                font-size: 1.3rem;
-            }
-
-            .experiment-card {
-                min-height: 300px;
-            }
-        }
-
-        /* ═══════════════════════════════════════════
-           INTERACTIVE STATES
-        ═══════════════════════════════════════════ */
-        
-        .experiment-card[data-status="live"] .card-status {
-            color: var(--green);
-        }
-
-        .experiment-card[data-status="dev"] .card-status {
-            color: var(--cyan);
-        }
-
-        .experiment-card[data-status="concept"] .card-status {
-            color: var(--magenta);
-        }
-
-        .experiment-card[data-status="beta"] .card-status {
-            color: var(--red);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ART LAB | Ciro Mendoza</title>
+<meta name="description" content="Laboratorio de experimentos en new media, arte generativo y tecnología obsoleta">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root{--black:#000000;--dark:#0a0a0a;--darker:#050505;--accent:#ffffff;--accent-dim:#333333;--accent-glow:rgba(255,255,255,0.1);--red:#ff0033;--green:#00ff41;--cyan:#00d4ff;--magenta:#ff00ff;--noise-opacity:0.03;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'JetBrains Mono',monospace;background:var(--black);color:var(--accent);overflow-x:hidden;cursor:crosshair;}
+::selection{background:var(--red);color:var(--black);}
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-2;opacity:0.6;}
+.noise-overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none;opacity:var(--noise-opacity);}
+.noise-overlay::before{content:"";position:absolute;top:-50%;left:-50%;width:200%;height:200%;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");animation:noiseMove 0.5s steps(10) infinite;}
+@keyframes noiseMove{0%,100%{transform:translate(0,0);}10%{transform:translate(-2%,-2%);}20%{transform:translate(2%,2%);}30%{transform:translate(-1%,1%);}40%{transform:translate(1%,-1%);}50%{transform:translate(-2%,2%);}60%{transform:translate(2%,-2%);}70%{transform:translate(0,1%);}80%{transform:translate(-1%,0);}90%{transform:translate(1%,1%);}}
+.scanlines{position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,0.1)0px,rgba(0,0,0,0.1)1px,transparent 1px,transparent 2px);opacity:0.3;}
+.cursor-glow{position:fixed;width:300px;height:300px;background:radial-gradient(circle,rgba(255,255,255,0.03)0%,transparent 70%);border-radius:50%;pointer-events:none;z-index:-1;transform:translate(-50%,-50%);transition:opacity 0.3s;}
+header{position:fixed;top:0;left:0;width:100%;padding:20px 40px;display:flex;justify-content:space-between;align-items:center;z-index:1000;background:linear-gradient(to bottom,rgba(0,0,0,0.9)0%,transparent 100%);}
+.logo{font-size:0.75rem;font-weight:300;letter-spacing:0.3em;text-transform:uppercase;color:var(--accent-dim);text-decoration:none;transition:all 0.3s;}
+.logo:hover{color:var(--accent);text-shadow:0 0 20px var(--accent-glow);}
+.logo span{color:var(--red);}
+.nav-status{font-size:0.65rem;color:var(--accent-dim);letter-spacing:0.2em;display:flex;align-items:center;gap:15px;}
+.status-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 5px var(--green);}50%{opacity:0.3;box-shadow:none;}}
+.back-link{font-size:0.7rem;color:var(--accent-dim);text-decoration:none;letter-spacing:0.1em;transition:all 0.3s;border:1px solid var(--accent-dim);padding:8px 16px;}
+.back-link:hover{color:var(--accent);border-color:var(--accent);background:rgba(255,255,255,0.05);}
+.experiments{padding:100px 40px;max-width:1400px;margin:0 auto;}
+.section-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:80px;padding-bottom:20px;border-bottom:1px solid var(--accent-dim);}
+.section-title{font-size:0.7rem;font-weight:300;letter-spacing:0.4em;text-transform:uppercase;color:var(--accent-dim);}
+.section-count{font-size:0.65rem;color:var(--accent-dim);letter-spacing:0.2em;}
+.experiments-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2px;background:var(--accent-dim);}
+.experiment-card{background:var(--black);padding:60px 40px;position:relative;overflow:hidden;transition:all 0.5s cubic-bezier(0.23,1,0.32,1);cursor:pointer;min-height:400px;display:flex;flex-direction:column;justify-content:space-between;}
+.experiment-card::before{content:"";position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,transparent 0%,rgba(255,255,255,0.02)100%);opacity:0;transition:opacity 0.5s;}
+.experiment-card:hover::before{opacity:1;}
+.experiment-card:hover{background:var(--darker);}
+.experiment-card:hover .card-number{transform:translateX(10px);color:var(--accent);}
+.experiment-card:hover .card-title{transform:translateX(10px);}
+.experiment-card:hover .card-visual{opacity:0.3;transform:scale(1.1);}
+.experiment-card:hover .card-status{color:var(--green);}
+.card-header{position:relative;z-index:2;}
+.card-number{font-size:0.65rem;font-weight:300;letter-spacing:0.3em;color:var(--accent-dim);margin-bottom:20px;transition:all 0.5s;}
+.card-title{font-size:clamp(1.5rem,3vw,2.5rem);font-weight:700;line-height:1.1;margin-bottom:15px;transition:all 0.5s;}
+.card-subtitle{font-size:0.75rem;font-weight:300;color:var(--accent-dim);letter-spacing:0.1em;line-height:1.6;max-width:400px;}
+.card-footer{display:flex;justify-content:space-between;align-items:flex-end;position:relative;z-index:2;}
+.card-tags{display:flex;gap:10px;flex-wrap:wrap;}
+.card-tag{font-size:0.55rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--accent-dim);border:1px solid var(--accent-dim);padding:5px 10px;transition:all 0.3s;}
+.experiment-card:hover .card-tag{border-color:var(--accent);color:var(--accent);}
+.card-status{font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent-dim);display:flex;align-items:center;gap:8px;transition:all 0.3s;}
+.card-status::before{content:"";width:6px;height:6px;background:currentColor;border-radius:50%;}
+.card-visual{position:absolute;top:0;right:0;width:50%;height:100%;opacity:0.1;transition:all 0.8s cubic-bezier(0.23,1,0.32,1);pointer-events:none;}
+.visual-hologram{background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--cyan)2px,var(--cyan)4px);mask-image:linear-gradient(to left,black,transparent);-webkit-mask-image:linear-gradient(to left,black,transparent);}
+.visual-reactable{background:radial-gradient(circle at 30% 30%,var(--magenta)0%,transparent 30%),radial-gradient(circle at 70% 60%,var(--cyan)0%,transparent 25%),radial-gradient(circle at 50% 80%,var(--green)0%,transparent 20%);mask-image:linear-gradient(to left,black,transparent);-webkit-mask-image:linear-gradient(to left,black,transparent);}
+.visual-gesture{background:conic-gradient(from 0deg at 50% 50%,transparent 0deg,var(--accent)10deg,transparent 20deg,transparent 90deg,var(--accent)100deg,transparent 110deg,transparent 180deg,var(--accent)190deg,transparent 200deg,transparent 270deg,var(--accent)280deg,transparent 290deg);mask-image:linear-gradient(to left,black,transparent);-webkit-mask-image:linear-gradient(to left,black,transparent);animation:rotateVisual 20s linear infinite;}
+@keyframes rotateVisual{to{transform:rotate(360deg);}}
+.visual-visualizer{background:repeating-linear-gradient(90deg,var(--green)0px,var(--green)3px,transparent 3px,transparent 8px);mask-image:linear-gradient(to left,black,transparent);-webkit-mask-image:linear-gradient(to left,black,transparent);animation:visualizerPulse 1s ease-in-out infinite;}
+@keyframes visualizerPulse{0%,100%{transform:scaleY(0.5);}50%{transform:scaleY(1);}}
+.visual-neural{background:radial-gradient(circle at 20% 20%,var(--red)0%,transparent 10%),radial-gradient(circle at 80% 30%,var(--red)0%,transparent 8%),radial-gradient(circle at 40% 70%,var(--red)0%,transparent 12%),radial-gradient(circle at 70% 80%,var(--red)0%,transparent 6%),linear-gradient(45deg,transparent 40%,var(--red)40.5%,var(--red)41%,transparent 41.5%),linear-gradient(-30deg,transparent 60%,var(--red)60.5%,var(--red)61%,transparent 61.5%);mask-image:linear-gradient(to left,black,transparent);-webkit-mask-image:linear-gradient(to left,black,transparent);}
+.visual-datascape{background:linear-gradient(180deg,transparent 0%,var(--cyan)50%,transparent 50.5%,transparent 100%),linear-gradient(180deg,transparent 25%,var(--magenta)25.5%,transparent 26%),linear-gradient(180deg,transparent 75%,var(--green)75.5%,transparent 76%);mask-image:linear-gradient(to left,black,transparent);-webkit-mask-image:linear-gradient(to left,black,transparent);animation:dataPulse 3s ease-in-out infinite;}
+@keyframes dataPulse{0%,100%{background-position:0 0;}50%{background-position:0 20px;}}
+.experiment-card.featured{grid-column:span 2;min-height:500px;background:linear-gradient(135deg,var(--black)0%,var(--darker)100%);}
+.experiment-card.featured .card-title{font-size:clamp(2rem,5vw,4rem);}
+.experiment-card.featured .card-visual{width:60%;opacity:0.15;}
+.tech-stack{padding:100px 40px;border-top:1px solid var(--accent-dim);border-bottom:1px solid var(--accent-dim);}
+.tech-content{max-width:1400px;margin:0 auto;display:grid;grid-template-columns:1fr 2fr;gap:80px;align-items:start;}
+.tech-label{font-size:0.65rem;letter-spacing:0.4em;text-transform:uppercase;color:var(--accent-dim);}
+.tech-list{display:flex;flex-wrap:wrap;gap:15px;}
+.tech-item{font-size:0.75rem;letter-spacing:0.1em;color:var(--accent-dim);border:1px solid var(--accent-dim);padding:10px 20px;transition:all 0.3s;cursor:default;}
+.tech-item:hover{color:var(--accent);border-color:var(--accent);background:rgba(255,255,255,0.03);}
+footer{padding:80px 40px;display:flex;justify-content:space-between;align-items:center;max-width:1400px;margin:0 auto;}
+.footer-left{font-size:0.65rem;color:var(--accent-dim);letter-spacing:0.2em;}
+.footer-links{display:flex;gap:30px;}
+.footer-link{font-size:0.7rem;color:var(--accent-dim);text-decoration:none;letter-spacing:0.15em;transition:all 0.3s;position:relative;}
+.footer-link::after{content:"";position:absolute;bottom:-5px;left:0;width:0;height:1px;background:var(--accent);transition:width 0.3s;}
+.footer-link:hover{color:var(--accent);}
+.footer-link:hover::after{width:100%;}
+.loader{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--black);z-index:10000;display:flex;flex-direction:column;justify-content:center;align-items:center;transition:opacity 0.5s,visibility 0.5s;}
+.loader.hidden{opacity:0;visibility:hidden;}
+.loader-text{font-size:0.7rem;letter-spacing:0.4em;color:var(--accent-dim);margin-bottom:30px;}
+.loader-bar{width:200px;height:1px;background:var(--accent-dim);position:relative;overflow:hidden;}
+.loader-bar::after{content:"";position:absolute;top:0;left:0;width:0;height:100%;background:var(--accent);animation:loading 2s forwards;}
+@keyframes loading{to{width:100%;}}
+.loader-glitch{font-size:0.6rem;color:var(--accent-dim);margin-top:20px;letter-spacing:0.2em;opacity:0;animation:blinkIn 0.1s 1.5s forwards;}
+@keyframes blinkIn{to{opacity:1;}}
+@media (max-width:1024px){.experiments-grid{grid-template-columns:1fr;}.experiment-card.featured{grid-column:span 1;}.tech-content{grid-template-columns:1fr;gap:40px;}}
+@media (max-width:768px){header{padding:15px 20px;}.experiments{padding:60px 20px;}.experiment-card{padding:40px 25px;min-height:350px;}.section-header{flex-direction:column;align-items:flex-start;gap:10px;}.tech-stack{padding:60px 20px;}footer{flex-direction:column;gap:30px;text-align:center;padding:60px 20px;}.footer-links{flex-wrap:wrap;justify-content:center;}.nav-status{display:none;}.card-visual{width:100%;opacity:0.05;}}
+@media (max-width:480px){.card-tags{display:none;}.card-title{font-size:1.3rem;}.experiment-card{min-height:300px;}}
+.experiment-card[data-status="live"] .card-status{color:var(--green);}
+.experiment-card[data-status="dev"] .card-status{color:var(--cyan);}
+.experiment-card[data-status="concept"] .card-status{color:var(--magenta);}
+.experiment-card[data-status="beta"] .card-status{color:var(--red);}
+</style>
 </head>
 <body>
-    <!-- Loading Screen -->
-    <div class="loader" id="loader">
-        <div class="loader-text">INITIALIZING</div>
-        <div class="loader-bar"></div>
-        <div class="loader-glitch">[ SYSTEM READY ]</div>
-    </div>
-
-    <!-- Noise Overlay -->
-    <div class="noise-overlay"></div>
-
-    <!-- Scanlines -->
-    <div class="scanlines"></div>
-
-    <!-- Cursor Glow -->
-    <div class="cursor-glow" id="cursorGlow"></div>
-
-    <!-- Generative Background -->
-    <canvas id="bg-canvas"></canvas>
-
-    <!-- Header -->
-    <header>
-        <a href="index.html" class="logo">CINEMATRONIC <span>///</span> ART LAB</a>
-        <div class="nav-status">
-            <div class="status-dot"></div>
-            <span>SYSTEMS ONLINE</span>
-        </div>
-        <a href="index.html" class="back-link">← BACK TO MAIN</a>
-    </header>
-
-    <!-- Hero -->
-    <section class="hero">
-        <h1 class="hero-title">
-            <span class="line"><span class="glitch" data-text="ART">ART</span></span>
-            <span class="line"><span class="glitch" data-text="LAB">LAB</span></span>
-        </h1>
-        <p class="hero-subtitle">Experimental New Media Laboratory</p>
-        <p class="hero-description">
-            Un espacio de investigación donde la tecnología obsoleta, 
-            el código y el error se transforman en experiencias. 
-            Cada proyecto es un prototipo vivo, una pregunta sin respuesta definitiva.
-        </p>
-        <div class="scroll-indicator">
-            <span>SCROLL</span>
-            <div class="scroll-line"></div>
-        </div>
-    </section>
-
-    <!-- Experiments Grid -->
-    <section class="experiments">
-        <div class="section-header">
-            <h2 class="section-title">Active Experiments</h2>
-            <span class="section-count">06 Projects</span>
-        </div>
-
-        <div class="experiments-grid">
-            <!-- Experiment 01: Holographic Arcade (Featured) -->
-            <article class="experiment-card featured" data-status="dev">
-                <div class="card-visual visual-hologram"></div>
-                <div class="card-header">
-                    <span class="card-number">EXP_001</span>
-                    <h3 class="card-title">HOLOGRAPHIC<br>ARCADE</h3>
-                    <p class="card-subtitle">
-                        Sistema de visualización holográfica para arcade retro. 
-                        Proyección volumétrica sobre hardware de los 80s. 
-                        Fusión de CRT, espejos y tracking espacial.
-                    </p>
-                </div>
-                <div class="card-footer">
-                    <div class="card-tags">
-                        <span class="card-tag">Holography</span>
-                        <span class="card-tag">Retro Hardware</span>
-                        <span class="card-tag">Installation</span>
-                        <span class="card-tag">Pepper's Ghost</span>
-                    </div>
-                    <span class="card-status">In Development</span>
-                </div>
-            </article>
-
-            <!-- Experiment 02: Reactable Clone -->
-            <article class="experiment-card" data-status="dev">
-                <div class="card-visual visual-reactable"></div>
-                <div class="card-header">
-                    <span class="card-number">EXP_002</span>
-                    <h3 class="card-title">MODULAR<br>SURFACE</h3>
-                    <p class="card-subtitle">
-                        Mesa táctil modular inspirada en Reactable. 
-                        Síntesis visual-sonora mediante objetos físicos tangibles.
-                    </p>
-                </div>
-                <div class="card-footer">
-                    <div class="card-tags">
-                        <span class="card-tag">Tangible UI</span>
-                        <span class="card-tag">Synthesis</span>
-                    </div>
-                    <span class="card-status">In Development</span>
-                </div>
-            </article>
-
-            <!-- Experiment 03: Gesture Synth -->
-            <article class="experiment-card" data-status="beta">
-                <div class="card-visual visual-gesture"></div>
-                <div class="card-header">
-                    <span class="card-number">EXP_003</span>
-                    <h3 class="card-title">GESTURE<br>SYNTH</h3>
-                    <p class="card-subtitle">
-                        Sintetizador controlado por gestos en el aire. 
-                        Computer vision + síntesis granular en tiempo real.
-                    </p>
-                </div>
-                <div class="card-footer">
-                    <div class="card-tags">
-                        <span class="card-tag">CV</span>
-                        <span class="card-tag">Audio</span>
-                    </div>
-                    <span class="card-status">Beta Testing</span>
-                </div>
-            </article>
-
-            <!-- Experiment 04: Live Visualizer -->
-            <article class="experiment-card" data-status="live">
-                <div class="card-visual visual-visualizer"></div>
-                <div class="card-header">
-                    <span class="card-number">EXP_004</span>
-                    <h3 class="card-title">LIVE<br>VISUALIZER</h3>
-                    <p class="card-subtitle">
-                        Sistema de visuales reactivos para performances en vivo. 
-                        Audio-reactive shaders para Fuzzytronic y Cinematronic.
-                    </p>
-                </div>
-                <div class="card-footer">
-                    <div class="card-tags">
-                        <span class="card-tag">GLSL</span>
-                        <span class="card-tag">Live</span>
-                    </div>
-                    <span class="card-status">Live</span>
-                </div>
-            </article>
-
-            <!-- Experiment 05: Neural Glitch -->
-            <article class="experiment-card" data-status="concept">
-                <div class="card-visual visual-neural"></div>
-                <div class="card-header">
-                    <span class="card-number">EXP_005</span>
-                    <h3 class="card-title">NEURAL<br>GLITCH</h3>
-                    <p class="card-subtitle">
-                        Exploración de errores en redes neuronales como material estético. 
-                        Adversarial art y corrupción controlada de modelos.
-                    </p>
-                </div>
-                <div class="card-footer">
-                    <div class="card-tags">
-                        <span class="card-tag">AI/ML</span>
-                        <span class="card-tag">Glitch</span>
-                    </div>
-                    <span class="card-status">Concept</span>
-                </div>
-            </article>
-
-            <!-- Experiment 06: Datascape -->
-            <article class="experiment-card" data-status="concept">
-                <div class="card-visual visual-datascape"></div>
-                <div class="card-header">
-                    <span class="card-number">EXP_006</span>
-                    <h3 class="card-title">DATA<br>SCAPE</h3>
-                    <p class="card-subtitle">
-                        Sonificación y visualización de datos en tiempo real. 
-                        Transformar información en paisajes audiovisuales navegables.
-                    </p>
-                </div>
-                <div class="card-footer">
-                    <div class="card-tags">
-                        <span class="card-tag">Data Art</span>
-                        <span class="card-tag">Sonification</span>
-                    </div>
-                    <span class="card-status">Concept</span>
-                </div>
-            </article>
-        </div>
-    </section>
-
-    <!-- Manifesto -->
-    <section class="manifesto">
-        <p class="manifesto-text">
-            Este laboratorio existe en el <strong>límite entre lo funcional y lo roto</strong>. 
-            Cada experimento es un intento de hackear la percepción, 
-            de encontrar <strong>poesía en el código</strong> y 
-            <strong>música en el ruido</strong>. 
-            No busco la perfección técnica — busco el momento exacto 
-            donde la tecnología <strong>deja de comportarse</strong> 
-            y empieza a <strong>expresar</strong>.
-        </p>
-        <p class="manifesto-signature">— CIRO / CINEMATRONIC</p>
-    </section>
-
-    <!-- Tech Stack -->
-    <section class="tech-stack">
-        <div class="tech-content">
-            <span class="tech-label">Technologies in Use</span>
-            <div class="tech-list">
-                <span class="tech-item">LSDJ</span>
-                <span class="tech-item">Arduboy</span>
-                <span class="tech-item">Game Boy</span>
-                <span class="tech-item">WebGL</span>
-                <span class="tech-item">GLSL Shaders</span>
-                <span class="tech-item">p5.js</span>
-                <span class="tech-item">Three.js</span>
-                <span class="tech-item">Web Audio API</span>
-                <span class="tech-item">MindAR</span>
-                <span class="tech-item">TouchDesigner</span>
-                <span class="tech-item">Processing</span>
-                <span class="tech-item">Max/MSP</span>
-                <span class="tech-item">Unity</span>
-                <span class="tech-item">OpenCV</span>
-                <span class="tech-item">TensorFlow.js</span>
-                <span class="tech-item">Raspberry Pi</span>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer>
-        <div class="footer-left">
-            © 2024 CINEMATRONIC — BUENOS AIRES
-        </div>
-        <div class="footer-links">
-            <a href="https://www.youtube.com/@ciberdelia.telnet" target="_blank" class="footer-link">YouTube</a>
-            <a href="https://daskrank.itch.io/" target="_blank" class="footer-link">Itch.io</a>
-            <a href="https://instagram.com/ciro.ciberdelia" target="_blank" class="footer-link">Instagram</a>
-            <a href="index.html" class="footer-link">Main Site</a>
-        </div>
-    </footer>
-
-    <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        
-        // ═══════════════════════════════════════════
-        // LOADER
-        // ═══════════════════════════════════════════
-        
-        const loader = document.getElementById('loader');
-        setTimeout(() => {
-            loader.classList.add('hidden');
-        }, 2500);
-
-        // ═══════════════════════════════════════════
-        // CURSOR GLOW TRACKER
-        // ═══════════════════════════════════════════
-        
-        const cursorGlow = document.getElementById('cursorGlow');
-        let mouseX = 0, mouseY = 0;
-        let glowX = 0, glowY = 0;
-
-        document.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-        });
-
-        function animateCursor() {
-            glowX += (mouseX - glowX) * 0.1;
-            glowY += (mouseY - glowY) * 0.1;
-            cursorGlow.style.left = glowX + 'px';
-            cursorGlow.style.top = glowY + 'px';
-            requestAnimationFrame(animateCursor);
-        }
-        animateCursor();
-
-        // ═══════════════════════════════════════════
-        // GENERATIVE BACKGROUND CANVAS
-        // ═══════════════════════════════════════════
-        
-        const canvas = document.getElementById('bg-canvas');
-        const ctx = canvas.getContext('2d');
-
-        let width, height;
-        let particles = [];
-        const particleCount = 80;
-
-        function resize() {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-        }
-
-        class Particle {
-            constructor() {
-                this.reset();
-            }
-
-            reset() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * height;
-                this.vx = (Math.random() - 0.5) * 0.3;
-                this.vy = (Math.random() - 0.5) * 0.3;
-                this.radius = Math.random() * 1.5 + 0.5;
-                this.alpha = Math.random() * 0.3 + 0.1;
-            }
-
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-
-                // Wrap around edges
-                if (this.x < 0) this.x = width;
-                if (this.x > width) this.x = 0;
-                if (this.y < 0) this.y = height;
-                if (this.y > height) this.y = 0;
-
-                // Subtle mouse attraction
-                const dx = mouseX - this.x;
-                const dy = mouseY - this.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < 200) {
-                    this.vx += dx * 0.00005;
-                    this.vy += dy * 0.00005;
-                }
-
-                // Damping
-                this.vx *= 0.99;
-                this.vy *= 0.99;
-            }
-
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
-                ctx.fill();
-            }
-        }
-
-        function initParticles() {
-            particles = [];
-            for (let i = 0; i < particleCount; i++) {
-                particles.push(new Particle());
-            }
-        }
-
-        function drawConnections() {
-            for (let i = 0; i < particles.length; i++) {
-                for (let j = i + 1; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x;
-                    const dy = particles[i].y - particles[j].y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-
-                    if (dist < 120) {
-                        const alpha = (1 - dist / 120) * 0.15;
-                        ctx.beginPath();
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
-                        ctx.lineWidth = 0.5;
-                        ctx.stroke();
-                    }
-                }
-            }
-        }
-
-        function animate() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-            ctx.fillRect(0, 0, width, height);
-
-            particles.forEach(p => {
-                p.update();
-                p.draw();
-            });
-
-            drawConnections();
-
-            // Random glitch line
-            if (Math.random() > 0.995) {
-                const y = Math.random() * height;
-                const h = Math.random() * 3 + 1;
-                ctx.fillStyle = `rgba(255, 0, 50, ${Math.random() * 0.3})`;
-                ctx.fillRect(0, y, width, h);
-            }
-
-            requestAnimationFrame(animate);
-        }
-
-        resize();
-        initParticles();
-        animate();
-
-        window.addEventListener('resize', () => {
-            resize();
-            initParticles();
-        });
-
-        // ═══════════════════════════════════════════
-        // EXPERIMENT CARDS - CLICK INTERACTION
-        // ═══════════════════════════════════════════
-        
-        const cards = document.querySelectorAll('.experiment-card');
-        
-        cards.forEach(card => {
-            card.addEventListener('click', function() {
-                // Visual feedback
-                this.style.transform = 'scale(0.98)';
-                setTimeout(() => {
-                    this.style.transform = '';
-                }, 150);
-
-                // Could link to individual experiment pages
-                // For now, just a visual interaction
-            });
-        });
-
-        // ═══════════════════════════════════════════
-        // SCROLL REVEAL
-        // ═══════════════════════════════════════════
-        
-        const revealElements = document.querySelectorAll('.experiment-card, .manifesto, .tech-stack');
-        
-        const revealObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }
-            });
-        }, { threshold: 0.1 });
-
-        revealElements.forEach(el => {
-            el.style.opacity = '0';
-            el.style.transform = 'translateY(30px)';
-            el.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
-            revealObserver.observe(el);
-        });
-
-        // ═══════════════════════════════════════════
-        // KEYBOARD NAVIGATION (Accessibility)
-        // ═══════════════════════════════════════════
-        
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                window.location.href = 'index.html';
-            }
-        });
-
-        // ═══════════════════════════════════════════
-        // CONSOLE EASTER EGG
-        // ═══════════════════════════════════════════
-        
-        console.log('%c ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄', 'color: #00ff41');
-        console.log('%c █                                 █', 'color: #00ff41');
-        console.log('%c █   CINEMATRONIC ART LAB          █', 'color: #00ff41');
-        console.log('%c █   ----------------------        █', 'color: #00ff41');
-        console.log('%c █   Welcome, curious one.         █', 'color: #00ff41');
-        console.log('%c █   You found the backdoor.       █', 'color: #00ff41');
-        console.log('%c █                                 █', 'color: #00ff41');
-        console.log('%c █   > hack the planet             █', 'color: #00ff41');
-        console.log('%c █                                 █', 'color: #00ff41');
-        console.log('%c ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀', 'color: #00ff41');
-    });
-    </script>
+<div class="loader" id="loader"><div class="loader-text">INITIALIZING</div><div class="loader-bar"></div><div class="loader-glitch">[ SYSTEM READY ]</div></div>
+<div class="noise-overlay"></div>
+<div class="scanlines"></div>
+<div class="cursor-glow" id="cursorGlow"></div>
+<canvas id="bg-canvas"></canvas>
+<header><a href="index.html" class="logo">ART LAB <span>///</span> CIRO MENDOZA </a><a href="index.html" class="back-link">← BACK TO MAIN</a></header>
+<section class="experiments">
+<div class="section-header"><h2 class="section-title">Active Experiments</h2></div>
+<div class="experiments-grid">
+<article class="experiment-card featured" data-status="dev">
+<div class="card-visual visual-hologram"></div>
+<div class="card-header"><span class="card-number">EXP_001</span><h3 class="card-title">HOLOGRAPHIC<br>ARCADE</h3><p class="card-subtitle">Sistema de visualización holográfica para arcade retro. Proyección volumétrica sobre hardware de los 80s. Fusión de CRT, espejos y tracking espacial.</p></div>
+<div class="card-footer"><div class="card-tags"><span class="card-tag">Holography</span><span class="card-tag">Retro Hardware</span><span class="card-tag">Installation</span><span class="card-tag">Pepper's Ghost</span></div><span class="card-status">In Development</span></div>
+</article>
+<article class="experiment-card" data-status="dev">
+<div class="card-visual visual-reactable"></div>
+<div class="card-header"><span class="card-number">EXP_002</span><h3 class="card-title">MODULAR<br>SURFACE</h3><p class="card-subtitle">Mesa táctil modular inspirada en Reactable. Síntesis visual-sonora mediante objetos físicos tangibles.</p></div>
+<div class="card-footer"><div class="card-tags"><span class="card-tag">Tangible UI</span><span class="card-tag">Synthesis</span></div><span class="card-status">In Development</span></div>
+</article>
+<article class="experiment-card" data-status="beta">
+<div class="card-visual visual-gesture"></div>
+<div class="card-header"><span class="card-number">EXP_003</span><h3 class="card-title">GESTURE<br>SYNTH</h3><p class="card-subtitle">Sintetizador controlado por gestos en el aire. Computer vision + síntesis granular en tiempo real.</p></div>
+<div class="card-footer"><div class="card-tags"><span class="card-tag">CV</span><span class="card-tag">Audio</span></div><span class="card-status">Beta Testing</span></div>
+</article>
+<article class="experiment-card" data-status="live">
+<div class="card-visual visual-visualizer"></div>
+<div class="card-header"><span class="card-number">EXP_004</span><h3 class="card-title">LIVE<br>VISUALIZER</h3><p class="card-subtitle">Sistema de visuales reactivos para performances en vivo. Audio-reactive shaders para Fuzzytronic y Cinematronic.</p></div>
+<div class="card-footer"><div class="card-tags"><span class="card-tag">GLSL</span><span class="card-tag">Live</span></div><span class="card-status">Live</span></div>
+</article>
+<article class="experiment-card" data-status="concept">
+<div class="card-visual visual-neural"></div>
+<div class="card-header"><span class="card-number">EXP_005</span><h3 class="card-title">JELLYFISH<br>POOL</h3><p class="card-subtitle">Instalación interactiva que simula un entorno abisal de medusas digitales que interactuan alejandose del usuario.</p></div>
+<div class="card-footer"><div class="card-tags"><span class="card-tag">AI/ML</span><span class="card-tag">Glitch</span></div><span class="card-status">Concept</span></div>
+</article>
+</div>
+</section>
+<section class="tech-stack"><div class="tech-content"><span class="tech-label">Technologies in Use</span><div class="tech-list"><span class="tech-item">Media Pipe</span><span class="tech-item">WebGL</span><span class="tech-item">Three.js</span><span class="tech-item">Web Audio API</span><span class="tech-item">MindAR</span><span class="tech-item">Claude Opus 3.5</span></div></div></section>
+<footer><div class="footer-left">© 2026 - CIRO MENDOZA — BUENOS AIRES</div></footer>
+<script>
+document.addEventListener("DOMContentLoaded",function(){
+const loader=document.getElementById('loader');
+setTimeout(()=>{loader.classList.add('hidden');},2500);
+const cursorGlow=document.getElementById('cursorGlow');
+let mouseX=0,mouseY=0,glowX=0,glowY=0;
+document.addEventListener('mousemove',(e)=>{mouseX=e.clientX;mouseY=e.clientY;});
+function animateCursor(){glowX+=(mouseX-glowX)*0.1;glowY+=(mouseY-glowY)*0.1;cursorGlow.style.left=glowX+'px';cursorGlow.style.top=glowY+'px';requestAnimationFrame(animateCursor);}
+animateCursor();
+const canvas=document.getElementById('bg-canvas'),ctx=canvas.getContext('2d');
+let width,height,particles=[];
+const particleCount=80;
+function resize(){width=canvas.width=window.innerWidth;height=canvas.height=window.innerHeight;}
+class Particle{constructor(){this.reset();}
+reset(){this.x=Math.random()*width;this.y=Math.random()*height;this.vx=(Math.random()-0.5)*0.3;this.vy=(Math.random()-0.5)*0.3;this.radius=Math.random()*1.5+0.5;this.alpha=Math.random()*0.3+0.1;}
+update(){this.x+=this.vx;this.y+=this.vy;if(this.x<0)this.x=width;if(this.x>width)this.x=0;if(this.y<0)this.y=height;if(this.y>height)this.y=0;const dx=mouseX-this.x,dy=mouseY-this.y,dist=Math.hypot(dx,dy);if(dist<200){this.vx+=dx*0.00005;this.vy+=dy*0.00005;}
+this.vx*=0.99;this.vy*=0.99;}
+draw(){ctx.beginPath();ctx.arc(this.x,this.y,this.radius,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${this.alpha})`;ctx.fill();}}
+function initParticles(){particles=[];for(let i=0;i<particleCount;i++)particles.push(new Particle());}
+function drawConnections(){for(let i=0;i<particles.length;i++)for(let j=i+1;j<particles.length;j++){const dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y,dist=Math.hypot(dx,dy);if(dist<120){const alpha=(1-dist/120)*0.15;ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);ctx.lineTo(particles[j].x,particles[j].y);ctx.strokeStyle=`rgba(255,255,255,${alpha})`;ctx.lineWidth=0.5;ctx.stroke();}}}
+function animate(){ctx.fillStyle='rgba(0,0,0,0.1)';ctx.fillRect(0,0,width,height);particles.forEach(p=>{p.update();p.draw();});drawConnections();if(Math.random()>0.995){const y=Math.random()*height,h=Math.random()*3+1;ctx.fillStyle=`rgba(255,0,50,${Math.random()*0.3})`;ctx.fillRect(0,y,width,h);}
+requestAnimationFrame(animate);}
+resize();initParticles();animate();
+window.addEventListener('resize',()=>{resize();initParticles();});
+const cards=document.querySelectorAll('.experiment-card');
+cards.forEach(card=>{card.addEventListener('click',function(){this.style.transform='scale(0.98)';setTimeout(()=>{this.style.transform='';},150);});});
+const revealElements=document.querySelectorAll('.experiment-card, .tech-stack');
+const revealObserver=new IntersectionObserver((entries)=>{entries.forEach(entry=>{if(entry.isIntersecting){entry.target.style.opacity='1';entry.target.style.transform='translateY(0)';}});},{threshold:0.1});
+revealElements.forEach(el=>{el.style.opacity='0';el.style.transform='translateY(30px)';el.style.transition='opacity 0.8s ease, transform 0.8s ease';revealObserver.observe(el);});
+document.addEventListener('keydown',(e)=>{if(e.key==='Escape')window.location.href='index.html';});
+console.log('%c ▄please dont hack the gibson▄▄', 'color: #00ff41');
+});
+</script>
 </body>
 </html>
