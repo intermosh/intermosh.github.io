@@ -2,1613 +2,1834 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AR TRACKING SYSTEM v2</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AR TRACK v3</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323:wght@400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg:     #000000;
-  --panel:  #030303;
-  --border: #0a1a0a;
-  --green:  #00FF00;
-  --green2: #00cc00;
-  --green3: rgba(0,255,0,0.12);
-  --dim:    #0a2a0a;
-  --txt:    #2a6a2a;
-  --txt2:   #7aaa7a;
-  --white:  #e8f0e8;
+:root{
+  --bg:#000;--panel:#030303;--border:#0a1a0a;
+  --green:#0f0;--green2:#0c0;--green3:rgba(0,255,0,0.12);
+  --dim:#0a2a0a;--txt:#2a6a2a;--txt2:#7aaa7a;--white:#e8f0e8;
+  --accent:#0f0;--accent-r:0;--accent-g:255;--accent-b:0;
 }
-*, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
-html, body { width:100%; height:100%; overflow:hidden; background:#000; }
-body {
-  font-family: 'Share Tech Mono', monospace;
-  color: var(--txt2);
-  display: flex;
-  flex-direction: column;
-}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#000}
+body{font-family:'Share Tech Mono',monospace;color:var(--txt2);display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.13) 2px,rgba(0,0,0,0.13) 3px)}
 
-/* Global scanline overlay */
-body::before {
-  content:'';
-  position:fixed; inset:0; pointer-events:none; z-index:9999;
-  background: repeating-linear-gradient(
-    0deg, transparent, transparent 2px,
-    rgba(0,0,0,0.13) 2px, rgba(0,0,0,0.13) 3px
-  );
-}
-
-/* ═══ HEADER ═══════════════════════════════════════════════ */
-header {
-  flex-shrink:0; height:38px;
-  background: #000;
-  border-bottom: 1px solid #001a00;
-  display:flex; align-items:center;
-  padding: 0 14px; gap:14px;
-}
-header::after {
-  content:'';
-  position:absolute; left:0; top:0;
-  width:100%; height:1px;
-  background: linear-gradient(90deg, transparent, var(--green), transparent);
-  opacity:0.4;
-}
-.h-logo {
-  font-family: 'VT323', monospace;
-  font-size: 1.1rem;
-  letter-spacing: 0.3em;
-  color: var(--green);
-  text-shadow: 0 0 8px var(--green);
-}
-.h-sep  { color: #002200; font-size:0.65rem; }
-.h-sub  { font-size:0.58rem; letter-spacing:0.2em; color: var(--txt); text-transform:uppercase; }
-.h-right { margin-left:auto; display:flex; gap:10px; align-items:center; }
-.h-badge {
-  font-size:0.54rem; letter-spacing:0.18em;
-  padding:2px 8px; border:1px solid #001a00;
-  color: var(--txt); text-transform:uppercase;
-}
-.h-badge.live { border-color: var(--green); color: var(--green); animation: glow-pulse 2s infinite; }
-@keyframes glow-pulse { 50%{ box-shadow: 0 0 6px rgba(0,255,0,0.3); } }
-
-/* ═══ BODY LAYOUT ════════════════════════════════════════════ */
-.body {
-  flex:1; display:grid;
-  grid-template-columns: 256px 1fr;
-  min-height:0;
-}
-
-/* ═══ SIDEBAR ════════════════════════════════════════════════ */
-.sidebar {
-  background: #000;
-  border-right: 1px solid #001a00;
-  display:flex; flex-direction:column;
-  overflow:hidden;
-}
-.s-block { border-bottom:1px solid #001a00; padding:10px 12px; }
-.s-label {
-  font-size:0.52rem; letter-spacing:0.28em;
-  color: var(--txt); text-transform:uppercase; margin-bottom:8px;
-  display:flex; align-items:center; gap:6px;
-}
-.s-label::before {
-  content:''; width:10px; height:1px; background: var(--green); opacity:0.4;
-}
-
-/* Cam preview */
-video { display:none; }
-#camPreview {
-  width:100%; aspect-ratio:4/3;
-  background:#000; border:1px solid #001a00; display:block;
-}
-
-/* Status dots */
-.status-row { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
-.s-item { display:flex; align-items:center; gap:6px; font-size:0.6rem; color:var(--txt); }
-.dot {
-  width:5px; height:5px; border-radius:50%;
-  background:#001500; flex-shrink:0; transition: background 0.3s, box-shadow 0.3s;
-}
-.dot.on   { background:var(--green); box-shadow:0 0 4px var(--green); }
-.dot.err  { background:#ff0033; }
-.dot.pend { background:#556600; animation:blink 0.6s infinite; }
-@keyframes blink { 50%{ opacity:0.2; } }
-
-/* Start button */
-#startBtn {
-  width:100%; background:transparent;
-  border:1px solid var(--green); color:var(--green);
+/* ═══ INTRO SCREEN ═══ */
+#introScreen{
+  position:fixed;inset:0;z-index:10000;background:#000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
   font-family:'Share Tech Mono',monospace;
-  font-size:0.66rem; letter-spacing:0.22em; text-transform:uppercase;
-  padding:9px 0; cursor:pointer; transition:all 0.2s;
+}
+#introScreen::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,0,0.04) 2px,rgba(0,255,0,0.04) 3px);
+  pointer-events:none;
+}
+.intro-grid{
+  position:absolute;inset:0;pointer-events:none;overflow:hidden;
+}
+.intro-title{
+  font-family:'VT323',monospace;font-size:clamp(2.2rem,6vw,4.5rem);
+  color:var(--green);text-shadow:0 0 30px var(--green),0 0 60px rgba(0,255,0,0.3);
+  letter-spacing:0.35em;text-align:center;margin-bottom:4px;
+}
+.intro-sub{
+  font-size:0.58rem;letter-spacing:0.3em;color:var(--txt);
+  text-transform:uppercase;margin-bottom:40px;text-align:center;
+}
+.intro-panel{
+  background:rgba(0,10,0,0.85);border:1px solid #001a00;
+  padding:28px 32px;width:min(680px,94vw);
+  position:relative;
+}
+.intro-panel::before,.intro-panel::after{
+  content:'';position:absolute;width:14px;height:14px;border-color:var(--green);border-style:solid;opacity:0.4;
+}
+.intro-panel::before{top:-1px;left:-1px;border-width:1px 0 0 1px;}
+.intro-panel::after{bottom:-1px;right:-1px;border-width:0 1px 1px 0;}
+.intro-section{margin-bottom:24px;}
+.intro-section-title{
+  font-size:0.5rem;letter-spacing:0.28em;color:var(--txt);text-transform:uppercase;
+  margin-bottom:14px;display:flex;align-items:center;gap:8px;
+}
+.intro-section-title::before{content:'';width:14px;height:1px;background:var(--green);opacity:0.5;}
+.intro-section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,#001500,transparent);}
+
+/* Toggles grid */
+.toggle-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:8px;}
+.tog{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;
+  border:1px solid #001a00;background:#010301;cursor:pointer;
+  transition:all 0.18s;user-select:none;position:relative;overflow:hidden;
+}
+.tog:hover{border-color:#002800;background:#020602;}
+.tog.active{border-color:var(--accent);background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),0.07);}
+.tog.active::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:var(--accent);opacity:0.5;
+}
+.tog-dot{
+  width:7px;height:7px;border-radius:50%;border:1px solid #001500;flex-shrink:0;
+  transition:all 0.18s;
+}
+.tog.active .tog-dot{
+  background:var(--accent);
+  box-shadow:0 0 5px var(--accent);border-color:var(--accent);
+}
+.tog-lbl{font-size:0.52rem;letter-spacing:0.14em;color:var(--txt);text-transform:uppercase;}
+.tog.active .tog-lbl{color:var(--txt2);}
+
+/* Color Selector */
+.color-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.color-swatch{
+  width:32px;height:32px;border-radius:50%;border:2px solid transparent;
+  cursor:pointer;transition:transform 0.15s,border-color 0.15s;flex-shrink:0;
+}
+.color-swatch:hover{transform:scale(1.15);}
+.color-swatch.sel{border-color:#fff;transform:scale(1.18);}
+.color-custom-wrap{display:flex;align-items:center;gap:8px;}
+.color-custom-label{font-size:0.5rem;letter-spacing:0.18em;color:var(--txt);text-transform:uppercase;}
+#customColorInput{
+  width:36px;height:36px;border:1px solid #001500;background:transparent;cursor:pointer;padding:0;
+  border-radius:50%;overflow:hidden;
+}
+
+/* Objects section */
+.obj-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.obj-type-btn{
+  padding:8px 16px;border:1px solid #001a00;background:#010301;color:var(--txt);
+  font-family:'Share Tech Mono',monospace;font-size:0.52rem;letter-spacing:0.14em;
+  text-transform:uppercase;cursor:pointer;transition:all 0.18s;
+}
+.obj-type-btn:hover{border-color:#002800;color:var(--txt2);}
+.obj-type-btn.sel{border-color:var(--accent);color:var(--accent);background:rgba(var(--accent-r),var(--accent-g),var(--accent-b),0.08);}
+.obj-count-wrap{display:flex;align-items:center;gap:8px;margin-left:auto;}
+.obj-count-label{font-size:0.5rem;letter-spacing:0.14em;color:var(--txt);}
+.obj-count-btn{
+  width:24px;height:24px;border:1px solid #001500;background:transparent;color:var(--txt2);
+  font-size:0.8rem;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-family:'Share Tech Mono',monospace;transition:all 0.15s;
+}
+.obj-count-btn:hover{border-color:var(--green);color:var(--green);}
+#objCountDisplay{font-size:0.7rem;color:var(--green);width:20px;text-align:center;}
+
+/* Launch button */
+.launch-btn{
+  width:100%;padding:14px;background:transparent;border:1px solid var(--green);
+  color:var(--green);font-family:'Share Tech Mono',monospace;font-size:0.78rem;
+  letter-spacing:0.3em;text-transform:uppercase;cursor:pointer;
+  transition:all 0.22s;text-shadow:0 0 8px var(--green);margin-top:4px;
+  position:relative;overflow:hidden;
+}
+.launch-btn::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(0,255,0,0.06),transparent);
+  transform:translateX(-100%);transition:transform 0.5s;
+}
+.launch-btn:hover::before{transform:translateX(100%);}
+.launch-btn:hover{background:rgba(0,255,0,0.06);box-shadow:0 0 20px rgba(0,255,0,0.2);}
+
+/* Scanline anim on intro */
+@keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
+.intro-scan{
+  position:absolute;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(0,255,0,0.15),transparent);
+  animation:scanline 4s linear infinite;pointer-events:none;
+}
+
+/* ═══ MAIN APP ═══ */
+#appShell{display:none;flex-direction:column;height:100%;}
+header{
+  flex-shrink:0;height:38px;background:#000;border-bottom:1px solid #001a00;
+  display:flex;align-items:center;padding:0 14px;gap:14px;position:relative;
+}
+header::after{
+  content:'';position:absolute;left:0;top:0;width:100%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--green),transparent);opacity:0.4;
+}
+.h-logo{font-family:'VT323',monospace;font-size:1.1rem;letter-spacing:0.3em;color:var(--green);text-shadow:0 0 8px var(--green)}
+.h-sep{color:#020;font-size:0.65rem}
+.h-sub{font-size:0.58rem;letter-spacing:0.2em;color:var(--txt);text-transform:uppercase}
+.h-right{margin-left:auto;display:flex;gap:10px;align-items:center}
+.h-badge{font-size:0.54rem;letter-spacing:0.18em;padding:2px 8px;border:1px solid #001a00;color:var(--txt);text-transform:uppercase}
+.h-badge.live{border-color:var(--green);color:var(--green);animation:glow-pulse 2s infinite}
+@keyframes glow-pulse{50%{box-shadow:0 0 6px rgba(0,255,0,0.3)}}
+.h-settings-btn{
+  font-size:0.5rem;letter-spacing:0.14em;padding:3px 10px;border:1px solid #001a00;
+  color:var(--txt);text-transform:uppercase;cursor:pointer;background:transparent;
+  font-family:'Share Tech Mono',monospace;transition:all 0.18s;
+}
+.h-settings-btn:hover{border-color:var(--green);color:var(--green);}
+
+.body{flex:1;display:grid;grid-template-columns:256px 1fr;min-height:0}
+.sidebar{background:#000;border-right:1px solid #001a00;display:flex;flex-direction:column;overflow:hidden}
+.s-block{border-bottom:1px solid #001a00;padding:10px 12px}
+.s-label{
+  font-size:0.52rem;letter-spacing:0.28em;color:var(--txt);text-transform:uppercase;
+  margin-bottom:8px;display:flex;align-items:center;gap:6px;
+}
+.s-label::before{content:'';width:10px;height:1px;background:var(--green);opacity:0.4}
+video{display:none}
+#camPreview{width:100%;aspect-ratio:4/3;background:#000;border:1px solid #001a00;display:block}
+.status-row{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.s-item{display:flex;align-items:center;gap:6px;font-size:0.6rem;color:var(--txt)}
+.dot{width:5px;height:5px;border-radius:50%;background:#001500;flex-shrink:0;transition:background 0.3s,box-shadow 0.3s}
+.dot.on{background:var(--green);box-shadow:0 0 4px var(--green)}
+.dot.err{background:#f03}
+.dot.pend{background:#560;animation:blink 0.6s infinite}
+@keyframes blink{50%{opacity:0.2}}
+#startBtn{
+  width:100%;background:transparent;border:1px solid var(--green);color:var(--green);
+  font-family:'Share Tech Mono',monospace;font-size:0.66rem;letter-spacing:0.22em;
+  text-transform:uppercase;padding:9px 0;cursor:pointer;transition:all 0.2s;
   text-shadow:0 0 6px var(--green);
 }
-#startBtn:hover  { background:rgba(0,255,0,0.06); box-shadow:0 0 12px rgba(0,255,0,0.2); }
-#startBtn:disabled { border-color:#001500; color:#001500; cursor:default;
-                     box-shadow:none; text-shadow:none; }
-
-/* Hand telemetry */
-.hand-panel {
-  background:#010301; border:1px solid #001a00;
-  padding:7px 8px; font-size:0.58rem; line-height:2;
-  margin-bottom:5px;
+#startBtn:hover{background:rgba(0,255,0,0.06);box-shadow:0 0 12px rgba(0,255,0,0.2)}
+#startBtn:disabled{border-color:#001500;color:#001500;cursor:default;box-shadow:none;text-shadow:none}
+.hand-panel{background:#010301;border:1px solid #001a00;padding:7px 8px;font-size:0.58rem;line-height:2;margin-bottom:5px}
+.hand-panel.active{border-color:var(--accent)}
+.hand-panel .hl{color:var(--txt);font-size:0.52rem;letter-spacing:0.18em;margin-bottom:2px}
+.gv{color:var(--accent)}
+.gbar-row{display:flex;align-items:center;gap:6px;font-size:0.56rem;margin:2px 0}
+.gbar-lbl{width:52px;color:var(--txt);font-size:0.52rem}
+.gbar{flex:1;height:3px;background:#001500;position:relative;overflow:hidden}
+.gbar-fill{position:absolute;left:0;top:0;bottom:0;background:var(--accent);box-shadow:0 0 4px var(--accent);width:0%;transition:width 0.06s}
+.gbar-val{width:28px;text-align:right;font-size:0.5rem;color:var(--txt)}
+.sab-cells{display:grid;grid-template-columns:repeat(4,1fr);gap:2px}
+.sab-cell{
+  background:#010301;border:1px solid #001500;padding:3px 2px;
+  font-size:0.48rem;text-align:center;color:#030;
+  transition:color 0.1s,border-color 0.1s;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
-.hand-panel.active { border-color:var(--green); }
-.hand-panel .hl { color:var(--txt); font-size:0.52rem; letter-spacing:0.18em; margin-bottom:2px; }
-.gv { color:var(--green); }
-
-/* Gesture bars */
-.gbar-row { display:flex; align-items:center; gap:6px; font-size:0.56rem; margin:2px 0; }
-.gbar-lbl { width:52px; color:var(--txt); font-size:0.52rem; }
-.gbar     { flex:1; height:3px; background:#001500; position:relative; overflow:hidden; }
-.gbar-fill { position:absolute; left:0; top:0; bottom:0; background:var(--green); box-shadow:0 0 4px var(--green); width:0%; transition:width 0.06s; }
-.gbar-val { width:28px; text-align:right; font-size:0.5rem; color:var(--txt); }
-
-/* SAB cells */
-.sab-cells { display:grid; grid-template-columns:repeat(4,1fr); gap:2px; }
-.sab-cell {
-  background:#010301; border:1px solid #001500;
-  padding:3px 2px; font-size:0.48rem; text-align:center;
-  color:#003300; transition:color 0.1s, border-color 0.1s;
-  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-}
-.sab-cell.live { color:var(--green); border-color:#002a00; }
-
-/* Console */
-#console {
-  flex:1; overflow-y:auto; padding:8px 10px;
-  font-size:0.54rem; line-height:1.85;
-  scrollbar-width:thin; scrollbar-color:#001500 transparent;
-}
-.lc-ok   { color:var(--green); }
-.lc-warn { color:#887700; }
-.lc-err  { color:#aa0022; }
-.lc-dim  { color:#003a00; }
-.lc-t    { color:#002200; margin-right:3px; }
-
-/* ═══ MAIN VIEW ═══════════════════════════════════════════════ */
-.main-view {
-  position:relative; background:#000; overflow:hidden;
-}
-/* BG canvas: B&W camera + matrix point cloud */
-#bgCanvas {
-  position:absolute; inset:0; width:100%; height:100%;
-  display:block;
-}
-/* LENS canvas: circular alternating B&W composition masks */
-#lensCanvas {
-  position:absolute; inset:0; width:100%; height:100%;
-  display:block; pointer-events:none;
-}
-/* AR canvas: skeleton, labels, reticles — transparent */
-#arCanvas {
-  position:absolute; inset:0; width:100%; height:100%;
-  display:block; pointer-events:none;
+.sab-cell.live{color:var(--accent);border-color:#002a00}
+#console{flex:1;overflow-y:auto;padding:8px 10px;font-size:0.54rem;line-height:1.85;scrollbar-width:thin;scrollbar-color:#001500 transparent}
+.lc-ok{color:var(--green)}.lc-warn{color:#870}.lc-err{color:#a02}.lc-dim{color:#030}.lc-t{color:#020;margin-right:3px}
+.main-view{position:relative;background:#000;overflow:hidden}
+#bgCanvas,#lensCanvas,#arCanvas,#objCanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#lensCanvas,#arCanvas,#objCanvas{pointer-events:none}
+#objCanvas{pointer-events:none;z-index:5}
+.hud{position:absolute;inset:0;pointer-events:none;font-family:'Share Tech Mono',monospace;z-index:6}
+.hud-c{position:absolute;font-size:0.5rem;letter-spacing:0.15em;color:rgba(0,255,0,0.22);text-transform:uppercase;line-height:1.6}
+.hud-tl{top:10px;left:12px}.hud-tr{top:10px;right:12px;text-align:right}
+.hud-bl{bottom:10px;left:12px}.hud-br{bottom:10px;right:12px;text-align:right}
+.corner{position:absolute;width:16px;height:16px;border-color:rgba(0,255,0,0.3);border-style:solid}
+.corner.tl{top:6px;left:6px;border-width:1px 0 0 1px}
+.corner.tr{top:6px;right:6px;border-width:1px 1px 0 0}
+.corner.bl{bottom:6px;left:6px;border-width:0 0 1px 1px}
+.corner.br{bottom:6px;right:6px;border-width:0 1px 1px 0}
+#sabNote{
+  display:none;position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
+  background:rgba(0,80,0,0.12);border:1px solid rgba(0,255,0,0.2);
+  color:rgba(0,255,0,0.5);font-size:0.5rem;letter-spacing:0.12em;padding:3px 10px;z-index:10;
 }
 
-/* HUD text overlays */
-.hud {
-  position:absolute; inset:0; pointer-events:none;
-  font-family:'Share Tech Mono',monospace;
+/* ═══ SETTINGS PANEL (overlay) ═══ */
+#settingsPanel{
+  position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.88);
+  display:none;align-items:center;justify-content:center;
 }
-.hud-c {
-  position:absolute; font-size:0.5rem; letter-spacing:0.15em;
-  color:rgba(0,255,0,0.22); text-transform:uppercase;
-  line-height:1.6;
+#settingsPanel.open{display:flex;}
+.settings-box{
+  background:#000;border:1px solid #001a00;padding:28px 32px;
+  width:min(600px,92vw);max-height:80vh;overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:#001500 transparent;
+  position:relative;
 }
-.hud-tl { top:10px; left:12px; }
-.hud-tr { top:10px; right:12px; text-align:right; }
-.hud-bl { bottom:10px; left:12px; }
-.hud-br { bottom:10px; right:12px; text-align:right; }
-
-/* Corner brackets */
-.corner {
-  position:absolute; width:16px; height:16px;
-  border-color:rgba(0,255,0,0.3); border-style:solid;
+.settings-close{
+  position:absolute;top:12px;right:16px;background:transparent;border:none;
+  color:var(--txt);font-family:'Share Tech Mono',monospace;font-size:0.6rem;
+  letter-spacing:0.18em;cursor:pointer;text-transform:uppercase;
+  transition:color 0.18s;
 }
-.corner.tl { top:6px; left:6px;  border-width:1px 0 0 1px; }
-.corner.tr { top:6px; right:6px; border-width:1px 1px 0 0; }
-.corner.bl { bottom:6px; left:6px;  border-width:0 0 1px 1px; }
-.corner.br { bottom:6px; right:6px; border-width:0 1px 1px 0; }
-
-/* SAB fallback note */
-#sabNote {
-  display:none; position:absolute; bottom:10px; left:50%;
-  transform:translateX(-50%);
-  background:rgba(0,80,0,0.12); border:1px solid rgba(0,255,0,0.2);
-  color:rgba(0,255,0,0.5); font-size:0.5rem; letter-spacing:0.12em; padding:3px 10px;
+.settings-close:hover{color:var(--green);}
+.settings-title{
+  font-family:'VT323',monospace;font-size:1.6rem;color:var(--green);
+  letter-spacing:0.3em;margin-bottom:20px;
 }
 </style>
 </head>
 <body>
 
-<!-- ═══ HEADER ═══════════════════════════════════════════════ -->
-<header>
-  <span class="h-logo">AR·TRACK SYS</span>
-  <span class="h-sep">//</span>
-  <span class="h-sub">Hand Skeleton · Point Cloud · Telemetry</span>
-  <div class="h-right">
-    <span class="h-badge" id="fpsBadge">-- FPS</span>
-    <span class="h-badge live" id="modeBadge">IDLE</span>
+<!-- ══════════ INTRO SCREEN ══════════ -->
+<div id="introScreen">
+  <div class="intro-scan"></div>
+  <canvas id="introGridCanvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0.18;"></canvas>
+
+  <div class="intro-title">AR·TRACK SYS</div>
+  <div class="intro-sub">Hand Skeleton · Point Cloud · Telemetry · v3.0</div>
+
+  <div class="intro-panel">
+    <!-- LAYER TOGGLES -->
+    <div class="intro-section">
+      <div class="intro-section-title">Render Layers</div>
+      <div class="toggle-grid" id="layerToggles">
+        <div class="tog active" data-layer="matrix">
+          <div class="tog-dot"></div><span class="tog-lbl">Matrix FX</span>
+        </div>
+        <div class="tog active" data-layer="skeleton">
+          <div class="tog-dot"></div><span class="tog-lbl">Skeleton</span>
+        </div>
+        <div class="tog active" data-layer="circles">
+          <div class="tog-dot"></div><span class="tog-lbl">Circles / Reticles</span>
+        </div>
+        <div class="tog active" data-layer="coords">
+          <div class="tog-dot"></div><span class="tog-lbl">Coord Data</span>
+        </div>
+        <div class="tog active" data-layer="lens">
+          <div class="tog-dot"></div><span class="tog-lbl">Lens Overlay</span>
+        </div>
+        <div class="tog active" data-layer="face">
+          <div class="tog-dot"></div><span class="tog-lbl">Face Detect</span>
+        </div>
+        <div class="tog active" data-layer="radial">
+          <div class="tog-dot"></div><span class="tog-lbl">Radial Vectors</span>
+        </div>
+        <div class="tog active" data-layer="hud">
+          <div class="tog-dot"></div><span class="tog-lbl">HUD Telemetry</span>
+        </div>
+        <div class="tog active" data-layer="objects">
+          <div class="tog-dot"></div><span class="tog-lbl">AR Objects</span>
+        </div>
+        <div class="tog active" data-layer="twohand">
+          <div class="tog-dot"></div><span class="tog-lbl">Two-Hand Link</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLOR SELECTOR -->
+    <div class="intro-section">
+      <div class="intro-section-title">Accent Color</div>
+      <div class="color-row">
+        <div class="color-swatch sel" data-hex="#00ff00" style="background:#00ff00;" title="Green"></div>
+        <div class="color-swatch" data-hex="#00ffaa" style="background:#00ffaa;" title="Cyan-Green"></div>
+        <div class="color-swatch" data-hex="#00eeff" style="background:#00eeff;" title="Cyan"></div>
+        <div class="color-swatch" data-hex="#4488ff" style="background:#4488ff;" title="Blue"></div>
+        <div class="color-swatch" data-hex="#cc44ff" style="background:#cc44ff;" title="Purple"></div>
+        <div class="color-swatch" data-hex="#ff2266" style="background:#ff2266;" title="Red"></div>
+        <div class="color-swatch" data-hex="#ff8800" style="background:#ff8800;" title="Orange"></div>
+        <div class="color-swatch" data-hex="#ffee00" style="background:#ffee00;" title="Yellow"></div>
+        <div class="color-custom-wrap">
+          <span class="color-custom-label">Custom</span>
+          <input type="color" id="customColorInput" value="#00ff00">
+        </div>
+      </div>
+    </div>
+
+    <!-- AR OBJECTS -->
+    <div class="intro-section">
+      <div class="intro-section-title">AR Draggable Objects</div>
+      <div class="obj-row">
+        <button class="obj-type-btn sel" data-shape="semicircle">Semicircle Arc</button>
+        <button class="obj-type-btn" data-shape="ring">Thick Ring</button>
+        <button class="obj-type-btn" data-shape="wedge">Wedge Chunk</button>
+        <div class="obj-count-wrap">
+          <span class="obj-count-label">Count</span>
+          <button class="obj-count-btn" id="objMinus">−</button>
+          <span id="objCountDisplay">3</span>
+          <button class="obj-count-btn" id="objPlus">+</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="launch-btn" id="launchBtn">▶ INITIALIZE SYSTEM</button>
   </div>
-</header>
-
-<div class="body">
-
-  <!-- ═══ SIDEBAR ════════════════════════════════════════════ -->
-  <aside class="sidebar">
-
-    <!-- Camera preview (MediaPipe skeleton) -->
-    <div class="s-block">
-      <div class="s-label">Skeleton Preview</div>
-      <video id="video" autoplay playsinline></video>
-      <canvas id="camPreview"></canvas>
-    </div>
-
-    <!-- Control -->
-    <div class="s-block">
-      <div class="s-label">Engine Control</div>
-      <button id="startBtn">▶ Initialize Tracking</button>
-    </div>
-
-    <!-- Status -->
-    <div class="s-block">
-      <div class="s-label">System Status</div>
-      <div class="status-row">
-        <div class="s-item"><div class="dot" id="s-cam"></div>Camera</div>
-        <div class="s-item"><div class="dot" id="s-mp"></div>MediaPipe</div>
-        <div class="s-item"><div class="dot" id="s-gl"></div>Renderer</div>
-        <div class="s-item"><div class="dot" id="s-sab"></div>SAB</div>
-      </div>
-    </div>
-
-    <!-- Hand 1 & 2 Telemetry -->
-    <div class="s-block">
-      <div class="s-label">Hand Telemetry</div>
-      <div class="hand-panel" id="hp1">
-        <div class="hl">HAND 01</div>
-        <div id="ht1">—</div>
-      </div>
-      <div class="hand-panel" id="hp2">
-        <div class="hl">HAND 02</div>
-        <div id="ht2">—</div>
-      </div>
-    </div>
-
-    <!-- Gesture bars -->
-    <div class="s-block">
-      <div class="s-label">Gesture Weights</div>
-      <div class="gbar-row"><span class="gbar-lbl">PINCH</span>  <div class="gbar"><div class="gbar-fill" id="gb-pinch"></div></div><span class="gbar-val" id="gv-pinch">0.00</span></div>
-      <div class="gbar-row"><span class="gbar-lbl">FIST</span>   <div class="gbar"><div class="gbar-fill" id="gb-fist"></div></div><span class="gbar-val" id="gv-fist">0.00</span></div>
-      <div class="gbar-row"><span class="gbar-lbl">SPREAD</span> <div class="gbar"><div class="gbar-fill" id="gb-spread"></div></div><span class="gbar-val" id="gv-spread">0.00</span></div>
-    </div>
-
-    <!-- SAB layout -->
-    <div class="s-block">
-      <div class="s-label">SAB Float32[16]</div>
-      <div class="sab-cells" id="sabCells"></div>
-    </div>
-
-    <!-- Console -->
-    <div id="console"></div>
-
-  </aside>
-
-  <!-- ═══ MAIN VIEW ══════════════════════════════════════════ -->
-  <main class="main-view">
-    <canvas id="bgCanvas"></canvas>
-    <canvas id="lensCanvas"></canvas>
-    <canvas id="arCanvas"></canvas>
-
-    <div class="hud">
-      <div class="corner tl"></div>
-      <div class="corner tr"></div>
-      <div class="corner bl"></div>
-      <div class="corner br"></div>
-      <div class="hud-c hud-tl" id="hud-tl">SYS · POINT CLOUD RENDER<br>MODE: IDLE</div>
-      <div class="hud-c hud-tr" id="hud-tr">FRAME: 000000<br>HANDS: 0</div>
-      <div class="hud-c hud-bl" id="hud-bl">LANDMARKS: 0/42<br>SAB WRITE: --</div>
-      <div class="hud-c hud-br">MATRIX CHARS · BW FEED<br>AR OVERLAY ACTIVE</div>
-    </div>
-
-    <div id="sabNote">⚠ FALLBACK MODE · postMessage · run: node server.js</div>
-  </main>
-
 </div>
 
-<!-- MediaPipe Hands -->
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js"></script>
-<!-- MediaPipe Face Detection -->
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection@0.4/face_detection.js"></script>
+<!-- ══════════ SETTINGS OVERLAY ══════════ -->
+<div id="settingsPanel">
+  <div class="settings-box">
+    <button class="settings-close" id="settingsClose">✕ CLOSE</button>
+    <div class="settings-title">SETTINGS</div>
 
+    <div class="intro-section">
+      <div class="intro-section-title">Render Layers</div>
+      <div class="toggle-grid" id="settingsLayerToggles"></div>
+    </div>
+
+    <div class="intro-section">
+      <div class="intro-section-title">Accent Color</div>
+      <div class="color-row" id="settingsColorRow"></div>
+    </div>
+
+    <div class="intro-section">
+      <div class="intro-section-title">AR Draggable Objects</div>
+      <div class="obj-row" id="settingsObjRow"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MAIN APP SHELL ══════════ -->
+<div id="appShell" style="display:none;flex-direction:column;height:100%;">
+  <header>
+    <span class="h-logo">AR·TRACK SYS</span>
+    <span class="h-sep">//</span>
+    <span class="h-sub">Hand Skeleton · Point Cloud · Telemetry</span>
+    <div class="h-right">
+      <span class="h-badge" id="fpsBadge">-- FPS</span>
+      <span class="h-badge live" id="modeBadge">IDLE</span>
+      <button class="h-settings-btn" id="openSettings">⚙ LAYERS</button>
+    </div>
+  </header>
+  <div class="body">
+    <aside class="sidebar">
+      <div class="s-block">
+        <div class="s-label">Skeleton Preview</div>
+        <video id="video" autoplay playsinline></video>
+        <canvas id="camPreview"></canvas>
+      </div>
+      <div class="s-block">
+        <div class="s-label">Engine Control</div>
+        <button id="startBtn">▶ Initialize Tracking</button>
+      </div>
+      <div class="s-block">
+        <div class="s-label">System Status</div>
+        <div class="status-row">
+          <div class="s-item"><div class="dot" id="s-cam"></div>Camera</div>
+          <div class="s-item"><div class="dot" id="s-mp"></div>MediaPipe</div>
+          <div class="s-item"><div class="dot" id="s-gl"></div>Renderer</div>
+          <div class="s-item"><div class="dot" id="s-sab"></div>SAB</div>
+        </div>
+      </div>
+      <div class="s-block">
+        <div class="s-label">Hand Telemetry</div>
+        <div class="hand-panel" id="hp1"><div class="hl">HAND 01</div><div id="ht1">—</div></div>
+        <div class="hand-panel" id="hp2"><div class="hl">HAND 02</div><div id="ht2">—</div></div>
+      </div>
+      <div class="s-block">
+        <div class="s-label">Gesture Weights</div>
+        <div class="gbar-row"><span class="gbar-lbl">PINCH</span><div class="gbar"><div class="gbar-fill" id="gb-pinch"></div></div><span class="gbar-val" id="gv-pinch">0.00</span></div>
+        <div class="gbar-row"><span class="gbar-lbl">FIST</span><div class="gbar"><div class="gbar-fill" id="gb-fist"></div></div><span class="gbar-val" id="gv-fist">0.00</span></div>
+        <div class="gbar-row"><span class="gbar-lbl">SPREAD</span><div class="gbar"><div class="gbar-fill" id="gb-spread"></div></div><span class="gbar-val" id="gv-spread">0.00</span></div>
+      </div>
+      <div class="s-block">
+        <div class="s-label">SAB Float32[16]</div>
+        <div class="sab-cells" id="sabCells"></div>
+      </div>
+      <div id="console"></div>
+    </aside>
+    <main class="main-view">
+      <canvas id="bgCanvas"></canvas>
+      <canvas id="lensCanvas"></canvas>
+      <canvas id="arCanvas"></canvas>
+      <canvas id="objCanvas"></canvas>
+      <div class="hud" id="mainHud">
+        <div class="corner tl"></div><div class="corner tr"></div>
+        <div class="corner bl"></div><div class="corner br"></div>
+        <div class="hud-c hud-tl" id="hud-tl">SYS · POINT CLOUD RENDER<br>MODE: IDLE</div>
+        <div class="hud-c hud-tr" id="hud-tr">FRAME: 000000<br>HANDS: 0</div>
+        <div class="hud-c hud-bl" id="hud-bl">LANDMARKS: 0/42<br>SAB WRITE: --</div>
+        <div class="hud-c hud-br">MATRIX CHARS · BW FEED<br>AR OVERLAY ACTIVE</div>
+      </div>
+      <div id="sabNote">⚠ FALLBACK MODE · postMessage · run: node server.js</div>
+    </main>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection@0.4/face_detection.js"></script>
 <script>
 'use strict';
-// ─────────────────────────────────────────────────────────────────────────────
-// PERFORMANCE ARCHITECTURE:
-//  1. MediaPipe inference runs in its OWN loop (setTimeout), never blocking rAF
-//  2. Char atlas: pre-rendered sprite sheet → drawImage instead of fillText
-//  3. Zero shadowBlur in AR hot paths — replaced by pre-glowed atlas sprites
-//  4. All baking (ctx.filter) throttled to 15fps, completely off rAF path
-//  5. Batched canvas paths — one stroke() per style group
-//  6. Lens uses pre-clipped offscreen tiles, no per-frame clip() call
-// ─────────────────────────────────────────────────────────────────────────────
 
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════
+// GLOBAL CONFIG STATE
+// ═══════════════════════════════════════
+const CFG = {
+  layers: {
+    matrix: true, skeleton: true, circles: true, coords: true,
+    lens: true, face: true, radial: true, hud: true, objects: true, twohand: true
+  },
+  accentHex: '#00ff00',
+  accentRGB: {r:0,g:255,b:0},
+  objShape: 'semicircle',
+  objCount: 3,
+};
+
+function hexToRGB(hex){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return {r,g,b};
+}
+function applyAccent(hex){
+  CFG.accentHex=hex;
+  CFG.accentRGB=hexToRGB(hex);
+  const {r,g,b}=CFG.accentRGB;
+  document.documentElement.style.setProperty('--accent',hex);
+  document.documentElement.style.setProperty('--accent-r',r);
+  document.documentElement.style.setProperty('--accent-g',g);
+  document.documentElement.style.setProperty('--accent-b',b);
+  document.documentElement.style.setProperty('--green',hex);
+}
+
+// ═══════════════════════════════════════
+// INTRO SCREEN LOGIC
+// ═══════════════════════════════════════
+(function setupIntro(){
+  // Animated grid on intro
+  const igc = document.getElementById('introGridCanvas');
+  const igx = igc.getContext('2d');
+  function resizeIG(){igc.width=window.innerWidth;igc.height=window.innerHeight;}
+  resizeIG();
+  window.addEventListener('resize',resizeIG);
+  let igFrame=0;
+  function drawIG(){
+    igFrame++;
+    const W=igc.width,H=igc.height;
+    igx.clearRect(0,0,W,H);
+    igx.strokeStyle='#00ff00';igx.lineWidth=0.5;
+    const STEP=44;
+    igx.beginPath();
+    for(let y=0;y<H;y+=STEP){igx.moveTo(0,y);igx.lineTo(W,y);}
+    for(let x=0;x<W;x+=STEP){igx.moveTo(x,0);igx.lineTo(x,H);}
+    igx.stroke();
+    const t=igFrame/60;
+    const cx=W*0.5,cy=H*0.5;
+    for(let i=0;i<3;i++){
+      const r=80+i*55+Math.sin(t*(1+i*0.3))*12;
+      igx.strokeStyle=`rgba(0,255,0,${0.12-i*0.03})`;
+      igx.lineWidth=0.6;igx.setLineDash([6,12]);
+      igx.beginPath();igx.arc(cx,cy,r,0,Math.PI*2);igx.stroke();
+    }
+    igx.setLineDash([]);
+    requestAnimationFrame(drawIG);
+  }
+  drawIG();
+
+  // Layer toggles
+  document.querySelectorAll('#layerToggles .tog').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const layer=el.dataset.layer;
+      CFG.layers[layer]=!CFG.layers[layer];
+      el.classList.toggle('active',CFG.layers[layer]);
+    });
+  });
+
+  // Color swatches
+  document.querySelectorAll('.color-swatch').forEach(sw=>{
+    sw.addEventListener('click',()=>{
+      document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('sel'));
+      sw.classList.add('sel');
+      applyAccent(sw.dataset.hex);
+      document.getElementById('customColorInput').value=sw.dataset.hex;
+    });
+  });
+  document.getElementById('customColorInput').addEventListener('input',e=>{
+    document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('sel'));
+    applyAccent(e.target.value);
+  });
+
+  // Object type buttons
+  document.querySelectorAll('.obj-type-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.obj-type-btn').forEach(b=>b.classList.remove('sel'));
+      btn.classList.add('sel');
+      CFG.objShape=btn.dataset.shape;
+    });
+  });
+
+  // Object count
+  let objCount=3;
+  const objDisplay=document.getElementById('objCountDisplay');
+  document.getElementById('objMinus').addEventListener('click',()=>{
+    objCount=Math.max(1,objCount-1);
+    objDisplay.textContent=objCount;
+    CFG.objCount=objCount;
+  });
+  document.getElementById('objPlus').addEventListener('click',()=>{
+    objCount=Math.min(8,objCount+1);
+    objDisplay.textContent=objCount;
+    CFG.objCount=objCount;
+  });
+
+  // Launch
+  document.getElementById('launchBtn').addEventListener('click',()=>{
+    document.getElementById('introScreen').style.display='none';
+    const app=document.getElementById('appShell');
+    app.style.display='flex';
+    startApp();
+  });
+})();
+
+// ═══════════════════════════════════════
+// SETTINGS OVERLAY (runtime)
+// ═══════════════════════════════════════
+function buildSettingsPanel(){
+  // Clone layer toggles
+  const stl=document.getElementById('settingsLayerToggles');
+  stl.innerHTML='';
+  Object.keys(CFG.layers).forEach(layer=>{
+    const d=document.createElement('div');
+    d.className='tog'+(CFG.layers[layer]?' active':'');
+    d.dataset.layer=layer;
+    const label=layer.charAt(0).toUpperCase()+layer.slice(1);
+    d.innerHTML=`<div class="tog-dot"></div><span class="tog-lbl">${label}</span>`;
+    d.addEventListener('click',()=>{
+      CFG.layers[layer]=!CFG.layers[layer];
+      d.classList.toggle('active',CFG.layers[layer]);
+      // sync intro toggles too
+      const introEl=document.querySelector(`#layerToggles [data-layer="${layer}"]`);
+      if(introEl)introEl.classList.toggle('active',CFG.layers[layer]);
+      applyLayerVisibility();
+    });
+    stl.appendChild(d);
+  });
+
+  // Color row
+  const scr=document.getElementById('settingsColorRow');
+  scr.innerHTML=`
+    <div class="color-swatch" data-hex="#00ff00" style="background:#00ff00;"></div>
+    <div class="color-swatch" data-hex="#00ffaa" style="background:#00ffaa;"></div>
+    <div class="color-swatch" data-hex="#00eeff" style="background:#00eeff;"></div>
+    <div class="color-swatch" data-hex="#4488ff" style="background:#4488ff;"></div>
+    <div class="color-swatch" data-hex="#cc44ff" style="background:#cc44ff;"></div>
+    <div class="color-swatch" data-hex="#ff2266" style="background:#ff2266;"></div>
+    <div class="color-swatch" data-hex="#ff8800" style="background:#ff8800;"></div>
+    <div class="color-swatch" data-hex="#ffee00" style="background:#ffee00;"></div>
+    <div class="color-custom-wrap"><span class="color-custom-label">Custom</span><input type="color" id="settingsColorInput" value="${CFG.accentHex}"></div>
+  `;
+  scr.querySelectorAll('.color-swatch').forEach(sw=>{
+    if(sw.dataset.hex===CFG.accentHex)sw.classList.add('sel');
+    sw.addEventListener('click',()=>{
+      scr.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('sel'));
+      sw.classList.add('sel');
+      applyAccent(sw.dataset.hex);
+      document.getElementById('settingsColorInput').value=sw.dataset.hex;
+    });
+  });
+  const sci=document.getElementById('settingsColorInput');
+  if(sci)sci.addEventListener('input',e=>{
+    scr.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('sel'));
+    applyAccent(e.target.value);
+  });
+
+  // Object row
+  const sor=document.getElementById('settingsObjRow');
+  sor.innerHTML=`
+    <button class="obj-type-btn${CFG.objShape==='semicircle'?' sel':''}" data-shape="semicircle">Semicircle Arc</button>
+    <button class="obj-type-btn${CFG.objShape==='ring'?' sel':''}" data-shape="ring">Thick Ring</button>
+    <button class="obj-type-btn${CFG.objShape==='wedge'?' sel':''}" data-shape="wedge">Wedge Chunk</button>
+  `;
+  sor.querySelectorAll('.obj-type-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      sor.querySelectorAll('.obj-type-btn').forEach(b=>b.classList.remove('sel'));
+      btn.classList.add('sel');
+      CFG.objShape=btn.dataset.shape;
+      if(window._engine)window._engine.objRenderer.resetObjects();
+    });
+  });
+}
+
+function applyLayerVisibility(){
+  const hud=document.getElementById('mainHud');
+  if(hud)hud.style.display=CFG.layers.hud?'':'none';
+}
+
+document.getElementById('openSettings').addEventListener('click',()=>{
+  buildSettingsPanel();
+  document.getElementById('settingsPanel').classList.add('open');
+});
+document.getElementById('settingsClose').addEventListener('click',()=>{
+  document.getElementById('settingsPanel').classList.remove('open');
+});
+document.getElementById('settingsPanel').addEventListener('click',e=>{
+  if(e.target===document.getElementById('settingsPanel'))
+    document.getElementById('settingsPanel').classList.remove('open');
+});
+
+// ═══════════════════════════════════════
 // CONSTANTS
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════
+const CONNECTIONS=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[0,9],[9,10],[10,11],[11,12],[0,13],[13,14],[14,15],[15,16],[0,17],[17,18],[18,19],[19,20],[5,9],[9,13],[13,17]];
+const TIPS=[4,8,12,16,20];
+const TIP_NAMES=['TH','IX','MD','RG','PK'];
+const WRIST=0,INDEX_MCP=5,PINKY_MCP=17,THUMB_TIP=4,INDEX_TIP=8,MIDDLE_TIP=12;
+const MCPS_ALL=[0,5,9,13,17];
+const MATRIX_CHARS='10アイ01ウエ10オカ01キク10ケコ01サシ10スセ01ソタ'.split('');
+const SAB_NAMES=['H1·X','H1·Y','H1·P','H1·R','H1·Fist','H1·Spd','H1·Vx','H1·Vy','H2·X','H2·Y','H2·P','H2·R','H2·Fist','H2·Spd','2H·D','RES'];
 
-// Hand connections (MediaPipe standard)
-const CONNECTIONS = [
-  [0,1],[1,2],[2,3],[3,4],         // thumb
-  [0,5],[5,6],[6,7],[7,8],         // index
-  [0,9],[9,10],[10,11],[11,12],    // middle
-  [0,13],[13,14],[14,15],[15,16],  // ring
-  [0,17],[17,18],[18,19],[19,20],  // pinky
-  [5,9],[9,13],[13,17]             // palm arch
-];
-
-// Fingertip indices for labels + radial lines highlight
-const TIPS = [4, 8, 12, 16, 20];
-const TIP_NAMES = ['TH','IX','MD','RG','PK'];
-
-// Wrist = 0, palm center landmark indices
-const WRIST = 0;
-const INDEX_MCP = 5, PINKY_MCP = 17;
-const THUMB_TIP = 4, INDEX_TIP = 8;
-const MIDDLE_TIP = 12;
-const MCPS_ALL = [0, 5, 9, 13, 17];
-
-// Matrix characters — 0s, 1s, katakana fragments
-const MATRIX_CHARS = '10アイ01ウエ10オカ01キク10ケコ01サシ10スセ01ソタ'.split('');
-
-// SAB layout names
-const SAB_NAMES = [
-  'H1·X','H1·Y','H1·P','H1·R',
-  'H1·Fist','H1·Spd','H1·Vx','H1·Vy',
-  'H2·X','H2·Y','H2·P','H2·R',
-  'H2·Fist','H2·Spd','2H·D','RES'
-];
-
-// Build SAB cell DOM
-const sabContainer = document.getElementById('sabCells');
+// Build SAB cells
+const sabContainer=document.getElementById('sabCells');
 SAB_NAMES.forEach((n,i)=>{
-  const d = document.createElement('div');
-  d.className='sab-cell'; d.id=`sc${i}`;
-  d.textContent=`[${i}]`;
+  const d=document.createElement('div');
+  d.className='sab-cell';d.id=`sc${i}`;d.textContent=`[${i}]`;
   sabContainer.appendChild(d);
 });
 
-
-// ─────────────────────────────────────────────────────────────────────────────
-// PERF ARCHITECTURE
-//  1. MediaPipe runs in its OWN loop (setTimeout chain), NEVER blocking rAF
-//  2. Char atlas: pre-rendered sprite → drawImage instead of fillText (10× faster)
-//  3. Zero shadowBlur in AR hot paths
-//  4. All ctx.filter baking throttled to ~15fps, off rAF path entirely
-//  5. Single-path batched strokes in skeleton/vectors
-//  6. Typed arrays for bucket storage (no JS object allocation per cell)
-// ─────────────────────────────────────────────────────────────────────────────
-
-// ─── Char sprite atlas ────────────────────────────────────────────────────────
-const ATLAS_CW = 14;
-const ATLAS_CH = 18;
-let   CHAR_ATLAS = null;
-
-function buildCharAtlas() {
-  const n   = MATRIX_CHARS.length;
-  const cvs = document.createElement('canvas');
-  cvs.width  = n * ATLAS_CW;
-  cvs.height = ATLAS_CH;
-  const ctx  = cvs.getContext('2d');
-  ctx.font         = `${ATLAS_CH - 1}px VT323, monospace`;
-  ctx.textAlign    = 'center';
-  ctx.textBaseline = 'top';
-  ctx.fillStyle    = '#00ff00';
-  for (let i = 0; i < n; i++) {
-    ctx.fillText(MATRIX_CHARS[i], i * ATLAS_CW + ATLAS_CW * 0.5, 0);
-  }
-  CHAR_ATLAS = cvs;
+const ATLAS_CW=14,ATLAS_CH=18;
+let CHAR_ATLAS=null;
+function buildCharAtlas(){
+  const n=MATRIX_CHARS.length;
+  const cvs=document.createElement('canvas');
+  cvs.width=n*ATLAS_CW;cvs.height=ATLAS_CH;
+  const ctx=cvs.getContext('2d');
+  ctx.font=`${ATLAS_CH-1}px VT323,monospace`;
+  ctx.textAlign='center';ctx.textBaseline='top';
+  ctx.fillStyle='#00ff00';
+  for(let i=0;i<n;i++)ctx.fillText(MATRIX_CHARS[i],i*ATLAS_CW+ATLAS_CW*0.5,0);
+  CHAR_ATLAS=cvs;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// BACKGROUND RENDERER — B&W camera + atlas-based matrix point cloud
-// ─────────────────────────────────────────────────────────────────────────────
-class BgRenderer {
-  constructor(canvas, video) {
-    this.canvas = canvas;
-    this.video  = video;
-    this.ctx    = canvas.getContext('2d');
-    this.W = 0; this.H = 0;
-    this.frame = 0;
-
-    // Bake at 480p — sufficient quality, fast filter
-    this.BW = 480; this.BH = 270;
-    this.bwCvs = this._mkCvs(this.BW, this.BH);
-    this.bwCtx = this.bwCvs.getContext('2d');
-    this.hcCvs = this._mkCvs(this.BW, this.BH);
-    this.hcCtx = this.hcCvs.getContext('2d');
-    this.baked = false;
-
-    // Grid cell size — larger = fewer drawImage calls per frame
-    this.GRID = 18;
-    this.lumGrid  = null;  // Float32Array
-    this.edgeGrid = null;  // Uint8Array (0/1)
-    this.gridCols = 0;
-    this.gridRows = 0;
-
-    // 4 alpha buckets only — typed arrays, reused each frame
-    this.ALPHA_LVLS = [0.13, 0.32, 0.62, 0.92];
-    this.NUM_A = 4;
-    this.BUCKETS = null;   // Array of Int16Array
-    this._bktLen = null;   // Int32Array
-
-    // Lum sample canvas (1px per grid cell)
-    this._lumCvs = this._mkCvs(1, 1);
-    this._lumCtx = this._lumCvs.getContext('2d', {willReadFrequently: true});
-
-    this.focal = [];
+// ═══════════════════════════════════════
+// AR OBJECTS RENDERER (Draggable, Rotatable, Pinch-controlled)
+// ═══════════════════════════════════════
+class ARObjectRenderer {
+  constructor(canvas){
+    this.canvas=canvas;
+    this.ctx=canvas.getContext('2d');
+    this.W=0;this.H=0;
+    this.objects=[];
+    this.t=0;
+    // Pinch drag state
+    this.drag={active:false,objIdx:-1,handIdx:-1,startPinchX:0,startPinchY:0,startObjX:0,startObjY:0,prevAngle:0,rotating:false,rotStartPinchAngle:0,rotStartObjAngle:0,pinchHoldFrames:0};
+    this.prevPinchPos=[{x:-1,y:-1},{x:-1,y:-1}];
+    this.pinchActive=[false,false];
   }
-
-  _mkCvs(w, h) {
-    const c = document.createElement('canvas');
-    c.width = w; c.height = h; return c;
+  resize(w,h){
+    this.canvas.width=w;this.canvas.height=h;this.W=w;this.H=h;
+    if(this.objects.length===0)this.resetObjects();
   }
-
-  resize(w, h) {
-    this.canvas.width = w; this.canvas.height = h;
-    this.W = w; this.H = h;
-    const GRID = this.GRID;
-    this.gridCols = Math.ceil(w / GRID) + 1;
-    this.gridRows = Math.ceil(h / GRID) + 1;
-    const n = this.gridCols * this.gridRows;
-    this.lumGrid   = new Float32Array(n);
-    this.edgeGrid  = new Uint8Array(n);
-    // Each bucket stores (destX, destY, atlasX) as Int16 triples
-    this.BUCKETS   = Array.from({length: this.NUM_A}, () => new Int16Array(n * 3));
-    this._bktLen   = new Int32Array(this.NUM_A);
-    this._lumCvs.width  = this.gridCols;
-    this._lumCvs.height = this.gridRows;
-    this.baked = false;
-  }
-
-  setFocal(fp) { this.focal = fp; }
-
-  // ALL ctx.filter here — throttled to ~15fps, never called from rAF
-  bakeFrame() {
-    if (!CHAR_ATLAS) buildCharAtlas();
-    const W = this.BW, H = this.BH;
-
-    this.bwCtx.save();
-    this.bwCtx.filter = 'grayscale(100%) contrast(1.1) brightness(0.45)';
-    this.bwCtx.translate(W, 0); this.bwCtx.scale(-1, 1);
-    this.bwCtx.drawImage(this.video, 0, 0, W, H);
-    this.bwCtx.restore();
-
-    this.hcCtx.save();
-    this.hcCtx.filter = 'grayscale(100%) contrast(2.2) brightness(0.65)';
-    this.hcCtx.translate(W, 0); this.hcCtx.scale(-1, 1);
-    this.hcCtx.drawImage(this.video, 0, 0, W, H);
-    this.hcCtx.restore();
-
-    // Build lum grid — scale bwCvs to 1px per cell, read pixels once
-    const cols = this.gridCols, rows = this.gridRows;
-    this._lumCtx.drawImage(this.bwCvs, 0, 0, cols, rows);
-    const px = this._lumCtx.getImageData(0, 0, cols, rows).data;
-    const lum = this.lumGrid;
-    for (let i = 0, n = cols * rows; i < n; i++) lum[i] = px[i << 2] / 255;
-
-    // Edge grid: horizontal + vertical diff
-    const edge = this.edgeGrid;
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        const i = r * cols + c;
-        const e = (c < cols-1 ? Math.abs(lum[i] - lum[i+1])    : 0)
-                + (r < rows-1 ? Math.abs(lum[i] - lum[i+cols])  : 0);
-        edge[i] = e > 0.20 ? 1 : 0;
-      }
+  resetObjects(){
+    this.objects=[];
+    const n=CFG.objCount;
+    const {r,g,b}=CFG.accentRGB;
+    const shapes=['semicircle','ring','wedge'];
+    for(let i=0;i<n;i++){
+      const angle=(i/n)*Math.PI*2;
+      const rx=0.35+Math.cos(angle)*0.22,ry=0.35+Math.sin(angle)*0.22;
+      this.objects.push({
+        x:this.W*rx,y:this.H*ry,
+        rotation:i*(Math.PI*2/n),
+        rotVel:0,
+        shape:CFG.objShape,
+        r:50+i*10,
+        thickness:18+i*4,
+        alpha:0.85,
+        grabbed:false,
+        grabHandIdx:-1,
+        pulsePhase:i*1.1,
+        spinAnim:0,
+        id:i,
+      });
     }
-    this.baked = true;
   }
 
-  render(now) {
-    if (!this.baked || !CHAR_ATLAS) return;
-    const ctx  = this.ctx;
-    const W = this.W, H = this.H;
-    const fr   = ++this.frame;
-    const cols = this.gridCols, rows = this.gridRows;
-    const GRID = this.GRID;
-    const nChars = MATRIX_CHARS.length;
-    const focalArr = this.focal, nFocal = focalArr.length;
-    const charTick = (fr * 0.28) | 0;
+  // Map normalized hand coords to canvas
+  mapX(nx){return(1-nx)*this.W;}
+  mapY(ny){return ny*this.H;}
 
-    // 1. Black
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, W, H);
+  update(landmarks,hWeights,handVels){
+    this.t=performance.now()/1000;
+    const t=this.t;
+    if(!this.objects.length)return;
 
-    // 2. Ghost B&W — pre-baked, no filter
-    ctx.globalAlpha = 0.24;
-    ctx.drawImage(this.bwCvs, 0, 0, W, H);
-    ctx.globalAlpha = 1;
+    // Update pulse & spin anims
+    this.objects.forEach(o=>{
+      o.pulsePhase+=0.04;
+      o.spinAnim+=o.rotVel;
+      o.rotVel*=0.92; // damping
+    });
 
-    // 3. Fill buckets
-    const NUM_A  = this.NUM_A;
-    const bktLen = this._bktLen;
-    bktLen.fill(0);
-    const BKTS = this.BUCKETS;
-    const lumG = this.lumGrid, edgeG = this.edgeGrid;
+    // Pinch interaction
+    for(let hi=0;hi<Math.min(landmarks.length,2);hi++){
+      const lm=landmarks[hi];
+      const pinch=hWeights[hi]?.pinch||0;
+      const pinchX=this.mapX((lm[THUMB_TIP].x+lm[INDEX_TIP].x)*0.5);
+      const pinchY=this.mapY((lm[THUMB_TIP].y+lm[INDEX_TIP].y)*0.5);
+      const wasPinching=this.pinchActive[hi];
+      const isPinching=pinch>0.55;
+      this.pinchActive[hi]=isPinching;
 
-    for (let row = 0; row < rows; row++) {
-      const ny = row / rows;
-      for (let col = 0; col < cols; col++) {
-        const ci  = row * cols + col;
-        const l   = lumG[ci];
-        if (l < 0.06) continue;
-
-        // Focal boost — squared distance (no sqrt needed)
-        let fb = 0;
-        const nx = col / cols;
-        for (let fi = 0; fi < nFocal; fi++) {
-          const fp = focalArr[fi];
-          const dx = nx - fp.x, dy = ny - fp.y;
-          const b  = 1 - (dx*dx + dy*dy) / 0.035;
-          if (b > fb) fb = b < 0 ? 0 : b;
+      if(isPinching && !wasPinching){
+        // Start potential grab — find closest object
+        let best=-1,bestD=80;
+        this.objects.forEach((o,oi)=>{
+          if(o.grabbed && o.grabHandIdx!==hi)return;
+          const d=Math.hypot(pinchX-o.x,pinchY-o.y);
+          const threshold=o.r*1.8;
+          if(d<threshold && d<bestD){bestD=d;best=oi;}
+        });
+        if(best>=0){
+          const o=this.objects[best];
+          o.grabbed=true;
+          o.grabHandIdx=hi;
+          // Determine: drag vs rotate
+          // If pinch point is near edge → rotate, near center → drag
+          const d=Math.hypot(pinchX-o.x,pinchY-o.y);
+          const rotZone=o.r*0.6;
+          if(d>rotZone){
+            // rotate mode
+            this.drag={
+              active:true,objIdx:best,handIdx:hi,
+              rotating:true,
+              rotStartPinchAngle:Math.atan2(pinchY-o.y,pinchX-o.x),
+              rotStartObjAngle:o.rotation,
+              startPinchX:pinchX,startPinchY:pinchY,
+              startObjX:o.x,startObjY:o.y,
+              pinchHoldFrames:0,
+            };
+          } else {
+            // drag mode
+            this.drag={
+              active:true,objIdx:best,handIdx:hi,
+              rotating:false,
+              startPinchX:pinchX,startPinchY:pinchY,
+              startObjX:o.x,startObjY:o.y,
+              rotStartPinchAngle:0,rotStartObjAngle:0,
+              pinchHoldFrames:0,
+            };
+          }
         }
-
-        const isEdge = edgeG[ci];
-        const a   = Math.min(l + fb * 0.55 + isEdge * 0.25, 1);
-        const ai  = Math.min(NUM_A - 1, (a * NUM_A) | 0);
-
-        const charIdx = ((col * 7 + row * 13 + charTick) >>> 0) % nChars;
-        const bkt = BKTS[ai];
-        const idx = bktLen[ai];
-        bkt[idx]   = col * GRID;
-        bkt[idx+1] = row * GRID;
-        bkt[idx+2] = charIdx * ATLAS_CW; // pre-compute atlas srcX
-        bktLen[ai] = idx + 3;
       }
-    }
 
-    // 4. Blit buckets — ONE globalAlpha per bucket, drawImage per char
-    const atlas = CHAR_ATLAS;
-    const CW = ATLAS_CW, CH = ATLAS_CH;
-    for (let ai = 0; ai < NUM_A; ai++) {
-      const len = bktLen[ai];
-      if (len === 0) continue;
-      ctx.globalAlpha = this.ALPHA_LVLS[ai];
-      const b = BKTS[ai];
-      for (let i = 0; i < len; i += 3) {
-        ctx.drawImage(atlas, b[i+2], 0, CW, CH, b[i], b[i+1], CW, CH);
+      if(isPinching && this.drag.active && this.drag.handIdx===hi){
+        const dr=this.drag;
+        const o=this.objects[dr.objIdx];
+        dr.pinchHoldFrames++;
+        if(dr.rotating){
+          const curAngle=Math.atan2(pinchY-o.y,pinchX-o.x);
+          const delta=curAngle-dr.rotStartPinchAngle;
+          const prevRot=o.rotation;
+          o.rotation=dr.rotStartObjAngle+delta;
+          o.rotVel=(o.rotation-prevRot)*0.3;
+        } else {
+          const dx=pinchX-dr.startPinchX;
+          const dy=pinchY-dr.startPinchY;
+          o.x=Math.max(o.r,Math.min(this.W-o.r,dr.startObjX+dx));
+          o.y=Math.max(o.r,Math.min(this.H-o.r,dr.startObjY+dy));
+        }
       }
-    }
-    ctx.globalAlpha = 1;
 
-    // 5. Focal lens — clip + pre-baked hcCvs
-    for (let fi = 0; fi < nFocal; fi++) {
-      const fp = focalArr[fi];
-      const px = fp.x * W, py = fp.y * H;
-      const R  = (52 + fp.pinch * 32) * (W / 900);
-      ctx.save();
-      ctx.beginPath(); ctx.arc(px, py, R, 0, Math.PI*2); ctx.clip();
-      ctx.globalAlpha = 0.42;
-      ctx.drawImage(this.hcCvs, 0, 0, W, H);
-      ctx.restore();
-      ctx.strokeStyle = 'rgba(0,255,0,0.32)';
-      ctx.lineWidth = 0.7; ctx.setLineDash([3,6]);
-      ctx.beginPath(); ctx.arc(px, py, R, 0, Math.PI*2); ctx.stroke();
-      ctx.setLineDash([]);
-    }
-
-    // 6. Occasional interference band
-    if ((fr & 7) === 0 && Math.sin(fr * 47.3) > 0.7) {
-      const lineY = ((Math.sin(fr * 31.7) * 0.5 + 0.5) * H) | 0;
-      ctx.globalAlpha = 0.17;
-      ctx.drawImage(this.hcCvs, 0, lineY*this.BH/H|0, this.BW, 3,
-                    (Math.sin(fr*17.1)*7)|0, lineY, W, 3);
-      ctx.globalAlpha = 1;
-    }
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// LENS RENDERER — alternating B&W/inverted circular composition masks
-// ─────────────────────────────────────────────────────────────────────────────
-class LensRenderer {
-  constructor(canvas, video) {
-    this.canvas = canvas;
-    this.video  = video;
-    this.ctx    = canvas.getContext('2d');
-    this.W = 0; this.H = 0;
-    this.BW = 480; this.BH = 270;
-    this.bwCvs  = this._mkCvs(this.BW, this.BH);
-    this.bwCtx  = this.bwCvs.getContext('2d');
-    this.invCvs = this._mkCvs(this.BW, this.BH);
-    this.invCtx = this.invCvs.getContext('2d');
-    this.hasBaked = false;
-    // Pre-allocated dash arrays
-    this._d = [[4,10],[7,7],[9,5]];
-  }
-
-  _mkCvs(w, h) { const c = document.createElement('canvas'); c.width=w; c.height=h; return c; }
-
-  resize(w, h) { this.canvas.width=w; this.canvas.height=h; this.W=w; this.H=h; }
-
-  // ctx.filter ONLY here — throttled, off rAF
-  bakeFrames() {
-    const W = this.BW, H = this.BH;
-    this.bwCtx.save();
-    this.bwCtx.filter = 'grayscale(100%) contrast(1.4) brightness(0.78)';
-    this.bwCtx.translate(W,0); this.bwCtx.scale(-1,1);
-    this.bwCtx.drawImage(this.video, 0, 0, W, H);
-    this.bwCtx.restore();
-
-    this.invCtx.save();
-    this.invCtx.filter = 'grayscale(100%) contrast(1.55) brightness(0.72) invert(100%)';
-    this.invCtx.translate(W,0); this.invCtx.scale(-1,1);
-    this.invCtx.drawImage(this.video, 0, 0, W, H);
-    this.invCtx.restore();
-    this.hasBaked = true;
-  }
-
-  render(focalPoints, t) {
-    if (!this.hasBaked) return;
-    const ctx = this.ctx;
-    ctx.clearRect(0, 0, this.W, this.H);
-    for (let fi = 0; fi < focalPoints.length; fi++) {
-      const fp = focalPoints[fi];
-      if (fp.active) this._drawLens(fp, t);
-    }
-  }
-
-  _drawLens(fp, t) {
-    const ctx = this.ctx;
-    const { cx, cy, baseR, vel, pinch, fist, isFace } = fp;
-    const W = this.W, H = this.H;
-    const MS = (1 + vel * 0.45) * (1 - fist * 0.18) * (1 + Math.sin(t*6.5)*pinch*0.05);
-
-    // 3 rings — [radiusMult, isInverted, alphaBase, velFade]
-    const RM  = [0.55, 1.00, 1.62];
-    const INV = [false, true, false];
-    const AB  = [0.48, 0.36, 0.20];
-    const VF  = [0.0,  0.08, 0.22];
-
-    for (let ri = 0; ri < 3; ri++) {
-      const R     = baseR * RM[ri] * MS;
-      const Rprev = ri === 0 ? 0 : baseR * RM[ri-1] * MS;
-      const alpha = Math.max(0, AB[ri] - vel * VF[ri]);
-      if (alpha < 0.02) continue;
-
-      // Annular clip + texture blit
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      ctx.beginPath();
-      ctx.arc(cx, cy, R, 0, Math.PI*2);
-      if (Rprev > 1) ctx.arc(cx, cy, Rprev, 0, Math.PI*2, true);
-      ctx.clip('evenodd');
-      ctx.drawImage(INV[ri] ? this.invCvs : this.bwCvs, 0, 0, W, H);
-      ctx.restore();
-
-      // Border — no shadowBlur
-      ctx.save();
-      ctx.globalAlpha = alpha * 0.6;
-      ctx.strokeStyle = INV[ri] ? 'rgba(230,230,230,0.65)' : 'rgba(0,255,0,0.5)';
-      ctx.lineWidth   = ri === 1 ? 1.2 : 0.7;
-      ctx.setLineDash(this._d[ri]);
-      ctx.lineDashOffset = -t * (16 + ri * 8) * (ri % 2 === 0 ? 1 : -1);
-      ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI*2); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.restore();
-    }
-
-    // Pinch burst
-    if (pinch > 0.72) {
-      ctx.save();
-      ctx.globalAlpha = (pinch - 0.72) / 0.28 * 0.28;
-      ctx.beginPath(); ctx.arc(cx, cy, baseR * 0.5 * MS, 0, Math.PI*2); ctx.clip();
-      ctx.drawImage(this.invCvs, 0, 0, W, H);
-      ctx.restore();
-    }
-
-    // Face outer ring — one simple stroke, no shadow
-    if (isFace) {
-      ctx.globalAlpha = 0.09;
-      ctx.strokeStyle = '#aaffaa'; ctx.lineWidth = 0.6;
-      ctx.setLineDash([2,14]);
-      ctx.beginPath(); ctx.arc(cx, cy, baseR * 2.2, 0, Math.PI*2); ctx.stroke();
-      ctx.setLineDash([]); ctx.globalAlpha = 1;
-    }
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// AR OVERLAY RENDERER — skeleton, labels, reticles, vectors
-// NO shadowBlur in any hot path — all glow replaced by color/alpha
-// ─────────────────────────────────────────────────────────────────────────────
-class ARRenderer {
-  constructor(canvas) {
-    this.canvas = canvas;
-    this.ctx    = canvas.getContext('2d');
-    this.W = 0; this.H = 0;
-    this.t = 0;
-  }
-
-  resize(w, h) {
-    this.canvas.width = w; this.canvas.height = h;
-    this.W = w; this.H = h;
-  }
-
-  mapX(nx) { return (1 - nx) * this.W; }
-  mapY(ny) { return ny * this.H; }
-
-  render(handLandmarks, weights, frameCount, extra) {
-    const ctx = this.ctx;
-    this.t = performance.now() / 1000;
-    const t  = this.t;
-    const ex = extra || {};
-
-    ctx.clearRect(0, 0, this.W, this.H);
-    ctx.shadowBlur = 0; // ensure clean state
-
-    if (!handLandmarks || handLandmarks.length === 0) {
-      this._drawIdleGrid(t);
-      if (ex.faceCenter?.active) this._drawFaceReticle(ex.faceCenter, t);
-      return;
-    }
-
-    handLandmarks.forEach((lm, hi) => {
-      this._drawRadialVectors(lm, hi);
-      this._drawSkeleton(lm, hi, weights);
-      this._drawFingertipReticles(lm, hi, t, ex.tipVels?.[hi], weights[hi]);
-      this._drawTelescope(lm, hi, t, weights[hi] || {}, ex.handVels?.[hi] || 0);
-      this._drawFingertipLabels(lm, hi);
-    });
-
-    if (ex.faceCenter?.active) this._drawFaceReticle(ex.faceCenter, t);
-    if (handLandmarks.length === 2) this._drawTwoHandLink(handLandmarks, t, weights);
-  }
-
-  // ── Skeleton — two batched paths, no shadowBlur ─────────────
-  _drawSkeleton(lm, hi, weights) {
-    const ctx   = this.ctx;
-    const pinch = weights[hi]?.pinch || 0;
-    const col   = hi === 0 ? 'rgba(0,255,0,0.72)' : 'rgba(0,210,100,0.72)';
-
-    ctx.shadowBlur = 0;
-
-    // All non-pinch lines — one path
-    ctx.beginPath();
-    for (let i = 0; i < CONNECTIONS.length; i++) {
-      const [a,b] = CONNECTIONS[i];
-      if (a===THUMB_TIP||a===INDEX_TIP||b===THUMB_TIP||b===INDEX_TIP) continue;
-      ctx.moveTo(this.mapX(lm[a].x), this.mapY(lm[a].y));
-      ctx.lineTo(this.mapX(lm[b].x), this.mapY(lm[b].y));
-    }
-    ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.stroke();
-
-    // Pinch lines — one path, brighter
-    if (pinch > 0.04) {
-      const g = 180 + (pinch * 75) | 0;
-      ctx.beginPath();
-      for (let i = 0; i < CONNECTIONS.length; i++) {
-        const [a,b] = CONNECTIONS[i];
-        if (!(a===THUMB_TIP||a===INDEX_TIP||b===THUMB_TIP||b===INDEX_TIP)) continue;
-        ctx.moveTo(this.mapX(lm[a].x), this.mapY(lm[a].y));
-        ctx.lineTo(this.mapX(lm[b].x), this.mapY(lm[b].y));
+      if(!isPinching && wasPinching){
+        if(this.drag.active && this.drag.handIdx===hi){
+          const o=this.objects[this.drag.objIdx];
+          o.grabbed=false;o.grabHandIdx=-1;
+          this.drag={active:false,objIdx:-1,handIdx:-1};
+        }
       }
-      ctx.strokeStyle = `rgba(0,${g},${(pinch*80)|0},${0.55+pinch*0.45})`;
-      ctx.lineWidth = 1 + pinch * 1.5; ctx.stroke();
+
+      this.prevPinchPos[hi]={x:pinchX,y:pinchY};
     }
-
-    // Non-tip joints — one batched fill
-    ctx.fillStyle = hi===0 ? 'rgba(0,175,0,0.7)' : 'rgba(0,155,85,0.7)';
-    ctx.beginPath();
-    lm.forEach((pt, idx) => {
-      if (TIPS.includes(idx) || idx === WRIST) return;
-      ctx.moveTo(this.mapX(pt.x)+2, this.mapY(pt.y));
-      ctx.arc(this.mapX(pt.x), this.mapY(pt.y), 2, 0, Math.PI*2);
-    });
-    ctx.fill();
-
-    // Wrist
-    ctx.fillStyle = hi===0 ? 'rgba(0,210,0,0.85)' : 'rgba(0,170,95,0.85)';
-    ctx.beginPath();
-    ctx.arc(this.mapX(lm[WRIST].x), this.mapY(lm[WRIST].y), 4, 0, Math.PI*2);
-    ctx.fill();
-
-    // Tips — bright, ONE shadowBlur set for the batch
-    ctx.shadowColor = hi===0 ? '#00ff00' : '#00dc6e';
-    ctx.shadowBlur  = 5 + pinch * 7;
-    ctx.fillStyle   = hi===0 ? '#00ff00' : '#00dd88';
-    ctx.beginPath();
-    for (let i = 0; i < TIPS.length; i++) {
-      const pt = lm[TIPS[i]];
-      ctx.moveTo(this.mapX(pt.x)+3.5, this.mapY(pt.y));
-      ctx.arc(this.mapX(pt.x), this.mapY(pt.y), 3.5, 0, Math.PI*2);
+    // Release grabs if no hands
+    if(landmarks.length===0){
+      this.objects.forEach(o=>{o.grabbed=false;o.grabHandIdx=-1;});
+      this.drag={active:false,objIdx:-1,handIdx:-1,rotating:false,rotStartPinchAngle:0,rotStartObjAngle:0,startPinchX:0,startPinchY:0,startObjX:0,startObjY:0,pinchHoldFrames:0};
     }
-    ctx.fill();
-    ctx.shadowBlur = 0;
   }
 
-  // ── Radial vectors — two batched paths ───────────────────────
-  _drawRadialVectors(lm, hi) {
-    const ctx = this.ctx;
-    const wx  = this.mapX(lm[WRIST].x), wy = this.mapY(lm[WRIST].y);
-    const col = hi === 0 ? '#00ff00' : '#00cc88';
+  render(landmarks,hWeights){
+    if(!CFG.layers.objects)return;
+    const ctx=this.ctx;
+    ctx.clearRect(0,0,this.W,this.H);
+    const t=this.t;
+    const {r,g,b}=CFG.accentRGB;
+    const accentStr=`${r},${g},${b}`;
 
-    ctx.shadowBlur  = 0;
-    ctx.globalAlpha = 0.16;
-    ctx.strokeStyle = col; ctx.lineWidth = 0.4;
-    ctx.setLineDash([2,6]);
-    ctx.beginPath();
-    lm.forEach((pt, idx) => {
-      if (idx === WRIST || TIPS.includes(idx)) return;
-      ctx.moveTo(wx, wy); ctx.lineTo(this.mapX(pt.x), this.mapY(pt.y));
-    });
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    ctx.globalAlpha = 0.28;
-    ctx.lineWidth   = 0.7;
-    ctx.beginPath();
-    for (let i = 0; i < TIPS.length; i++) {
-      const pt = lm[TIPS[i]];
-      ctx.moveTo(wx, wy); ctx.lineTo(this.mapX(pt.x), this.mapY(pt.y));
-    }
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-  }
-
-  // ── Telescope reticle — 4 rings (down from 6), no per-ring shadowBlur ──
-  _drawTelescope(lm, hi, t, w, vel) {
-    const ctx   = this.ctx;
-    const pinch = w.pinch || 0;
-    const fist  = w.fist  || 0;
-
-    let cx = 0, cy = 0;
-    for (let i = 0; i < MCPS_ALL.length; i++) { cx += lm[MCPS_ALL[i]].x; cy += lm[MCPS_ALL[i]].y; }
-    cx /= MCPS_ALL.length; cy /= MCPS_ALL.length;
-    const px = this.mapX(cx), py = this.mapY(cy);
-
-    const S = (1 + Math.min(vel,1)*0.5) * (1-fist*0.18) * (1+Math.sin(t*6.5)*pinch*0.06);
-    const R = [14*S, 26*S, 44*S, 68*S, 92*S];
-    const outerA = Math.max(0.07, 0.32 - vel*0.22);
-    const col    = hi===0 ? '0,255,0' : '0,220,110';
-
-    ctx.save();
-    ctx.translate(px, py);
-    ctx.shadowBlur = 0; // NO per-ring shadow
-
-    // Ring 4 — outermost, dashed, slow spin
-    ctx.save(); ctx.rotate(-t*0.07);
-    ctx.strokeStyle=`rgba(${col},${outerA})`; ctx.lineWidth=0.6;
-    ctx.setLineDash([2,22]);
-    ctx.beginPath(); ctx.arc(0,0,R[4],0,Math.PI*2); ctx.stroke();
-    ctx.restore();
-
-    // Ring 3 — reference + pinch arc
-    ctx.save(); ctx.rotate(t*0.13);
-    ctx.strokeStyle=`rgba(${col},${outerA+0.06})`; ctx.lineWidth=0.8;
-    ctx.setLineDash([4,14]);
-    ctx.beginPath(); ctx.arc(0,0,R[3],0,Math.PI*2); ctx.stroke();
-    ctx.restore();
-    // Cardinal ticks at R[3]
-    ctx.strokeStyle=`rgba(${col},${outerA+0.18})`; ctx.lineWidth=0.7; ctx.setLineDash([]);
-    ctx.globalAlpha=1;
-    ctx.beginPath();
-    for (let i=0;i<8;i++){
-      const a=i/8*Math.PI*2, c2=i%2===0;
-      ctx.save(); ctx.rotate(a);
-      ctx.moveTo(0,-(R[3]-(c2?9:4))); ctx.lineTo(0,-(R[3]+2));
-      ctx.restore();
-    }
-    ctx.stroke();
-
-    // Pinch arc on R[2]
-    ctx.save(); ctx.rotate(-t*0.20);
-    ctx.strokeStyle=`rgba(${col},${0.25+fist*0.1})`; ctx.lineWidth=0.8;
-    ctx.setLineDash([5,8]);
-    ctx.beginPath(); ctx.arc(0,0,R[2],0,Math.PI*2); ctx.stroke();
-    if (pinch>0.05) {
-      ctx.strokeStyle=`rgba(${col},${0.5+pinch*0.35})`; ctx.lineWidth=1.4; ctx.setLineDash([]);
-      ctx.beginPath(); ctx.arc(0,0,R[2],-Math.PI/2,-Math.PI/2+Math.PI*2*pinch); ctx.stroke();
-    }
-    ctx.restore();
-
-    // Ring 1 — main tracking, rotates
-    ctx.save(); ctx.rotate(t*0.32);
-    ctx.strokeStyle=`rgba(${col},${0.42+pinch*0.22})`; ctx.lineWidth=1;
-    ctx.setLineDash([7,6]);
-    ctx.beginPath(); ctx.arc(0,0,R[1],0,Math.PI*2); ctx.stroke();
-    ctx.restore();
-
-    // Ring 0 — innermost solid
-    ctx.strokeStyle=`rgba(${col},${0.80+pinch*0.18})`; ctx.lineWidth=1.2; ctx.setLineDash([]);
-    ctx.beginPath(); ctx.arc(0,0,R[0],0,Math.PI*2); ctx.stroke();
-
-    // Crosshair — 4 lines batched into ONE path
-    const arm=R[4]+14, gap=R[0]+3;
-    ctx.strokeStyle=`rgba(${col},0.65)`; ctx.lineWidth=0.8;
-    ctx.beginPath();
-    ctx.moveTo(0,-arm); ctx.lineTo(0,-gap);
-    ctx.moveTo(0, gap); ctx.lineTo(0, arm);
-    ctx.moveTo(-arm,0); ctx.lineTo(-gap,0);
-    ctx.moveTo( gap,0); ctx.lineTo( arm,0);
-    ctx.stroke();
-
-    // Sub-ticks at R1 and R3 — all in one path
-    ctx.strokeStyle=`rgba(${col},0.4)`; ctx.lineWidth=0.5;
-    ctx.beginPath();
-    [R[1],R[3]].forEach(r=>{
-      ctx.moveTo(-r-4,0); ctx.lineTo(-r+4,0);
-      ctx.moveTo( r-4,0); ctx.lineTo( r+4,0);
-      ctx.moveTo(0,-r-4); ctx.lineTo(0,-r+4);
-      ctx.moveTo(0, r-4); ctx.lineTo(0, r+4);
-    });
-    ctx.stroke();
-
-    // Corner brackets — 8 lines in one path
-    const sq=R[3]*0.72, brk=9;
-    ctx.strokeStyle=`rgba(${col},${0.32+pinch*0.22})`; ctx.lineWidth=1;
-    ctx.beginPath();
-    [[-sq,-sq,1,1],[sq,-sq,-1,1],[-sq,sq,1,-1],[sq,sq,-1,-1]].forEach(([bx,by,dx,dy])=>{
-      ctx.moveTo(bx,by); ctx.lineTo(bx+dx*brk,by);
-      ctx.moveTo(bx,by); ctx.lineTo(bx,by+dy*brk);
-    });
-    ctx.stroke();
-
-    // Center dot — ONE shadowBlur only here
-    ctx.shadowColor = hi===0?'#00ff00':'#00dc6e';
-    ctx.shadowBlur  = 8 + pinch*14;
-    ctx.fillStyle   = `rgba(${col},0.95)`;
-    ctx.beginPath(); ctx.arc(0,0,2.5+pinch*2,0,Math.PI*2); ctx.fill();
-    ctx.shadowBlur  = 0;
-
-    // Status label
-    const status = pinch>0.5?'PINCH·LOCK':fist>0.5?'FIST·LOCK':`V:${vel.toFixed(2)}`;
-    ctx.font='8px Share Tech Mono'; ctx.fillStyle=`rgba(${col},0.55)`;
-    ctx.textAlign='left'; ctx.fillText(status, R[2]+5, 3);
-
-    ctx.restore();
-    ctx.setLineDash([]); ctx.shadowBlur=0; ctx.globalAlpha=1;
-  }
-
-  // ── Fingertip reticles — no save/restore per tip ─────────────
-  _drawFingertipReticles(lm, hi, t, tipVels, w) {
-    const ctx   = this.ctx;
-    const pinch = w?.pinch || 0;
-    const col   = hi===0 ? '0,255,0' : '0,220,110';
-    ctx.shadowBlur = 0;
-
-    // Outer dashed rings (all 5 in one pass — vary lineDashOffset)
-    for (let fi = 0; fi < TIPS.length; fi++) {
-      const pt  = lm[TIPS[fi]];
-      const px  = this.mapX(pt.x), py = this.mapY(pt.y);
-      const vel = Math.min(tipVels?.[fi] || 0, 1);
-      const R2  = 11 + vel * 9;
-      const a2  = 0.22 + vel * 0.25;
-      const dir = fi%2===0?1:-1;
-
+    this.objects.forEach((o,oi)=>{
+      const pulse=0.08*Math.sin(o.pulsePhase);
+      const grabbed=o.grabbed;
+      const glow=grabbed?18:6;
       ctx.save();
-      ctx.translate(px, py);
-      ctx.rotate(t*(1+vel*2.5)*dir);
-      ctx.globalAlpha = a2;
-      ctx.strokeStyle = `rgba(${col},1)`;
-      ctx.lineWidth   = 0.7;
-      ctx.setLineDash([3,5]);
-      ctx.beginPath(); ctx.arc(0, 0, R2, 0, Math.PI*2); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.restore();
-    }
+      ctx.translate(o.x,o.y);
+      ctx.rotate(o.rotation);
 
-    // Inner solid rings + crosshair — all 5 sequentially (no save/restore)
-    for (let fi = 0; fi < TIPS.length; fi++) {
-      const pt  = lm[TIPS[fi]];
-      const px  = this.mapX(pt.x), py = this.mapY(pt.y);
-      const vel = Math.min(tipVels?.[fi] || 0, 1);
-      const R1  = 6 + vel * 7;
-      const a1  = 0.45 + vel * 0.38;
-      const isPinch = fi<2;
+      const baseAlpha=grabbed?1.0:0.82;
 
-      ctx.strokeStyle = `rgba(${col},${a1})`;
-      ctx.lineWidth   = 0.9;
-      ctx.globalAlpha = 1;
-      ctx.beginPath(); ctx.arc(px, py, R1, 0, Math.PI*2); ctx.stroke();
+      // Draw pinch indicators if grabbed
+      if(grabbed){
+        ctx.save();
+        ctx.rotate(o.spinAnim*0.1);
+        for(let k=0;k<6;k++){
+          const ka=k/6*Math.PI*2;
+          const kr=o.r*1.35+pulse*o.r;
+          ctx.strokeStyle=`rgba(${accentStr},0.22)`;
+          ctx.lineWidth=0.7;
+          ctx.setLineDash([2,8]);
+          ctx.beginPath();
+          ctx.moveTo(Math.cos(ka)*(o.r+4),Math.sin(ka)*(o.r+4));
+          ctx.lineTo(Math.cos(ka)*kr,Math.sin(ka)*kr);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+        ctx.restore();
+      }
 
-      // Crosshair ticks (4 segments batched)
-      const ch=R1+3, gap=R1-1;
-      ctx.strokeStyle = `rgba(${col},${a1*0.7})`; ctx.lineWidth=0.5;
+      // Shadow/glow
+      ctx.shadowColor=`rgba(${accentStr},${grabbed?0.9:0.5})`;
+      ctx.shadowBlur=glow+pulse*10;
+
+      if(o.shape==='semicircle'){
+        this._drawSemicircle(ctx,o,accentStr,baseAlpha,pulse);
+      } else if(o.shape==='ring'){
+        this._drawThickRing(ctx,o,accentStr,baseAlpha,pulse);
+      } else if(o.shape==='wedge'){
+        this._drawWedge(ctx,o,accentStr,baseAlpha,pulse);
+      }
+
+      ctx.shadowBlur=0;
+
+      // Center dot
+      ctx.fillStyle=`rgba(${accentStr},${baseAlpha*0.9})`;
+      ctx.shadowColor=`rgba(${accentStr},0.8)`;
+      ctx.shadowBlur=grabbed?10:4;
       ctx.beginPath();
-      ctx.moveTo(px,py-ch); ctx.lineTo(px,py-gap);
-      ctx.moveTo(px,py+gap); ctx.lineTo(px,py+ch);
-      ctx.moveTo(px-ch,py); ctx.lineTo(px-gap,py);
-      ctx.moveTo(px+gap,py); ctx.lineTo(px+ch,py);
+      ctx.arc(0,0,3+pulse*4,0,Math.PI*2);
+      ctx.fill();
+      ctx.shadowBlur=0;
+
+      // Rotation indicator tick
+      const tickR=o.r+o.thickness*0.5+4;
+      ctx.strokeStyle=`rgba(${accentStr},${baseAlpha*0.8})`;
+      ctx.lineWidth=2;
+      ctx.beginPath();
+      ctx.moveTo(0,-o.r+2);
+      ctx.lineTo(0,-(o.r+o.thickness*0.5+10));
       ctx.stroke();
 
-      // Center dot (one shadowBlur for pinch fingers only)
-      if (isPinch && pinch > 0.1) {
-        ctx.shadowColor = hi===0?'#00ff00':'#00dc6e';
-        ctx.shadowBlur  = 3 + pinch*8;
-      }
-      ctx.fillStyle = `rgba(${col},${a1})`;
-      ctx.beginPath(); ctx.arc(px, py, 1.5+isPinch*pinch, 0, Math.PI*2); ctx.fill();
-      ctx.shadowBlur = 0;
-    }
-  }
+      // Label
+      ctx.rotate(-o.rotation); // unrotate for label
+      ctx.font='8px Share Tech Mono';
+      ctx.fillStyle=`rgba(${accentStr},0.55)`;
+      ctx.textAlign='center';
+      const modeLabel=grabbed?(this.drag.rotating?'ROTATE':'DRAG'):'';
+      ctx.fillText(`OBJ.${String(oi+1).padStart(2,'0')} ${modeLabel}`,0,o.r+o.thickness+16);
+      const rotDeg=((o.rotation*180/Math.PI)%360+360)%360;
+      ctx.fillText(`${rotDeg.toFixed(0)}°`,0,o.r+o.thickness+26);
 
-  // ── Face reticle — simplified, no shadow ─────────────────────
-  _drawFaceReticle(fc, t) {
-    const ctx   = this.ctx;
-    const px    = this.mapX(fc.x), py = this.mapY(fc.y);
-    const baseR = (fc.size || 0.12) * this.W * 0.5;
-    const col   = '170,255,170';
-    ctx.shadowBlur = 0;
-
-    // 3 rings — no save/restore, just translate
-    ctx.save();
-    ctx.translate(px, py);
-
-    // Outer dashed slow ring
-    ctx.save(); ctx.rotate(-t*0.045);
-    ctx.strokeStyle=`rgba(${col},0.16)`; ctx.lineWidth=0.6; ctx.setLineDash([4,18]);
-    ctx.beginPath(); ctx.arc(0,0,baseR*1.8,0,Math.PI*2); ctx.stroke();
-    ctx.restore();
-
-    // Mid ring
-    ctx.save(); ctx.rotate(t*0.09);
-    ctx.strokeStyle=`rgba(${col},0.23)`; ctx.lineWidth=0.7; ctx.setLineDash([6,10]);
-    ctx.beginPath(); ctx.arc(0,0,baseR*1.2,0,Math.PI*2); ctx.stroke();
-    ctx.restore();
-
-    // Inner solid ring
-    ctx.strokeStyle=`rgba(${col},0.32)`; ctx.lineWidth=0.9; ctx.setLineDash([]);
-    ctx.beginPath(); ctx.arc(0,0,baseR,0,Math.PI*2); ctx.stroke();
-
-    // Long crosshair — one batched path
-    const arm=baseR*2.1, gap=baseR*0.32;
-    ctx.strokeStyle=`rgba(${col},0.25)`; ctx.lineWidth=0.6;
-    ctx.beginPath();
-    ctx.moveTo(0,-arm); ctx.lineTo(0,-gap);
-    ctx.moveTo(0, gap); ctx.lineTo(0, arm);
-    ctx.moveTo(-arm,0); ctx.lineTo(-gap,0);
-    ctx.moveTo( gap,0); ctx.lineTo( arm,0);
-    ctx.stroke();
-
-    // Corner brackets
-    const sq=baseR*0.75, brk=9;
-    ctx.strokeStyle=`rgba(${col},0.28)`; ctx.lineWidth=0.8;
-    ctx.beginPath();
-    [[-sq,-sq,1,1],[sq,-sq,-1,1],[-sq,sq,1,-1],[sq,sq,-1,-1]].forEach(([bx,by,dx,dy])=>{
-      ctx.moveTo(bx,by); ctx.lineTo(bx+dx*brk,by);
-      ctx.moveTo(bx,by); ctx.lineTo(bx,by+dy*brk);
+      ctx.restore();
     });
-    ctx.stroke();
 
-    // Center dot
-    ctx.fillStyle=`rgba(${col},0.45)`;
-    ctx.beginPath(); ctx.arc(0,0,2.5,0,Math.PI*2); ctx.fill();
-
-    // Label
-    ctx.font='8px Share Tech Mono'; ctx.fillStyle=`rgba(${col},0.38)`;
-    ctx.textAlign='left';
-    ctx.fillText(`FACE x:${fc.x.toFixed(3)} y:${fc.y.toFixed(3)}`, baseR+5, 3);
-
-    ctx.restore();
-    ctx.setLineDash([]); ctx.shadowBlur=0;
-  }
-
-  // ── Fingertip labels — no shadowBlur ─────────────────────────
-  _drawFingertipLabels(lm, hi) {
-    const ctx   = this.ctx;
-    const lcol  = hi===0?'#00FF00':'#00cc88';
-    const dcol  = 'rgba(0,195,75,0.85)';
-    ctx.shadowBlur = 0;
-
-    for (let i = 0; i < TIPS.length; i++) {
-      const pt = lm[TIPS[i]];
-      const px = this.mapX(pt.x), py = this.mapY(pt.y);
-      const ox = i%2===0 ? 8 : -50, oy = -14-i*2;
-      const lx = px+ox, ly = py+oy;
-
-      ctx.globalAlpha=0.68; ctx.fillStyle='#000';
-      ctx.fillRect(lx-2, ly-10, 44, 30);
-      ctx.globalAlpha=0.42; ctx.strokeStyle=lcol; ctx.lineWidth=0.5;
-      ctx.strokeRect(lx-2, ly-10, 44, 30);
-      ctx.globalAlpha=1;
-
-      ctx.font='8.5px Share Tech Mono'; ctx.textAlign='left';
-      ctx.fillStyle=lcol;   ctx.fillText(TIP_NAMES[i],          lx, ly);
-      ctx.fillStyle=dcol;   ctx.fillText(`x:${pt.x.toFixed(3)}`,lx, ly+10);
-                            ctx.fillText(`y:${pt.y.toFixed(3)}`,lx, ly+20);
-
-      ctx.strokeStyle='rgba(0,255,0,0.18)'; ctx.lineWidth=0.5;
-      ctx.setLineDash([2,3]);
-      ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(lx,ly); ctx.stroke();
-      ctx.setLineDash([]);
+    // Draw pinch crosshairs on canvas for active pinches
+    for(let hi=0;hi<Math.min(landmarks.length,2);hi++){
+      if(!this.pinchActive[hi])continue;
+      const lm=landmarks[hi];
+      const px=this.mapX((lm[THUMB_TIP].x+lm[INDEX_TIP].x)*0.5);
+      const py=this.mapY((lm[THUMB_TIP].y+lm[INDEX_TIP].y)*0.5);
+      const pinch=hWeights[hi]?.pinch||0;
+      ctx.save();
+      ctx.strokeStyle=`rgba(${accentStr},${0.5+pinch*0.5})`;
+      ctx.lineWidth=1.2;
+      ctx.shadowColor=`rgba(${accentStr},0.6)`;
+      ctx.shadowBlur=8;
+      const cr=6+pinch*6;
+      ctx.beginPath();ctx.arc(px,py,cr,0,Math.PI*2);ctx.stroke();
+      ctx.strokeStyle=`rgba(${accentStr},0.4)`;
+      ctx.lineWidth=0.7;ctx.shadowBlur=0;
+      ctx.beginPath();
+      ctx.moveTo(px-cr-5,py);ctx.lineTo(px-cr+3,py);
+      ctx.moveTo(px+cr-3,py);ctx.lineTo(px+cr+5,py);
+      ctx.moveTo(px,py-cr-5);ctx.lineTo(px,py-cr+3);
+      ctx.moveTo(px,py+cr-3);ctx.lineTo(px,py+cr+5);
+      ctx.stroke();
+      ctx.restore();
     }
   }
 
-  // ── Two-hand link ─────────────────────────────────────────────
-  _drawTwoHandLink(lmArr, t, weights) {
-    const ctx = this.ctx;
-    const w0  = lmArr[0][WRIST], w1 = lmArr[1][WRIST];
-    const x0  = this.mapX(w0.x), y0 = this.mapY(w0.y);
-    const x1  = this.mapX(w1.x), y1 = this.mapY(w1.y);
-    const mx  = (x0+x1)/2, my = (y0+y1)/2;
-    const dist= Math.hypot(x1-x0, y1-y0);
-
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle='rgba(0,255,0,0.28)'; ctx.lineWidth=0.7; ctx.setLineDash([4,9]);
-    ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke();
-    ctx.setLineDash([]);
-
-    ctx.font='8px Share Tech Mono'; ctx.fillStyle='rgba(0,255,0,0.50)'; ctx.textAlign='center';
-    ctx.fillText(`d:${(dist/this.W).toFixed(3)}`, mx, my-7);
-
-    ctx.save(); ctx.translate(mx,my); ctx.rotate(Math.PI/4+t*0.28);
-    ctx.strokeStyle='rgba(0,255,0,0.40)'; ctx.lineWidth=0.7;
-    ctx.strokeRect(-4,-4,8,8); ctx.restore();
-  }
-
-  // ── Idle grid ─────────────────────────────────────────────────
-  _drawIdleGrid(t) {
-    const ctx=this.ctx, W=this.W, H=this.H;
-    ctx.strokeStyle='rgba(0,50,0,0.28)'; ctx.lineWidth=0.5;
+  _drawSemicircle(ctx,o,col,alpha,pulse){
+    const r=o.r+pulse*o.r*0.15;
+    const thick=o.thickness;
+    // Outer thick arc (semicircle, top half)
+    ctx.strokeStyle=`rgba(${col},${alpha})`;
+    ctx.lineWidth=thick;
+    ctx.lineCap='round';
+    ctx.shadowBlur=12;
     ctx.beginPath();
-    for(let y=0;y<H;y+=40){ ctx.moveTo(0,y); ctx.lineTo(W,y); }
-    for(let x=0;x<W;x+=40){ ctx.moveTo(x,0); ctx.lineTo(x,H); }
+    ctx.arc(0,0,r,Math.PI,Math.PI*2);
     ctx.stroke();
 
-    const cx=W*0.5, cy=H*0.5;
-    const R=40+Math.sin(t*1.2)*8;
-    ctx.strokeStyle=`rgba(0,255,0,${0.12+Math.sin(t*2)*0.04})`;
-    ctx.lineWidth=0.8; ctx.setLineDash([6,11]);
-    ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.stroke();
+    // Inner detail arc
+    ctx.strokeStyle=`rgba(${col},${alpha*0.35})`;
+    ctx.lineWidth=1.5;
+    ctx.lineCap='butt';
+    ctx.setLineDash([5,7]);
+    ctx.beginPath();
+    ctx.arc(0,0,r-thick*0.5+3,Math.PI+0.15,Math.PI*2-0.15);
+    ctx.stroke();
     ctx.setLineDash([]);
 
-    ctx.font='11px VT323,monospace'; ctx.fillStyle=`rgba(0,255,0,${0.28+Math.sin(t*1.5)*0.13})`;
-    ctx.textAlign='center'; ctx.shadowBlur=0;
-    ctx.fillText('SCANNING FOR HANDS...', cx, cy+R+18);
+    // Flat base line
+    ctx.strokeStyle=`rgba(${col},${alpha*0.5})`;
+    ctx.lineWidth=1.5;
+    ctx.beginPath();
+    ctx.moveTo(-r,0);ctx.lineTo(r,0);
+    ctx.stroke();
+
+    // End caps decoration
+    [-r,r].forEach(ex=>{
+      ctx.strokeStyle=`rgba(${col},${alpha*0.6})`;
+      ctx.lineWidth=1;
+      ctx.beginPath();
+      ctx.arc(ex,0,4,0,Math.PI*2);
+      ctx.stroke();
+    });
+  }
+
+  _drawThickRing(ctx,o,col,alpha,pulse){
+    const r=o.r+pulse*o.r*0.1;
+    const thick=o.thickness*1.2;
+    // Main ring
+    ctx.strokeStyle=`rgba(${col},${alpha})`;
+    ctx.lineWidth=thick;
+    ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.stroke();
+
+    // Dashed inner ring
+    ctx.strokeStyle=`rgba(${col},${alpha*0.3})`;
+    ctx.lineWidth=1.5;
+    ctx.setLineDash([6,10]);
+    ctx.lineDashOffset=-this.t*20;
+    ctx.beginPath();ctx.arc(0,0,r-thick*0.5+2,0,Math.PI*2);ctx.stroke();
+    ctx.setLineDash([]);ctx.lineDashOffset=0;
+
+    // Outer thin ring
+    ctx.strokeStyle=`rgba(${col},${alpha*0.25})`;
+    ctx.lineWidth=1;
+    ctx.beginPath();ctx.arc(0,0,r+thick*0.5+6,0,Math.PI*2);ctx.stroke();
+
+    // 4 tick marks
+    for(let k=0;k<4;k++){
+      const a=k/4*Math.PI*2;
+      ctx.strokeStyle=`rgba(${col},${alpha*0.7})`;
+      ctx.lineWidth=2;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a)*(r+thick*0.5),Math.sin(a)*(r+thick*0.5));
+      ctx.lineTo(Math.cos(a)*(r+thick*0.5+10),Math.sin(a)*(r+thick*0.5+10));
+      ctx.stroke();
+    }
+  }
+
+  _drawWedge(ctx,o,col,alpha,pulse){
+    const r=o.r+pulse*o.r*0.12;
+    const thick=o.thickness*1.4;
+    const span=Math.PI*(0.55+pulse*0.05);
+    const start=-span/2-Math.PI/2;
+    const end=span/2-Math.PI/2;
+
+    // Main wedge arc
+    ctx.strokeStyle=`rgba(${col},${alpha})`;
+    ctx.lineWidth=thick;
+    ctx.lineCap='round';
+    ctx.beginPath();ctx.arc(0,0,r,start,end);ctx.stroke();
+
+    // Secondary arc (offset)
+    ctx.strokeStyle=`rgba(${col},${alpha*0.3})`;
+    ctx.lineWidth=2;
+    ctx.lineCap='butt';
+    ctx.setLineDash([4,8]);
+    ctx.beginPath();ctx.arc(0,0,r-thick*0.4,start+0.1,end-0.1);ctx.stroke();
+    ctx.setLineDash([]);ctx.lineCap='round';
+
+    // Radial lines from center to arc ends
+    [[start,r],[end,r]].forEach(([a,rad])=>{
+      ctx.strokeStyle=`rgba(${col},${alpha*0.5})`;
+      ctx.lineWidth=1.5;
+      ctx.lineCap='round';
+      ctx.beginPath();
+      ctx.moveTo(0,0);
+      ctx.lineTo(Math.cos(a)*(rad+thick*0.5),Math.sin(a)*(rad+thick*0.5));
+      ctx.stroke();
+    });
+
+    // Center small arc
+    ctx.strokeStyle=`rgba(${col},${alpha*0.6})`;
+    ctx.lineWidth=3;
+    ctx.lineCap='round';
+    ctx.beginPath();ctx.arc(0,0,8,start,end);ctx.stroke();
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// GESTURE AR ENGINE
-// ─────────────────────────────────────────────────────────────────────────────
-class GestureAREngine {
-  constructor() {
-    this.video      = document.getElementById('video');
-    this.camPreview = document.getElementById('camPreview');
-    this.camCtx     = this.camPreview.getContext('2d');
-    this.bgCanvas   = document.getElementById('bgCanvas');
-    this.lensCanvas = document.getElementById('lensCanvas');
-    this.arCanvas   = document.getElementById('arCanvas');
-    this.conEl      = document.getElementById('console');
-
-    this.SAB_SIZE = 16;
-    this.sharedBuf = null; this.floatView = null; this.useSAB = false;
-    this.fb = new Float32Array(16); this._resetBuf(this.fb);
-
-    this.bgR   = new BgRenderer(this.bgCanvas, this.video);
-    this.lensR = new LensRenderer(this.lensCanvas, this.video);
-    this.arR   = new ARRenderer(this.arCanvas);
-
-    this.hands = null; this.faceDetector = null;
-    this.isRunning = false; this.landmarks = [];
-
-    this.hWeights = [{pinch:0,fist:0,spread:0},{pinch:0,fist:0,spread:0}];
-    this.prevWrist = [{x:-1,y:-1},{x:-1,y:-1}];
-    this.twoHandDist = 0;
-
-    this.handVels = [0,0];
-    this.prevTipPos = [
-      Array.from({length:21}, ()=>({x:-1,y:-1})),
-      Array.from({length:21}, ()=>({x:-1,y:-1}))
-    ];
-    this.tipVels = [Array.from({length:5},()=>0), Array.from({length:5},()=>0)];
-
-    this.faceCenter  = {x:0.5,y:0.3,size:0.22,active:false,vel:0};
-    this.prevFacePos = {x:-1,y:-1};
-
-    // Perf counters
-    this.frameCount   = 0;
-    this.lastFPSTime  = 0;
-    this.fps          = 0;
-
-    // Bake throttle — 15fps for all filter work
-    this.lastBake    = 0;
-    this.BAKE_INTERVAL = 66; // ~15fps
-
-    // Inference decoupling
-    this._inferring     = false;
-    this._faceInferring = false;
-    this._faceSkip      = 0;
+// ═══════════════════════════════════════
+// BG RENDERER
+// ═══════════════════════════════════════
+class BgRenderer{
+  constructor(canvas,video){
+    this.canvas=canvas;this.video=video;
+    this.ctx=canvas.getContext('2d');
+    this.W=0;this.H=0;this.frame=0;
+    this.BW=480;this.BH=270;
+    this.bwCvs=this._mkCvs(this.BW,this.BH);this.bwCtx=this.bwCvs.getContext('2d');
+    this.hcCvs=this._mkCvs(this.BW,this.BH);this.hcCtx=this.hcCvs.getContext('2d');
+    this.baked=false;this.GRID=18;this.lumGrid=null;this.edgeGrid=null;
+    this.gridCols=0;this.gridRows=0;
+    this.ALPHA_LVLS=[0.13,0.32,0.62,0.92];this.NUM_A=4;
+    this.BUCKETS=null;this._bktLen=null;
+    this._lumCvs=this._mkCvs(1,1);
+    this._lumCtx=this._lumCvs.getContext('2d',{willReadFrequently:true});
+    this.focal=[];
   }
-
-  _resetBuf(b) { b.fill(0); b[0]=-1; b[1]=-1; b[8]=-1; b[9]=-1; }
-  buf() { return this.useSAB ? this.floatView : this.fb; }
-
-  log(msg, cls='lc-ok') {
-    const t = new Date().toLocaleTimeString('en-US',{hour12:false});
-    const r = document.createElement('div');
-    r.innerHTML = `<span class="lc-t">${t}</span><span class="${cls}">${msg}</span>`;
-    this.conEl.appendChild(r);
-    this.conEl.scrollTop = this.conEl.scrollHeight;
+  _mkCvs(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c;}
+  resize(w,h){
+    this.canvas.width=w;this.canvas.height=h;this.W=w;this.H=h;
+    const GRID=this.GRID;
+    this.gridCols=Math.ceil(w/GRID)+1;this.gridRows=Math.ceil(h/GRID)+1;
+    const n=this.gridCols*this.gridRows;
+    this.lumGrid=new Float32Array(n);this.edgeGrid=new Uint8Array(n);
+    this.BUCKETS=Array.from({length:this.NUM_A},()=>new Int16Array(n*3));
+    this._bktLen=new Int32Array(this.NUM_A);
+    this._lumCvs.width=this.gridCols;this._lumCvs.height=this.gridRows;
+    this.baked=false;
   }
-  setDot(id,s) { const el=document.getElementById(`s-${id}`); if(el) el.className=`dot ${s}`; }
-
-  initDataLayer() {
-    this.log(`crossOriginIsolated: ${window.crossOriginIsolated}`,'lc-dim');
-    if (window.crossOriginIsolated) {
-      try {
-        this.sharedBuf = new SharedArrayBuffer(this.SAB_SIZE*4);
-        this.floatView = new Float32Array(this.sharedBuf);
-        this._resetBuf(this.floatView);
-        this.useSAB = true;
-        this.setDot('sab','on');
-        this.log('SAB: 16×Float32 active');
-        document.getElementById('sabNote').style.display='none';
-      } catch(e){ this.log(`SAB error: ${e.message}`,'lc-err'); }
+  setFocal(fp){this.focal=fp;}
+  bakeFrame(){
+    if(!CFG.layers.matrix)return;
+    if(!CHAR_ATLAS)buildCharAtlas();
+    const W=this.BW,H=this.BH;
+    this.bwCtx.save();this.bwCtx.filter='grayscale(100%) contrast(1.1) brightness(0.45)';
+    this.bwCtx.translate(W,0);this.bwCtx.scale(-1,1);
+    this.bwCtx.drawImage(this.video,0,0,W,H);this.bwCtx.restore();
+    this.hcCtx.save();this.hcCtx.filter='grayscale(100%) contrast(2.2) brightness(0.65)';
+    this.hcCtx.translate(W,0);this.hcCtx.scale(-1,1);
+    this.hcCtx.drawImage(this.video,0,0,W,H);this.hcCtx.restore();
+    const cols=this.gridCols,rows=this.gridRows;
+    this._lumCtx.drawImage(this.bwCvs,0,0,cols,rows);
+    const px=this._lumCtx.getImageData(0,0,cols,rows).data;
+    const lum=this.lumGrid;
+    for(let i=0,n=cols*rows;i<n;i++)lum[i]=px[i<<2]/255;
+    const edge=this.edgeGrid;
+    for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+      const i=r*cols+c;
+      const e=(c<cols-1?Math.abs(lum[i]-lum[i+1]):0)+(r<rows-1?Math.abs(lum[i]-lum[i+cols]):0);
+      edge[i]=e>0.20?1:0;
     }
-    if (!this.useSAB) {
-      this.setDot('sab','pend');
-      this.log('Fallback: postMessage path','lc-warn');
+    this.baked=true;
+  }
+  render(now){
+    if(!CHAR_ATLAS)return;
+    const ctx=this.ctx;const W=this.W,H=this.H;
+    const fr=++this.frame;
+    const cols=this.gridCols,rows=this.gridRows;
+    const GRID=this.GRID;
+    const nChars=MATRIX_CHARS.length;
+    const focalArr=this.focal,nFocal=focalArr.length;
+    const charTick=(fr*0.28)|0;
+    const {r,g,b}=CFG.accentRGB;
+
+    if(!CFG.layers.matrix){
+      ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+      ctx.globalAlpha=0.24;
+      if(this.bwCvs && this.baked)ctx.drawImage(this.bwCvs,0,0,W,H);
+      ctx.globalAlpha=1;return;
+    }
+    if(!this.baked){ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);return;}
+
+    ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+    ctx.globalAlpha=0.24;ctx.drawImage(this.bwCvs,0,0,W,H);ctx.globalAlpha=1;
+
+    const NUM_A=this.NUM_A;const bktLen=this._bktLen;bktLen.fill(0);
+    const BKTS=this.BUCKETS;const lumG=this.lumGrid,edgeG=this.edgeGrid;
+    // Recolor atlas for current accent
+    if(!CHAR_ATLAS._lastColor || CHAR_ATLAS._lastColor!==CFG.accentHex){
+      buildCharAtlasColor(r,g,b);
+    }
+    for(let row=0;row<rows;row++){
+      const ny=row/rows;
+      for(let col=0;col<cols;col++){
+        const ci=row*cols+col;const l=lumG[ci];if(l<0.06)continue;
+        let fb=0;const nx=col/cols;
+        for(let fi=0;fi<nFocal;fi++){
+          const fp=focalArr[fi];const dx=nx-fp.x,dy=ny-fp.y;
+          const bv=1-(dx*dx+dy*dy)/0.035;if(bv>fb)fb=bv<0?0:bv;
+        }
+        const isEdge=edgeG[ci];
+        const a=Math.min(l+fb*0.55+isEdge*0.25,1);
+        const ai=Math.min(NUM_A-1,(a*NUM_A)|0);
+        const charIdx=((col*7+row*13+charTick)>>>0)%nChars;
+        const bkt=BKTS[ai];const idx=bktLen[ai];
+        bkt[idx]=col*GRID;bkt[idx+1]=row*GRID;bkt[idx+2]=charIdx*ATLAS_CW;
+        bktLen[ai]=idx+3;
+      }
+    }
+    const atlas=CHAR_ATLAS;const CW=ATLAS_CW,CH=ATLAS_CH;
+    for(let ai=0;ai<NUM_A;ai++){
+      const len=bktLen[ai];if(len===0)continue;
+      ctx.globalAlpha=this.ALPHA_LVLS[ai];
+      const bkt=BKTS[ai];
+      for(let i=0;i<len;i+=3)ctx.drawImage(atlas,bkt[i+2],0,CW,CH,bkt[i],bkt[i+1],CW,CH);
+    }
+    ctx.globalAlpha=1;
+    for(let fi=0;fi<nFocal;fi++){
+      const fp=focalArr[fi];
+      const px=fp.x*W,py=fp.y*H;
+      const R=(52+fp.pinch*32)*(W/900);
+      ctx.save();
+      ctx.beginPath();ctx.arc(px,py,R,0,Math.PI*2);ctx.clip();
+      ctx.globalAlpha=0.42;ctx.drawImage(this.hcCvs,0,0,W,H);ctx.restore();
+      ctx.strokeStyle=`rgba(${r},${g},${b},0.32)`;ctx.lineWidth=0.7;
+      ctx.setLineDash([3,6]);ctx.beginPath();ctx.arc(px,py,R,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+    }
+    if((fr&7)===0&&Math.sin(fr*47.3)>0.7){
+      const lineY=((Math.sin(fr*31.7)*0.5+0.5)*H)|0;
+      ctx.globalAlpha=0.17;
+      ctx.drawImage(this.hcCvs,0,lineY*this.BH/H|0,this.BW,3,(Math.sin(fr*17.1)*7)|0,lineY,W,3);
+      ctx.globalAlpha=1;
+    }
+  }
+}
+
+function buildCharAtlasColor(r,g,b){
+  const n=MATRIX_CHARS.length;
+  if(!CHAR_ATLAS){CHAR_ATLAS=document.createElement('canvas');}
+  CHAR_ATLAS.width=n*ATLAS_CW;CHAR_ATLAS.height=ATLAS_CH;
+  const ctx=CHAR_ATLAS.getContext('2d');
+  ctx.clearRect(0,0,CHAR_ATLAS.width,CHAR_ATLAS.height);
+  ctx.font=`${ATLAS_CH-1}px VT323,monospace`;
+  ctx.textAlign='center';ctx.textBaseline='top';
+  ctx.fillStyle=`rgb(${r},${g},${b})`;
+  for(let i=0;i<n;i++)ctx.fillText(MATRIX_CHARS[i],i*ATLAS_CW+ATLAS_CW*0.5,0);
+  CHAR_ATLAS._lastColor=CFG.accentHex;
+}
+
+// ═══════════════════════════════════════
+// LENS RENDERER
+// ═══════════════════════════════════════
+class LensRenderer{
+  constructor(canvas,video){
+    this.canvas=canvas;this.video=video;
+    this.ctx=canvas.getContext('2d');
+    this.W=0;this.H=0;
+    this.BW=480;this.BH=270;
+    this.bwCvs=this._mkCvs(this.BW,this.BH);this.bwCtx=this.bwCvs.getContext('2d');
+    this.invCvs=this._mkCvs(this.BW,this.BH);this.invCtx=this.invCvs.getContext('2d');
+    this.hasBaked=false;
+    this._d=[[4,10],[7,7],[9,5]];
+  }
+  _mkCvs(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c;}
+  resize(w,h){this.canvas.width=w;this.canvas.height=h;this.W=w;this.H=h;}
+  bakeFrames(){
+    const W=this.BW,H=this.BH;
+    this.bwCtx.save();this.bwCtx.filter='grayscale(100%) contrast(1.4) brightness(0.78)';
+    this.bwCtx.translate(W,0);this.bwCtx.scale(-1,1);
+    this.bwCtx.drawImage(this.video,0,0,W,H);this.bwCtx.restore();
+    this.invCtx.save();this.invCtx.filter='grayscale(100%) contrast(1.55) brightness(0.72) invert(100%)';
+    this.invCtx.translate(W,0);this.invCtx.scale(-1,1);
+    this.invCtx.drawImage(this.video,0,0,W,H);this.invCtx.restore();
+    this.hasBaked=true;
+  }
+  render(focalPoints,t){
+    if(!CFG.layers.lens||!this.hasBaked)return;
+    const ctx=this.ctx;ctx.clearRect(0,0,this.W,this.H);
+    for(let fi=0;fi<focalPoints.length;fi++){
+      const fp=focalPoints[fi];if(fp.active)this._drawLens(fp,t);
+    }
+  }
+  _drawLens(fp,t){
+    const ctx=this.ctx;
+    const {cx,cy,baseR,vel,pinch,fist,isFace}=fp;
+    const W=this.W,H=this.H;
+    const {r,g,b}=CFG.accentRGB;
+    const MS=(1+vel*0.45)*(1-fist*0.18)*(1+Math.sin(t*6.5)*pinch*0.05);
+    const RM=[0.55,1.00,1.62];const INV=[false,true,false];
+    const AB=[0.48,0.36,0.20];const VF=[0.0,0.08,0.22];
+    for(let ri=0;ri<3;ri++){
+      const R=baseR*RM[ri]*MS;
+      const Rprev=ri===0?0:baseR*RM[ri-1]*MS;
+      const alpha=Math.max(0,AB[ri]-vel*VF[ri]);
+      if(alpha<0.02)continue;
+      ctx.save();ctx.globalAlpha=alpha;
+      ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);
+      if(Rprev>1)ctx.arc(cx,cy,Rprev,0,Math.PI*2,true);
+      ctx.clip('evenodd');
+      ctx.drawImage(INV[ri]?this.invCvs:this.bwCvs,0,0,W,H);
+      ctx.restore();
+      ctx.save();ctx.globalAlpha=alpha*0.6;
+      ctx.strokeStyle=INV[ri]?`rgba(230,230,230,0.65)`:`rgba(${r},${g},${b},0.5)`;
+      ctx.lineWidth=ri===1?1.2:0.7;
+      ctx.setLineDash(this._d[ri]);
+      ctx.lineDashOffset=-t*(16+ri*8)*(ri%2===0?1:-1);
+      ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.stroke();
+      ctx.setLineDash([]);ctx.restore();
+    }
+    if(pinch>0.72){
+      ctx.save();ctx.globalAlpha=(pinch-0.72)/0.28*0.28;
+      ctx.beginPath();ctx.arc(cx,cy,baseR*0.5*MS,0,Math.PI*2);ctx.clip();
+      ctx.drawImage(this.invCvs,0,0,W,H);ctx.restore();
+    }
+    if(isFace){
+      ctx.globalAlpha=0.09;ctx.strokeStyle='#aaffaa';ctx.lineWidth=0.6;
+      ctx.setLineDash([2,14]);ctx.beginPath();ctx.arc(cx,cy,baseR*2.2,0,Math.PI*2);ctx.stroke();
+      ctx.setLineDash([]);ctx.globalAlpha=1;
+    }
+  }
+}
+
+// ═══════════════════════════════════════
+// AR RENDERER
+// ═══════════════════════════════════════
+class ARRenderer{
+  constructor(canvas){
+    this.canvas=canvas;this.ctx=canvas.getContext('2d');
+    this.W=0;this.H=0;this.t=0;
+  }
+  resize(w,h){this.canvas.width=w;this.canvas.height=h;this.W=w;this.H=h;}
+  mapX(nx){return(1-nx)*this.W;}
+  mapY(ny){return ny*this.H;}
+  render(handLandmarks,weights,frameCount,extra){
+    const ctx=this.ctx;
+    this.t=performance.now()/1000;const t=this.t;
+    const ex=extra||{};
+    ctx.clearRect(0,0,this.W,this.H);ctx.shadowBlur=0;
+    if(!handLandmarks||handLandmarks.length===0){
+      this._drawIdleGrid(t);
+      if(CFG.layers.face&&ex.faceCenter?.active)this._drawFaceReticle(ex.faceCenter,t);
+      return;
+    }
+    handLandmarks.forEach((lm,hi)=>{
+      if(CFG.layers.radial)this._drawRadialVectors(lm,hi);
+      if(CFG.layers.skeleton)this._drawSkeleton(lm,hi,weights);
+      if(CFG.layers.circles)this._drawFingertipReticles(lm,hi,t,ex.tipVels?.[hi],weights[hi]);
+      if(CFG.layers.circles)this._drawTelescope(lm,hi,t,weights[hi]||{},ex.handVels?.[hi]||0);
+      if(CFG.layers.coords)this._drawFingertipLabels(lm,hi);
+    });
+    if(CFG.layers.face&&ex.faceCenter?.active)this._drawFaceReticle(ex.faceCenter,t);
+    if(CFG.layers.twohand&&handLandmarks.length===2)this._drawTwoHandLink(handLandmarks,t,weights);
+  }
+  _accentStr(hi){
+    const {r,g,b}=CFG.accentRGB;
+    if(hi===0)return `${r},${g},${b}`;
+    return `${Math.max(0,(r*0.82)|0)},${Math.max(0,(g*0.85)|0)},${Math.max(0,(b*0.55+40)|0)}`;
+  }
+  _drawSkeleton(lm,hi,weights){
+    const ctx=this.ctx;const pinch=weights[hi]?.pinch||0;
+    const col=`rgba(${this._accentStr(hi)},0.72)`;
+    ctx.shadowBlur=0;ctx.beginPath();
+    for(let i=0;i<CONNECTIONS.length;i++){
+      const [a,b]=CONNECTIONS[i];
+      if(a===THUMB_TIP||a===INDEX_TIP||b===THUMB_TIP||b===INDEX_TIP)continue;
+      ctx.moveTo(this.mapX(lm[a].x),this.mapY(lm[a].y));
+      ctx.lineTo(this.mapX(lm[b].x),this.mapY(lm[b].y));
+    }
+    ctx.strokeStyle=col;ctx.lineWidth=1;ctx.stroke();
+    if(pinch>0.04){
+      const g2=180+(pinch*75)|0;
+      ctx.beginPath();
+      for(let i=0;i<CONNECTIONS.length;i++){
+        const [a,b]=CONNECTIONS[i];
+        if(!(a===THUMB_TIP||a===INDEX_TIP||b===THUMB_TIP||b===INDEX_TIP))continue;
+        ctx.moveTo(this.mapX(lm[a].x),this.mapY(lm[a].y));
+        ctx.lineTo(this.mapX(lm[b].x),this.mapY(lm[b].y));
+      }
+      ctx.strokeStyle=`rgba(${this._accentStr(hi)},${0.55+pinch*0.45})`;
+      ctx.lineWidth=1+pinch*1.5;ctx.stroke();
+    }
+    ctx.fillStyle=`rgba(${this._accentStr(hi)},0.7)`;ctx.beginPath();
+    lm.forEach((pt,idx)=>{
+      if(TIPS.includes(idx)||idx===WRIST)return;
+      ctx.moveTo(this.mapX(pt.x)+2,this.mapY(pt.y));
+      ctx.arc(this.mapX(pt.x),this.mapY(pt.y),2,0,Math.PI*2);
+    });
+    ctx.fill();
+    ctx.fillStyle=`rgba(${this._accentStr(hi)},0.85)`;ctx.beginPath();
+    ctx.arc(this.mapX(lm[WRIST].x),this.mapY(lm[WRIST].y),4,0,Math.PI*2);ctx.fill();
+    const {r,g,b}=CFG.accentRGB;
+    ctx.shadowColor=`rgba(${r},${g},${b},1)`;ctx.shadowBlur=5+pinch*7;
+    ctx.fillStyle=`rgba(${this._accentStr(hi)},0.95)`;ctx.beginPath();
+    for(let i=0;i<TIPS.length;i++){
+      const pt=lm[TIPS[i]];
+      ctx.moveTo(this.mapX(pt.x)+3.5,this.mapY(pt.y));
+      ctx.arc(this.mapX(pt.x),this.mapY(pt.y),3.5,0,Math.PI*2);
+    }
+    ctx.fill();ctx.shadowBlur=0;
+  }
+  _drawRadialVectors(lm,hi){
+    const ctx=this.ctx;
+    const wx=this.mapX(lm[WRIST].x),wy=this.mapY(lm[WRIST].y);
+    const col=`rgba(${this._accentStr(hi)},1)`;
+    ctx.shadowBlur=0;ctx.globalAlpha=0.16;ctx.strokeStyle=col;
+    ctx.lineWidth=0.4;ctx.setLineDash([2,6]);ctx.beginPath();
+    lm.forEach((pt,idx)=>{
+      if(idx===WRIST||TIPS.includes(idx))return;
+      ctx.moveTo(wx,wy);ctx.lineTo(this.mapX(pt.x),this.mapY(pt.y));
+    });
+    ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=0.28;ctx.lineWidth=0.7;ctx.beginPath();
+    for(let i=0;i<TIPS.length;i++){
+      const pt=lm[TIPS[i]];ctx.moveTo(wx,wy);ctx.lineTo(this.mapX(pt.x),this.mapY(pt.y));
+    }
+    ctx.stroke();ctx.globalAlpha=1;
+  }
+  _drawTelescope(lm,hi,t,w,vel){
+    const ctx=this.ctx;const pinch=w.pinch||0,fist=w.fist||0;
+    let cx=0,cy=0;
+    for(let i=0;i<MCPS_ALL.length;i++){cx+=lm[MCPS_ALL[i]].x;cy+=lm[MCPS_ALL[i]].y;}
+    cx/=MCPS_ALL.length;cy/=MCPS_ALL.length;
+    const px=this.mapX(cx),py=this.mapY(cy);
+    const S=(1+Math.min(vel,1)*0.5)*(1-fist*0.18)*(1+Math.sin(t*6.5)*pinch*0.06);
+    const R=[14*S,26*S,44*S,68*S,92*S];
+    const outerA=Math.max(0.07,0.32-vel*0.22);
+    const col=this._accentStr(hi);
+    ctx.save();ctx.translate(px,py);ctx.shadowBlur=0;
+    ctx.save();ctx.rotate(-t*0.07);
+    ctx.strokeStyle=`rgba(${col},${outerA})`;ctx.lineWidth=0.6;ctx.setLineDash([2,22]);
+    ctx.beginPath();ctx.arc(0,0,R[4],0,Math.PI*2);ctx.stroke();ctx.restore();
+    ctx.save();ctx.rotate(t*0.13);
+    ctx.strokeStyle=`rgba(${col},${outerA+0.06})`;ctx.lineWidth=0.8;ctx.setLineDash([4,14]);
+    ctx.beginPath();ctx.arc(0,0,R[3],0,Math.PI*2);ctx.stroke();ctx.restore();
+    ctx.strokeStyle=`rgba(${col},${outerA+0.18})`;ctx.lineWidth=0.7;ctx.setLineDash([]);ctx.globalAlpha=1;
+    ctx.beginPath();
+    for(let i=0;i<8;i++){
+      const a=i/8*Math.PI*2,c2=i%2===0;ctx.save();ctx.rotate(a);
+      ctx.moveTo(0,-(R[3]-(c2?9:4)));ctx.lineTo(0,-(R[3]+2));ctx.restore();
+    }
+    ctx.stroke();
+    ctx.save();ctx.rotate(-t*0.20);
+    ctx.strokeStyle=`rgba(${col},${0.25+fist*0.1})`;ctx.lineWidth=0.8;ctx.setLineDash([5,8]);
+    ctx.beginPath();ctx.arc(0,0,R[2],0,Math.PI*2);ctx.stroke();
+    if(pinch>0.05){
+      ctx.strokeStyle=`rgba(${col},${0.5+pinch*0.35})`;ctx.lineWidth=1.4;ctx.setLineDash([]);
+      ctx.beginPath();ctx.arc(0,0,R[2],-Math.PI/2,-Math.PI/2+Math.PI*2*pinch);ctx.stroke();
+    }
+    ctx.restore();
+    ctx.save();ctx.rotate(t*0.32);
+    ctx.strokeStyle=`rgba(${col},${0.42+pinch*0.22})`;ctx.lineWidth=1;ctx.setLineDash([7,6]);
+    ctx.beginPath();ctx.arc(0,0,R[1],0,Math.PI*2);ctx.stroke();ctx.restore();
+    ctx.strokeStyle=`rgba(${col},${0.80+pinch*0.18})`;ctx.lineWidth=1.2;ctx.setLineDash([]);
+    ctx.beginPath();ctx.arc(0,0,R[0],0,Math.PI*2);ctx.stroke();
+    const arm=R[4]+14,gap=R[0]+3;
+    ctx.strokeStyle=`rgba(${col},0.65)`;ctx.lineWidth=0.8;ctx.beginPath();
+    ctx.moveTo(0,-arm);ctx.lineTo(0,-gap);ctx.moveTo(0,gap);ctx.lineTo(0,arm);
+    ctx.moveTo(-arm,0);ctx.lineTo(-gap,0);ctx.moveTo(gap,0);ctx.lineTo(arm,0);ctx.stroke();
+    ctx.strokeStyle=`rgba(${col},0.4)`;ctx.lineWidth=0.5;ctx.beginPath();
+    [R[1],R[3]].forEach(r=>{
+      ctx.moveTo(-r-4,0);ctx.lineTo(-r+4,0);ctx.moveTo(r-4,0);ctx.lineTo(r+4,0);
+      ctx.moveTo(0,-r-4);ctx.lineTo(0,-r+4);ctx.moveTo(0,r-4);ctx.lineTo(0,r+4);
+    });
+    ctx.stroke();
+    const sq=R[3]*0.72,brk=9;
+    ctx.strokeStyle=`rgba(${col},${0.32+pinch*0.22})`;ctx.lineWidth=1;
+    ctx.beginPath();
+    [[-sq,-sq,1,1],[sq,-sq,-1,1],[-sq,sq,1,-1],[sq,sq,-1,-1]].forEach(([bx,by,dx,dy])=>{
+      ctx.moveTo(bx,by);ctx.lineTo(bx+dx*brk,by);ctx.moveTo(bx,by);ctx.lineTo(bx,by+dy*brk);
+    });
+    ctx.stroke();
+    ctx.shadowColor=`rgba(${col},1)`;ctx.shadowBlur=8+pinch*14;
+    ctx.fillStyle=`rgba(${col},0.95)`;ctx.beginPath();
+    ctx.arc(0,0,2.5+pinch*2,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+    const status=pinch>0.5?'PINCH·LOCK':fist>0.5?'FIST·LOCK':`V:${vel.toFixed(2)}`;
+    ctx.font='8px Share Tech Mono';ctx.fillStyle=`rgba(${col},0.55)`;
+    ctx.textAlign='left';ctx.fillText(status,R[2]+5,3);
+    ctx.restore();ctx.setLineDash([]);ctx.shadowBlur=0;ctx.globalAlpha=1;
+  }
+  _drawFingertipReticles(lm,hi,t,tipVels,w){
+    const ctx=this.ctx;const pinch=w?.pinch||0;
+    const col=this._accentStr(hi);
+    ctx.shadowBlur=0;
+    for(let fi=0;fi<TIPS.length;fi++){
+      const pt=lm[TIPS[fi]];const px=this.mapX(pt.x),py=this.mapY(pt.y);
+      const vel=Math.min(tipVels?.[fi]||0,1);
+      const R2=11+vel*9;const a2=0.22+vel*0.25;
+      const dir=fi%2===0?1:-1;
+      ctx.save();ctx.translate(px,py);ctx.rotate(t*(1+vel*2.5)*dir);
+      ctx.globalAlpha=a2;ctx.strokeStyle=`rgba(${col},1)`;
+      ctx.lineWidth=0.7;ctx.setLineDash([3,5]);
+      ctx.beginPath();ctx.arc(0,0,R2,0,Math.PI*2);ctx.stroke();
+      ctx.setLineDash([]);ctx.restore();
+    }
+    for(let fi=0;fi<TIPS.length;fi++){
+      const pt=lm[TIPS[fi]];const px=this.mapX(pt.x),py=this.mapY(pt.y);
+      const vel=Math.min(tipVels?.[fi]||0,1);
+      const R1=6+vel*7;const a1=0.45+vel*0.38;const isPinch=fi<2;
+      ctx.strokeStyle=`rgba(${col},${a1})`;ctx.lineWidth=0.9;ctx.globalAlpha=1;
+      ctx.beginPath();ctx.arc(px,py,R1,0,Math.PI*2);ctx.stroke();
+      const ch=R1+3,gap=R1-1;
+      ctx.strokeStyle=`rgba(${col},${a1*0.7})`;ctx.lineWidth=0.5;ctx.beginPath();
+      ctx.moveTo(px,py-ch);ctx.lineTo(px,py-gap);ctx.moveTo(px,py+gap);ctx.lineTo(px,py+ch);
+      ctx.moveTo(px-ch,py);ctx.lineTo(px-gap,py);ctx.moveTo(px+gap,py);ctx.lineTo(px+ch,py);
+      ctx.stroke();
+      if(isPinch&&pinch>0.1){const {r,g,b}=CFG.accentRGB;ctx.shadowColor=`rgb(${r},${g},${b})`;ctx.shadowBlur=3+pinch*8;}
+      ctx.fillStyle=`rgba(${col},${a1})`;ctx.beginPath();
+      ctx.arc(px,py,1.5+isPinch*pinch,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+    }
+  }
+  _drawFaceReticle(fc,t){
+    if(!CFG.layers.face)return;
+    const ctx=this.ctx;const px=this.mapX(fc.x),py=this.mapY(fc.y);
+    const baseR=(fc.size||0.12)*this.W*0.5;
+    const col='170,255,170';
+    ctx.shadowBlur=0;ctx.save();ctx.translate(px,py);
+    ctx.save();ctx.rotate(-t*0.045);ctx.strokeStyle=`rgba(${col},0.16)`;ctx.lineWidth=0.6;ctx.setLineDash([4,18]);
+    ctx.beginPath();ctx.arc(0,0,baseR*1.8,0,Math.PI*2);ctx.stroke();ctx.restore();
+    ctx.save();ctx.rotate(t*0.09);ctx.strokeStyle=`rgba(${col},0.23)`;ctx.lineWidth=0.7;ctx.setLineDash([6,10]);
+    ctx.beginPath();ctx.arc(0,0,baseR*1.2,0,Math.PI*2);ctx.stroke();ctx.restore();
+    ctx.strokeStyle=`rgba(${col},0.32)`;ctx.lineWidth=0.9;ctx.setLineDash([]);
+    ctx.beginPath();ctx.arc(0,0,baseR,0,Math.PI*2);ctx.stroke();
+    const arm=baseR*2.1,gap=baseR*0.32;
+    ctx.strokeStyle=`rgba(${col},0.25)`;ctx.lineWidth=0.6;ctx.beginPath();
+    ctx.moveTo(0,-arm);ctx.lineTo(0,-gap);ctx.moveTo(0,gap);ctx.lineTo(0,arm);
+    ctx.moveTo(-arm,0);ctx.lineTo(-gap,0);ctx.moveTo(gap,0);ctx.lineTo(arm,0);ctx.stroke();
+    const sq=baseR*0.75,brk=9;
+    ctx.strokeStyle=`rgba(${col},0.28)`;ctx.lineWidth=0.8;ctx.beginPath();
+    [[-sq,-sq,1,1],[sq,-sq,-1,1],[-sq,sq,1,-1],[sq,sq,-1,-1]].forEach(([bx,by,dx,dy])=>{
+      ctx.moveTo(bx,by);ctx.lineTo(bx+dx*brk,by);ctx.moveTo(bx,by);ctx.lineTo(bx,by+dy*brk);
+    });
+    ctx.stroke();
+    ctx.fillStyle=`rgba(${col},0.45)`;ctx.beginPath();ctx.arc(0,0,2.5,0,Math.PI*2);ctx.fill();
+    ctx.font='8px Share Tech Mono';ctx.fillStyle=`rgba(${col},0.38)`;ctx.textAlign='left';
+    ctx.fillText(`FACE x:${fc.x.toFixed(3)} y:${fc.y.toFixed(3)}`,baseR+5,3);
+    ctx.restore();ctx.setLineDash([]);ctx.shadowBlur=0;
+  }
+  _drawFingertipLabels(lm,hi){
+    if(!CFG.layers.coords)return;
+    const ctx=this.ctx;const lcol=`rgba(${this._accentStr(hi)},1)`;
+    const dcol=`rgba(${this._accentStr(hi)},0.85)`;ctx.shadowBlur=0;
+    for(let i=0;i<TIPS.length;i++){
+      const pt=lm[TIPS[i]];const px=this.mapX(pt.x),py=this.mapY(pt.y);
+      const ox=i%2===0?8:-50,oy=-14-i*2;const lx=px+ox,ly=py+oy;
+      ctx.globalAlpha=0.68;ctx.fillStyle='#000';ctx.fillRect(lx-2,ly-10,44,30);
+      ctx.globalAlpha=0.42;ctx.strokeStyle=lcol;ctx.lineWidth=0.5;ctx.strokeRect(lx-2,ly-10,44,30);
+      ctx.globalAlpha=1;ctx.font='8.5px Share Tech Mono';ctx.textAlign='left';
+      ctx.fillStyle=lcol;ctx.fillText(TIP_NAMES[i],lx,ly);
+      ctx.fillStyle=dcol;ctx.fillText(`x:${pt.x.toFixed(3)}`,lx,ly+10);
+      ctx.fillText(`y:${pt.y.toFixed(3)}`,lx,ly+20);
+      ctx.strokeStyle=`rgba(${this._accentStr(hi)},0.18)`;ctx.lineWidth=0.5;
+      ctx.setLineDash([2,3]);ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(lx,ly);ctx.stroke();ctx.setLineDash([]);
+    }
+  }
+  _drawTwoHandLink(lmArr,t,weights){
+    const ctx=this.ctx;
+    const w0=lmArr[0][WRIST],w1=lmArr[1][WRIST];
+    const x0=this.mapX(w0.x),y0=this.mapY(w0.y);
+    const x1=this.mapX(w1.x),y1=this.mapY(w1.y);
+    const mx=(x0+x1)/2,my=(y0+y1)/2;
+    const dist=Math.hypot(x1-x0,y1-y0);
+    const {r,g,b}=CFG.accentRGB;
+    ctx.shadowBlur=0;ctx.strokeStyle=`rgba(${r},${g},${b},0.28)`;ctx.lineWidth=0.7;
+    ctx.setLineDash([4,9]);ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);ctx.stroke();ctx.setLineDash([]);
+    ctx.font='8px Share Tech Mono';ctx.fillStyle=`rgba(${r},${g},${b},0.50)`;
+    ctx.textAlign='center';ctx.fillText(`d:${(dist/this.W).toFixed(3)}`,mx,my-7);
+    ctx.save();ctx.translate(mx,my);ctx.rotate(Math.PI/4+t*0.28);
+    ctx.strokeStyle=`rgba(${r},${g},${b},0.40)`;ctx.lineWidth=0.7;ctx.strokeRect(-4,-4,8,8);ctx.restore();
+  }
+  _drawIdleGrid(t){
+    const ctx=this.ctx,W=this.W,H=this.H;
+    const {r,g,b}=CFG.accentRGB;
+    ctx.strokeStyle=`rgba(${r},${g},${b},0.08)`;ctx.lineWidth=0.5;ctx.beginPath();
+    for(let y=0;y<H;y+=40){ctx.moveTo(0,y);ctx.lineTo(W,y);}
+    for(let x=0;x<W;x+=40){ctx.moveTo(x,0);ctx.lineTo(x,H);}
+    ctx.stroke();
+    const cx=W*0.5,cy=H*0.5;const R=40+Math.sin(t*1.2)*8;
+    ctx.strokeStyle=`rgba(${r},${g},${b},${0.12+Math.sin(t*2)*0.04})`;ctx.lineWidth=0.8;
+    ctx.setLineDash([6,11]);ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+    ctx.font='11px VT323,monospace';
+    ctx.fillStyle=`rgba(${r},${g},${b},${0.28+Math.sin(t*1.5)*0.13})`;
+    ctx.textAlign='center';ctx.shadowBlur=0;ctx.fillText('SCANNING FOR HANDS...',cx,cy+R+18);
+  }
+}
+
+// ═══════════════════════════════════════
+// MAIN ENGINE
+// ═══════════════════════════════════════
+class GestureAREngine{
+  constructor(){
+    this.video=document.getElementById('video');
+    this.camPreview=document.getElementById('camPreview');
+    this.camCtx=this.camPreview.getContext('2d');
+    this.bgCanvas=document.getElementById('bgCanvas');
+    this.lensCanvas=document.getElementById('lensCanvas');
+    this.arCanvas=document.getElementById('arCanvas');
+    this.objCanvas=document.getElementById('objCanvas');
+    this.conEl=document.getElementById('console');
+    this.SAB_SIZE=16;this.sharedBuf=null;this.floatView=null;this.useSAB=false;
+    this.fb=new Float32Array(16);this._resetBuf(this.fb);
+    this.bgR=new BgRenderer(this.bgCanvas,this.video);
+    this.lensR=new LensRenderer(this.lensCanvas,this.video);
+    this.arR=new ARRenderer(this.arCanvas);
+    this.objRenderer=new ARObjectRenderer(this.objCanvas);
+    this.hands=null;this.faceDetector=null;this.isRunning=false;
+    this.landmarks=[];
+    this.hWeights=[{pinch:0,fist:0,spread:0},{pinch:0,fist:0,spread:0}];
+    this.prevWrist=[{x:-1,y:-1},{x:-1,y:-1}];
+    this.twoHandDist=0;this.handVels=[0,0];
+    this.prevTipPos=[Array.from({length:21},()=>({x:-1,y:-1})),Array.from({length:21},()=>({x:-1,y:-1}))];
+    this.tipVels=[Array.from({length:5},()=>0),Array.from({length:5},()=>0)];
+    this.faceCenter={x:0.5,y:0.3,size:0.22,active:false,vel:0};
+    this.prevFacePos={x:-1,y:-1};
+    this.frameCount=0;this.lastFPSTime=0;this.fps=0;
+    this.lastBake=0;this.BAKE_INTERVAL=66;
+    this._inferring=false;this._faceInferring=false;
+  }
+  _resetBuf(b){b.fill(0);b[0]=-1;b[1]=-1;b[8]=-1;b[9]=-1;}
+  buf(){return this.useSAB?this.floatView:this.fb;}
+  log(msg,cls='lc-ok'){
+    const t=new Date().toLocaleTimeString('en-US',{hour12:false});
+    const r=document.createElement('div');
+    r.innerHTML=`<span class="lc-t">${t}</span><span class="${cls}">${msg}</span>`;
+    this.conEl.appendChild(r);this.conEl.scrollTop=this.conEl.scrollHeight;
+  }
+  setDot(id,s){const el=document.getElementById(`s-${id}`);if(el)el.className=`dot ${s}`;}
+  initDataLayer(){
+    this.log(`crossOriginIsolated: ${window.crossOriginIsolated}`,'lc-dim');
+    if(window.crossOriginIsolated){
+      try{
+        this.sharedBuf=new SharedArrayBuffer(this.SAB_SIZE*4);
+        this.floatView=new Float32Array(this.sharedBuf);
+        this._resetBuf(this.floatView);this.useSAB=true;
+        this.setDot('sab','on');this.log('SAB: 16×Float32 active');
+        document.getElementById('sabNote').style.display='none';
+      }catch(e){this.log(`SAB error: ${e.message}`,'lc-err');}
+    }
+    if(!this.useSAB){
+      this.setDot('sab','pend');this.log('Fallback: postMessage path','lc-warn');
       document.getElementById('sabNote').style.display='block';
     }
   }
-
-  writeHand(i,x,y,pinch,rot,fist,spread,vx,vy) {
-    const b=this.buf(), o=i*8;
-    b[o]=x;b[o+1]=y;b[o+2]=pinch;b[o+3]=rot;
-    b[o+4]=fist;b[o+5]=spread;b[o+6]=vx;b[o+7]=vy;
+  writeHand(i,x,y,pinch,rot,fist,spread,vx,vy){
+    const b=this.buf(),o=i*8;
+    b[o]=x;b[o+1]=y;b[o+2]=pinch;b[o+3]=rot;b[o+4]=fist;b[o+5]=spread;b[o+6]=vx;b[o+7]=vy;
   }
-
-  calcPinch(lm) {
+  calcPinch(lm){
     const d=Math.hypot(lm[THUMB_TIP].x-lm[INDEX_TIP].x,lm[THUMB_TIP].y-lm[INDEX_TIP].y);
     return d<0.05?1:d>0.15?0:1-(d-0.05)/0.1;
   }
-  calcRot(lm) { return Math.atan2(lm[INDEX_MCP].y-lm[PINKY_MCP].y,lm[INDEX_MCP].x-lm[PINKY_MCP].x); }
-  calcFist(lm) {
+  calcRot(lm){return Math.atan2(lm[INDEX_MCP].y-lm[PINKY_MCP].y,lm[INDEX_MCP].x-lm[PINKY_MCP].x);}
+  calcFist(lm){
     let px=0,py=0;
     for(let i=0;i<MCPS_ALL.length;i++){px+=lm[MCPS_ALL[i]].x;py+=lm[MCPS_ALL[i]].y;}
     px/=MCPS_ALL.length;py/=MCPS_ALL.length;
     let avg=0;
-    for(let i=0;i<TIPS.length;i++) avg+=Math.hypot(lm[TIPS[i]].x-px,lm[TIPS[i]].y-py);
+    for(let i=0;i<TIPS.length;i++)avg+=Math.hypot(lm[TIPS[i]].x-px,lm[TIPS[i]].y-py);
     avg/=TIPS.length;
     const ext=Math.hypot(lm[MIDDLE_TIP].x-lm[WRIST].x,lm[MIDDLE_TIP].y-lm[WRIST].y);
     return Math.max(0,(Math.max(0,1-avg/0.12)*0.6+Math.max(0,1-ext/0.22)*0.4-0.2)/0.8);
   }
-  calcSpread(lm) { return Math.min(Math.hypot(lm[INDEX_MCP].x-lm[WRIST].x,lm[INDEX_MCP].y-lm[WRIST].y)*5,1); }
-
-  // KEY CHANGE: MediaPipe runs in its own non-blocking loop
-  _runHandInference() {
-    if (!this.isRunning || !this.hands || this.video.readyState < 2) {
-      setTimeout(()=>this._runHandInference(), 33);
-      return;
-    }
-    if (this._inferring) { setTimeout(()=>this._runHandInference(), 5); return; }
-    this._inferring = true;
-    this.hands.send({image: this.video})
-      .catch(()=>{})
-      .finally(()=>{
-        this._inferring = false;
-        // Immediately queue next inference — runs at video rate, never blocks rAF
-        setTimeout(()=>this._runHandInference(), 0);
-      });
+  calcSpread(lm){return Math.min(Math.hypot(lm[INDEX_MCP].x-lm[WRIST].x,lm[INDEX_MCP].y-lm[WRIST].y)*5,1);}
+  _runHandInference(){
+    if(!this.isRunning||!this.hands||this.video.readyState<2){setTimeout(()=>this._runHandInference(),33);return;}
+    if(this._inferring){setTimeout(()=>this._runHandInference(),5);return;}
+    this._inferring=true;
+    this.hands.send({image:this.video}).catch(()=>{}).finally(()=>{this._inferring=false;setTimeout(()=>this._runHandInference(),0);});
   }
-
-  _runFaceInference() {
-    if (!this.isRunning || !this.faceDetector || this.video.readyState < 2) {
-      setTimeout(()=>this._runFaceInference(), 100);
-      return;
-    }
-    if (this._faceInferring) { setTimeout(()=>this._runFaceInference(), 16); return; }
-    this._faceInferring = true;
-    this.faceDetector.send({image: this.video})
-      .catch(()=>{})
-      .finally(()=>{
-        this._faceInferring = false;
-        setTimeout(()=>this._runFaceInference(), 80); // face detection at ~12fps
-      });
+  _runFaceInference(){
+    if(!this.isRunning||!this.faceDetector||this.video.readyState<2){setTimeout(()=>this._runFaceInference(),100);return;}
+    if(this._faceInferring){setTimeout(()=>this._runFaceInference(),16);return;}
+    this._faceInferring=true;
+    this.faceDetector.send({image:this.video}).catch(()=>{}).finally(()=>{this._faceInferring=false;setTimeout(()=>this._runFaceInference(),80);});
   }
-
-  onResults(res) {
-    this.landmarks = [];
-    const lms = (res.multiHandLandmarks||[]).slice(0,2);
-
+  onResults(res){
+    this.landmarks=[];
+    const lms=(res.multiHandLandmarks||[]).slice(0,2);
     lms.forEach((lm,idx)=>{
-      const w     = lm[WRIST];
-      const pinch = this.calcPinch(lm);
-      const rot   = this.calcRot(lm);
-      const fist  = this.calcFist(lm);
-      const spread= this.calcSpread(lm);
-      const prev  = this.prevWrist[idx];
-      const vx    = prev.x>=0?(w.x-prev.x)*60:0;
-      const vy    = prev.y>=0?(w.y-prev.y)*60:0;
+      const w=lm[WRIST];
+      const pinch=this.calcPinch(lm);const rot=this.calcRot(lm);
+      const fist=this.calcFist(lm);const spread=this.calcSpread(lm);
+      const prev=this.prevWrist[idx];
+      const vx=prev.x>=0?(w.x-prev.x)*60:0;const vy=prev.y>=0?(w.y-prev.y)*60:0;
       this.prevWrist[idx]={x:w.x,y:w.y};
-
-      const vm = Math.min(Math.hypot(vx,vy),1.5)/1.5;
-      this.handVels[idx] += (vm - this.handVels[idx]) * 0.22;
-
+      const vm=Math.min(Math.hypot(vx,vy),1.5)/1.5;
+      this.handVels[idx]+=(vm-this.handVels[idx])*0.22;
       this.writeHand(idx,w.x,w.y,pinch,rot,fist,spread,vx,vy);
-
-      const hw=this.hWeights[idx], S=0.14;
-      hw.pinch  +=(pinch -hw.pinch )*S;
-      hw.fist   +=(fist  -hw.fist  )*S;
-      hw.spread +=(spread-hw.spread)*S;
-
-      // Per-tip velocities
+      const hw=this.hWeights[idx],S=0.14;
+      hw.pinch+=(pinch-hw.pinch)*S;hw.fist+=(fist-hw.fist)*S;hw.spread+=(spread-hw.spread)*S;
       const prevT=this.prevTipPos[idx];
       for(let fi=0;fi<TIPS.length;fi++){
-        const ti=TIPS[fi], pt=lm[ti], pp=prevT[ti];
-        const tvx=pp.x>=0?(pt.x-pp.x)*60:0, tvy=pp.y>=0?(pt.y-pp.y)*60:0;
+        const ti=TIPS[fi],pt=lm[ti],pp=prevT[ti];
+        const tvx=pp.x>=0?(pt.x-pp.x)*60:0,tvy=pp.y>=0?(pt.y-pp.y)*60:0;
         const tm=Math.min(Math.hypot(tvx,tvy),1.5)/1.5;
         this.tipVels[idx][fi]+=(tm-this.tipVels[idx][fi])*0.18;
         prevT[ti]={x:pt.x,y:pt.y};
       }
       this.landmarks.push(lm);
     });
-
     for(let i=lms.length;i<2;i++){
-      this.writeHand(i,-1,-1,0,0,0,0,0,0);
-      this.prevWrist[i]={x:-1,y:-1};
+      this.writeHand(i,-1,-1,0,0,0,0,0,0);this.prevWrist[i]={x:-1,y:-1};
       this.handVels[i]*=0.88;
-      for(let fi=0;fi<TIPS.length;fi++) this.tipVels[i][fi]*=0.85;
+      for(let fi=0;fi<TIPS.length;fi++)this.tipVels[i][fi]*=0.85;
     }
-
-    if(lms.length===2){
-      const w0=lms[0][WRIST],w1=lms[1][WRIST];
-      this.twoHandDist=Math.hypot(w1.x-w0.x,w1.y-w0.y);
-    } else { this.twoHandDist=0; }
+    if(lms.length===2){const w0=lms[0][WRIST],w1=lms[1][WRIST];this.twoHandDist=Math.hypot(w1.x-w0.x,w1.y-w0.y);}
+    else{this.twoHandDist=0;}
     this.buf()[14]=this.twoHandDist;
-
     this.drawCamPreview(lms);
   }
-
-  onFaceResults(res) {
+  onFaceResults(res){
     const dets=(res.detections||[]);
     if(dets.length>0){
-      const d=dets[0], bb=d.boundingBox;
+      const d=dets[0],bb=d.boundingBox;
       const nx=bb.xCenter!==undefined?bb.xCenter:(bb.originX+bb.width*0.5);
       const ny=bb.yCenter!==undefined?bb.yCenter:(bb.originY+bb.height*0.5);
-      const sz=bb.width||0.2;
-      const S=0.15;
+      const sz=bb.width||0.2;const S=0.15;
       if(this.prevFacePos.x<0){this.faceCenter.x=nx;this.faceCenter.y=ny;}
-      else{ this.faceCenter.x+=(nx-this.faceCenter.x)*S; this.faceCenter.y+=(ny-this.faceCenter.y)*S; }
-      this.faceCenter.size=sz; this.faceCenter.active=true;
+      else{this.faceCenter.x+=(nx-this.faceCenter.x)*S;this.faceCenter.y+=(ny-this.faceCenter.y)*S;}
+      this.faceCenter.size=sz;this.faceCenter.active=true;
       const fvx=this.prevFacePos.x>=0?(nx-this.prevFacePos.x)*30:0;
       const fvy=this.prevFacePos.y>=0?(ny-this.prevFacePos.y)*30:0;
-      this.faceCenter.vel+=(Math.min(Math.hypot(fvx,fvy),1)-this.faceCenter.vel)*0.18;
+      this.faceCenter.vel+=( Math.min(Math.hypot(fvx,fvy),1)-this.faceCenter.vel)*0.18;
       this.prevFacePos={x:nx,y:ny};
     } else {
-      this.faceCenter.active=false;
-      this.faceCenter.vel*=0.9;
-      this.prevFacePos={x:-1,y:-1};
+      this.faceCenter.active=false;this.faceCenter.vel*=0.9;this.prevFacePos={x:-1,y:-1};
     }
   }
-
-  drawCamPreview(lms) {
-    const ctx=this.camCtx, W=this.camPreview.width, H=this.camPreview.height;
-    if(this.bgR.baked){
-      ctx.globalAlpha=0.72; ctx.drawImage(this.bgR.bwCvs,0,0,W,H); ctx.globalAlpha=1;
-    } else { ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H); }
-    ctx.fillStyle='rgba(0,0,0,0.28)'; ctx.fillRect(0,0,W,H);
+  drawCamPreview(lms){
+    const ctx=this.camCtx,W=this.camPreview.width,H=this.camPreview.height;
+    if(this.bgR.baked){ctx.globalAlpha=0.72;ctx.drawImage(this.bgR.bwCvs,0,0,W,H);ctx.globalAlpha=1;}
+    else{ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);}
+    ctx.fillStyle='rgba(0,0,0,0.28)';ctx.fillRect(0,0,W,H);
     lms.forEach((lm,hi)=>{
-      const col=hi===0?'#00FF00':'#00aa66';
-      ctx.strokeStyle=col; ctx.lineWidth=0.8; ctx.globalAlpha=0.8; ctx.shadowBlur=0;
+      const {r,g,b}=CFG.accentRGB;
+      const col=hi===0?`rgb(${r},${g},${b})`:`rgb(${(r*0.7)|0},${(g*0.7)|0},${(b*0.55+40)|0})`;
+      ctx.strokeStyle=col;ctx.lineWidth=0.8;ctx.globalAlpha=0.8;ctx.shadowBlur=0;
       ctx.beginPath();
-      CONNECTIONS.forEach(([a,b])=>{
-        ctx.moveTo((1-lm[a].x)*W,lm[a].y*H);
-        ctx.lineTo((1-lm[b].x)*W,lm[b].y*H);
+      CONNECTIONS.forEach(([a,b2])=>{
+        ctx.moveTo((1-lm[a].x)*W,lm[a].y*H);ctx.lineTo((1-lm[b2].x)*W,lm[b2].y*H);
       });
-      ctx.stroke();
-      ctx.fillStyle=col; ctx.globalAlpha=1;
+      ctx.stroke();ctx.fillStyle=col;ctx.globalAlpha=1;
       for(let i=0;i<TIPS.length;i++){
-        ctx.beginPath();
-        ctx.arc((1-lm[TIPS[i]].x)*W,lm[TIPS[i]].y*H,2,0,Math.PI*2); ctx.fill();
+        ctx.beginPath();ctx.arc((1-lm[TIPS[i]].x)*W,lm[TIPS[i]].y*H,2,0,Math.PI*2);ctx.fill();
       }
     });
     ctx.globalAlpha=1;
   }
-
-  updateUI() {
+  updateUI(){
     const b=this.buf();
-    const h1a=b[0]>=0, h2a=b[8]>=0;
-
-    const fmtH=(active,o)=>!active?'—':
-      `<span class="gv">x:</span>${b[o].toFixed(3)} <span class="gv">y:</span>${b[o+1].toFixed(3)}<br>`+
-      `<span class="gv">P:</span>${b[o+2].toFixed(2)} <span class="gv">R:</span>${(b[o+3]*57.3).toFixed(0)}°<br>`+
-      `<span class="gv">Fist:</span>${b[o+4].toFixed(2)} <span class="gv">Vx:</span>${b[o+6].toFixed(2)}`;
-
+    const h1a=b[0]>=0,h2a=b[8]>=0;
+    const fmtH=(active,o)=>!active?'—':`<span class="gv">x:</span>${b[o].toFixed(3)} <span class="gv">y:</span>${b[o+1].toFixed(3)}<br><span class="gv">P:</span>${b[o+2].toFixed(2)} <span class="gv">R:</span>${(b[o+3]*57.3).toFixed(0)}°<br><span class="gv">Fist:</span>${b[o+4].toFixed(2)} <span class="gv">Vx:</span>${b[o+6].toFixed(2)}`;
     document.getElementById('ht1').innerHTML=fmtH(h1a,0);
     document.getElementById('ht2').innerHTML=fmtH(h2a,8);
     document.getElementById('hp1').className=`hand-panel${h1a?' active':''}`;
     document.getElementById('hp2').className=`hand-panel${h2a?' active':''}`;
-
     const hw=h1a?this.hWeights[0]:h2a?this.hWeights[1]:{pinch:0,fist:0,spread:0};
     ['pinch','fist','spread'].forEach(k=>{
       const v=hw[k]||0;
-      const f=document.getElementById(`gb-${k}`), g=document.getElementById(`gv-${k}`);
-      if(f)f.style.width=(v*100).toFixed(1)+'%';
-      if(g)g.textContent=v.toFixed(2);
+      const f=document.getElementById(`gb-${k}`),g2=document.getElementById(`gv-${k}`);
+      if(f)f.style.width=(v*100).toFixed(1)+'%';if(g2)g2.textContent=v.toFixed(2);
     });
-
     for(let i=0;i<16;i++){
-      const c=document.getElementById(`sc${i}`);
-      if(!c) continue;
+      const c=document.getElementById(`sc${i}`);if(!c)continue;
       const live=(i<8&&h1a)||(i>=8&&i<14&&h2a)||i>=14;
       c.className=`sab-cell${live?' live':''}`;
-      const v=b[i];
-      c.textContent=Math.abs(v)>0.001?v.toFixed(2):SAB_NAMES[i];
+      const v=b[i];c.textContent=Math.abs(v)>0.001?v.toFixed(2):SAB_NAMES[i];
     }
-
     const nHands=(h1a?1:0)+(h2a?1:0);
-    const hw1=this.hWeights[0], hw2=this.hWeights[1];
-    const maxP=Math.max(hw1.pinch,hw2.pinch), maxF=Math.max(hw1.fist,hw2.fist);
+    const hw1=this.hWeights[0],hw2=this.hWeights[1];
+    const maxP=Math.max(hw1.pinch,hw2.pinch),maxF=Math.max(hw1.fist,hw2.fist);
     let mode=nHands>0?'TRACK':'SCAN';
-    if(maxP>0.5) mode='PINCH·LOCK';
-    else if(maxF>0.5) mode='FIST·LOCK';
-    else if(this.twoHandDist*2.5>0.4) mode='SPREAD';
-
+    if(maxP>0.5)mode='PINCH·LOCK';else if(maxF>0.5)mode='FIST·LOCK';else if(this.twoHandDist*2.5>0.4)mode='SPREAD';
     document.getElementById('modeBadge').textContent=mode;
     document.getElementById('fpsBadge').textContent=`${this.fps} FPS`;
-    document.getElementById('hud-tl').innerHTML=`SYS · POINT CLOUD RENDER<br>MODE: ${mode}`;
-    document.getElementById('hud-tr').innerHTML=`FRAME: ${String(this.frameCount).padStart(6,'0')}<br>HANDS: ${nHands}`;
-    document.getElementById('hud-bl').innerHTML=`LANDMARKS: ${nHands*21}/42<br>SAB: ${this.useSAB?'DIRECT':'FALLBACK'}`;
+    if(CFG.layers.hud){
+      document.getElementById('hud-tl').innerHTML=`SYS · POINT CLOUD RENDER<br>MODE: ${mode}`;
+      document.getElementById('hud-tr').innerHTML=`FRAME: ${String(this.frameCount).padStart(6,'0')}<br>HANDS: ${nHands}`;
+      document.getElementById('hud-bl').innerHTML=`LANDMARKS: ${nHands*21}/42<br>SAB: ${this.useSAB?'DIRECT':'FALLBACK'}`;
+    }
+    applyLayerVisibility();
   }
-
-  async initCamera() {
-    this.setDot('cam','pend');
-    this.log('Requesting camera...','lc-dim');
-    try {
+  async initCamera(){
+    this.setDot('cam','pend');this.log('Requesting camera...','lc-dim');
+    try{
       const s=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30}},audio:false});
       this.video.srcObject=s;
       await new Promise((res,rej)=>{
         this.video.onloadedmetadata=()=>this.video.play().then(res).catch(rej);
-        this.video.onerror=rej;
-        setTimeout(()=>rej(new Error('timeout')),5000);
+        this.video.onerror=rej;setTimeout(()=>rej(new Error('timeout')),5000);
       });
-      await new Promise(res=>{ const c=()=>this.video.readyState>=2?res():requestAnimationFrame(c); c(); });
-      this.camPreview.width=this.video.videoWidth||640;
-      this.camPreview.height=this.video.videoHeight||480;
-      this.setDot('cam','on');
-      this.log(`Camera: ${this.video.videoWidth}×${this.video.videoHeight}`);
+      await new Promise(res=>{const c=()=>this.video.readyState>=2?res():requestAnimationFrame(c);c();});
+      this.camPreview.width=this.video.videoWidth||640;this.camPreview.height=this.video.videoHeight||480;
+      this.setDot('cam','on');this.log(`Camera: ${this.video.videoWidth}×${this.video.videoHeight}`);
       return true;
-    } catch(e){ this.setDot('cam','err'); this.log(`Camera: ${e.message}`,'lc-err'); return false; }
+    }catch(e){this.setDot('cam','err');this.log(`Camera: ${e.message}`,'lc-err');return false;}
   }
-
-  async initMediaPipe() {
-    this.setDot('mp','pend');
-    this.log('Loading MediaPipe Hands...','lc-dim');
+  async initMediaPipe(){
+    this.setDot('mp','pend');this.log('Loading MediaPipe Hands...','lc-dim');
     return new Promise(resolve=>{
-      try {
+      try{
         this.hands=new Hands({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${f}`});
         this.hands.setOptions({maxNumHands:2,modelComplexity:1,minDetectionConfidence:0.6,minTrackingConfidence:0.6});
         this.hands.onResults(r=>this.onResults(r));
-        this.hands.initialize().then(()=>{
-          this.setDot('mp','on'); this.log('MediaPipe Hands: ready'); resolve(true);
-        }).catch(e=>{ this.setDot('mp','err'); this.log(`MP: ${e.message}`,'lc-err'); resolve(false); });
-      } catch(e){ this.setDot('mp','err'); this.log(`MP: ${e.message}`,'lc-err'); resolve(false); }
+        this.hands.initialize().then(()=>{this.setDot('mp','on');this.log('MediaPipe Hands: ready');resolve(true);})
+          .catch(e=>{this.setDot('mp','err');this.log(`MP: ${e.message}`,'lc-err');resolve(false);});
+      }catch(e){this.setDot('mp','err');this.log(`MP: ${e.message}`,'lc-err');resolve(false);}
     });
   }
-
-  async initFaceDetection() {
+  async initFaceDetection(){
     this.log('Loading FaceDetection...','lc-dim');
     return new Promise(resolve=>{
-      try {
-        if(typeof FaceDetection==='undefined'){ this.log('FaceDetection: unavailable','lc-warn'); resolve(false); return; }
+      try{
+        if(typeof FaceDetection==='undefined'){this.log('FaceDetection: unavailable','lc-warn');resolve(false);return;}
         this.faceDetector=new FaceDetection({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_detection@0.4/${f}`});
         this.faceDetector.setOptions({model:'short_range',minDetectionConfidence:0.5});
         this.faceDetector.onResults(r=>this.onFaceResults(r));
-        this.faceDetector.initialize().then(()=>{ this.log('FaceDetection: ready'); resolve(true); })
-          .catch(e=>{ this.log(`FaceDetection: ${e.message}`,'lc-warn'); resolve(false); });
-      } catch(e){ this.log(`FaceDetection: ${e.message}`,'lc-warn'); resolve(false); }
+        this.faceDetector.initialize().then(()=>{this.log('FaceDetection: ready');resolve(true);})
+          .catch(e=>{this.log(`FaceDetection: ${e.message}`,'lc-warn');resolve(false);});
+      }catch(e){this.log(`FaceDetection: ${e.message}`,'lc-warn');resolve(false);}
     });
   }
-
-  initRenderers() {
+  initRenderers(){
     this.setDot('gl','pend');
     const main=this.bgCanvas.parentElement;
     const rect=main.getBoundingClientRect();
-    const W=Math.floor(rect.width), H=Math.floor(rect.height);
-    this.bgR.resize(W,H); this.lensR.resize(W,H); this.arR.resize(W,H);
+    const W=Math.floor(rect.width),H=Math.floor(rect.height);
+    this.bgR.resize(W,H);this.lensR.resize(W,H);this.arR.resize(W,H);this.objRenderer.resize(W,H);
     window.addEventListener('resize',()=>{
       const r2=main.getBoundingClientRect();
-      const w2=Math.floor(r2.width), h2=Math.floor(r2.height);
-      this.bgR.resize(w2,h2); this.lensR.resize(w2,h2); this.arR.resize(w2,h2);
+      const w2=Math.floor(r2.width),h2=Math.floor(r2.height);
+      this.bgR.resize(w2,h2);this.lensR.resize(w2,h2);this.arR.resize(w2,h2);this.objRenderer.resize(w2,h2);
     });
-    this.setDot('gl','on');
-    this.log('Renderers: ready');
+    this.setDot('gl','on');this.log('Renderers: ready');
     return true;
   }
-
-  // KEY: rAF loop ONLY renders — no MediaPipe awaiting
-  _startLoop() {
-    const loop = () => {
-      if (!this.isRunning) return;
-      const now = performance.now();
+  _startLoop(){
+    const loop=()=>{
+      if(!this.isRunning)return;
+      const now=performance.now();
       this.frameCount++;
-
-      // FPS counter
-      if (now - this.lastFPSTime > 900) {
-        this.fps = Math.round(this.frameCount / ((now-this.lastFPSTime+0.001)/1000));
-        this.frameCount = 0; this.lastFPSTime = now;
+      if(now-this.lastFPSTime>900){
+        this.fps=Math.round(this.frameCount/((now-this.lastFPSTime+0.001)/1000));
+        this.frameCount=0;this.lastFPSTime=now;
       }
-
-      // Bake at ~15fps — throttled, off the inference path
-      if (now - this.lastBake > this.BAKE_INTERVAL && this.video.readyState >= 2) {
-        this.bgR.bakeFrame();
-        this.lensR.bakeFrames();
-        this.lastBake = now;
-
-        const b=this.buf(), fps=[];
-        if(b[0]>=0) fps.push({x:b[0],y:b[1],pinch:b[2],active:true});
-        if(b[8]>=0) fps.push({x:b[8],y:b[9],pinch:b[10],active:true});
-        if(this.faceCenter.active) fps.push({x:this.faceCenter.x,y:this.faceCenter.y,pinch:0,active:true});
+      if(now-this.lastBake>this.BAKE_INTERVAL&&this.video.readyState>=2){
+        this.bgR.bakeFrame();this.lensR.bakeFrames();this.lastBake=now;
+        const b=this.buf(),fps=[];
+        if(b[0]>=0)fps.push({x:b[0],y:b[1],pinch:b[2],active:true});
+        if(b[8]>=0)fps.push({x:b[8],y:b[9],pinch:b[10],active:true});
+        if(this.faceCenter.active)fps.push({x:this.faceCenter.x,y:this.faceCenter.y,pinch:0,active:true});
         this.bgR.setFocal(fps);
       }
-
-      // Render BG
-      if (this.bgR.baked) this.bgR.render(now);
-
-      // Render Lens
-      if (this.lensR.hasBaked) {
-        const b=this.buf(), lf=[];
-        if(b[0]>=0) lf.push({cx:(1-b[0])*this.lensCanvas.width, cy:b[1]*this.lensCanvas.height,
-          baseR:42+this.hWeights[0].spread*18, vel:this.handVels[0],
-          pinch:this.hWeights[0].pinch, fist:this.hWeights[0].fist, isFace:false, active:true});
-        if(b[8]>=0) lf.push({cx:(1-b[8])*this.lensCanvas.width, cy:b[9]*this.lensCanvas.height,
-          baseR:42+this.hWeights[1].spread*18, vel:this.handVels[1],
-          pinch:this.hWeights[1].pinch, fist:this.hWeights[1].fist, isFace:false, active:true});
-        if(this.faceCenter.active) lf.push({
-          cx:(1-this.faceCenter.x)*this.lensCanvas.width,
-          cy:this.faceCenter.y*this.lensCanvas.height,
-          baseR:(this.faceCenter.size||0.2)*this.lensCanvas.width*0.5,
-          vel:this.faceCenter.vel, pinch:0, fist:0, isFace:true, active:true});
-        this.lensR.render(lf, now/1000);
-      }
-
-      // Render AR overlay — pure canvas drawing, always fast
-      this.arR.render(this.landmarks, this.hWeights, this.frameCount, {
-        handVels: this.handVels, tipVels: this.tipVels, faceCenter: this.faceCenter
-      });
-
+      if(CFG.layers.matrix&&this.bgR.baked)this.bgR.render(now);
+      else if(!CFG.layers.matrix){const ctx=this.bgCanvas.getContext('2d');ctx.fillStyle='#000';ctx.fillRect(0,0,this.bgCanvas.width,this.bgCanvas.height);}
+      if(CFG.layers.lens&&this.lensR.hasBaked){
+        const b=this.buf(),lf=[];
+        if(b[0]>=0)lf.push({cx:(1-b[0])*this.lensCanvas.width,cy:b[1]*this.lensCanvas.height,baseR:42+this.hWeights[0].spread*18,vel:this.handVels[0],pinch:this.hWeights[0].pinch,fist:this.hWeights[0].fist,isFace:false,active:true});
+        if(b[8]>=0)lf.push({cx:(1-b[8])*this.lensCanvas.width,cy:b[9]*this.lensCanvas.height,baseR:42+this.hWeights[1].spread*18,vel:this.handVels[1],pinch:this.hWeights[1].pinch,fist:this.hWeights[1].fist,isFace:false,active:true});
+        if(CFG.layers.face&&this.faceCenter.active)lf.push({cx:(1-this.faceCenter.x)*this.lensCanvas.width,cy:this.faceCenter.y*this.lensCanvas.height,baseR:(this.faceCenter.size||0.2)*this.lensCanvas.width*0.5,vel:this.faceCenter.vel,pinch:0,fist:0,isFace:true,active:true});
+        this.lensR.render(lf,now/1000);
+      } else if(!CFG.layers.lens){const ctx=this.lensCanvas.getContext('2d');ctx.clearRect(0,0,this.lensCanvas.width,this.lensCanvas.height);}
+      this.arR.render(this.landmarks,this.hWeights,this.frameCount,{handVels:this.handVels,tipVels:this.tipVels,faceCenter:this.faceCenter});
+      // AR Objects
+      this.objRenderer.update(this.landmarks,this.hWeights,this.handVels);
+      this.objRenderer.render(this.landmarks,this.hWeights);
       this.updateUI();
       requestAnimationFrame(loop);
     };
-
-    this.lastFPSTime = performance.now();
-    this.lastBake    = 0;
+    this.lastFPSTime=performance.now();this.lastBake=0;
     requestAnimationFrame(loop);
     this.log('rAF render loop: running (inference decoupled)');
   }
-
-  async initialize() {
-    this.conEl.innerHTML='';
-    this.log('═══ AR TRACKING SYSTEM INIT ═══');
+  async initialize(){
+    this.conEl.innerHTML='';this.log('═══ AR TRACKING SYSTEM INIT ═══');
     this.initDataLayer();
-    if(!await this.initCamera()) return false;
+    if(!await this.initCamera())return false;
     this.initRenderers();
     this.isRunning=true;
-    if(!await this.initMediaPipe()) return false;
+    if(!await this.initMediaPipe())return false;
     await this.initFaceDetection();
-    // Start inference in their own loops — DECOUPLED from rAF
     this._runHandInference();
-    if(this.faceDetector) this._runFaceInference();
-    // Start render loop — never awaits inference
+    if(this.faceDetector)this._runFaceInference();
     this._startLoop();
     this.log('═══ SYSTEM ONLINE ═══');
-    this.log('Inference decoupled · rAF uncapped');
+    this.log('Pinch near center → DRAG object');
+    this.log('Pinch near edge → ROTATE object');
     return true;
   }
 }
-// ─── Bootstrap ────────────────────────────────────────────────
-document.getElementById('startBtn').addEventListener('click', async function() {
-  this.disabled = true;
-  this.textContent = '⋯ INITIALIZING';
-  const engine = new GestureAREngine();
-  const ok = await engine.initialize();
-  this.textContent = ok ? '✓ SYSTEM ONLINE' : '✗ FAILED · RETRY';
-  if (!ok) this.disabled = false;
-});
+
+function startApp(){
+  document.getElementById('startBtn').addEventListener('click',async function(){
+    this.disabled=true;this.textContent='⋯ INITIALIZING';
+    const engine=new GestureAREngine();
+    window._engine=engine;
+    const ok=await engine.initialize();
+    this.textContent=ok?'✓ SYSTEM ONLINE':'✗ FAILED · RETRY';
+    if(!ok)this.disabled=false;
+  });
+}
 </script>
 </body>
 </html>

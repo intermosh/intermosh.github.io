@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aqua Dreams</title>
+<style>
+/* ══════════════════════════════════════════════════════
+   RESET & BASE
+══════════════════════════════════════════════════════ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{
+  width:100%;height:100%;overflow:hidden;
+  background:#000;
+  font-family:'Courier New',Courier,monospace;
+  color:#fff;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ══════════════════════════════════════════════════════
+   START SCREEN
+══════════════════════════════════════════════════════ */
+#startScreen{
+  position:fixed;inset:0;z-index:200;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:1.8rem;
+  transition:opacity 1s ease;
+}
+/* camera bg handled via #camVideo shown during start screen */
+.s-logo{
+  font-size:clamp(2.4rem,7vw,5.2rem);
+  letter-spacing:.35em;
+  text-transform:uppercase;
+  font-weight:100;
+  color:#ff70c0;
+  text-shadow:
+    0 0 30px #ff20a0,
+    0 0 80px #c010ff,
+    0 0 160px #7000cc,
+    0 0 280px #3000880;
+  animation:logoPulse 3s ease-in-out infinite alternate;
+}
+@keyframes logoPulse{
+  from{text-shadow:0 0 30px #ff20a0,0 0 80px #c010ff,0 0 160px #7000cc;}
+  to{text-shadow:0 0 50px #ff50c0,0 0 110px #d040ff,0 0 220px #9020dd,0 0 350px #5010aa;}
+}
+.s-sub{
+  font-size:.72rem;letter-spacing:.28em;
+  color:rgba(255,255,255,.35);text-transform:uppercase;
+  margin-top:-.9rem;
+}
+.s-box{
+  display:flex;flex-direction:column;align-items:center;gap:1.6rem;
+  background:rgba(0,0,0,.4);
+  backdrop-filter:blur(24px) saturate(1.5);
+  border:1px solid rgba(255,80,180,.18);
+  border-radius:3px;
+  padding:2.8rem 4rem;
+  box-shadow:0 0 60px rgba(180,0,255,.08),inset 0 0 40px rgba(255,0,180,.04);
+}
+/* Toggle row */
+.t-row{
+  display:flex;align-items:center;gap:1rem;
+  font-size:.72rem;letter-spacing:.14em;
+  color:rgba(255,255,255,.6);
+  cursor:pointer;user-select:none;
+}
+.t-row input{display:none}
+.t-sw{
+  width:48px;height:26px;
+  background:rgba(255,255,255,.1);
+  border-radius:13px;
+  border:1px solid rgba(255,80,180,.3);
+  position:relative;transition:all .3s;flex-shrink:0;
+}
+.t-sw::after{
+  content:'';position:absolute;
+  top:3px;left:3px;
+  width:18px;height:18px;
+  background:rgba(255,255,255,.5);
+  border-radius:50%;
+  transition:transform .3s,background .3s;
+}
+.t-row input:checked+.t-sw{
+  background:rgba(255,30,130,.3);
+  border-color:#ff70c0;
+  box-shadow:0 0 12px rgba(255,30,130,.3);
+}
+.t-row input:checked+.t-sw::after{
+  transform:translateX(22px);
+  background:#ff90d0;
+}
+/* Enter button */
+#enterBtn{
+  margin-top:.4rem;
+  padding:.92rem 4.5rem;
+  background:transparent;
+  border:1px solid rgba(255,90,180,.5);
+  color:#ffb0d8;
+  font-family:inherit;font-size:.78rem;
+  letter-spacing:.4em;text-transform:uppercase;
+  cursor:pointer;border-radius:2px;
+  transition:all .35s;
+  text-shadow:0 0 14px #ff30a0;
+  box-shadow:0 0 30px rgba(255,20,150,.08),inset 0 0 30px rgba(255,10,150,.04);
+}
+#enterBtn:hover{
+  background:rgba(255,40,130,.12);
+  border-color:#ff90d0;
+  box-shadow:0 0 60px rgba(255,20,150,.22),inset 0 0 30px rgba(255,10,150,.08);
+}
+.s-hint{
+  font-size:.6rem;letter-spacing:.1em;
+  color:rgba(255,255,255,.22);text-align:center;line-height:1.9;
+}
+
+/* ── Section label ── */
+.s-label{
+  font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;
+  color:rgba(255,255,255,.4);align-self:flex-start;
+  margin-bottom:-.6rem;
+}
+
+/* ── Divider ── */
+.s-div{
+  width:100%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,80,180,.18),transparent);
+}
+
+/* ══ DUAL RANGE SLIDER ══ */
+.dr-wrap{
+  width:100%;display:flex;flex-direction:column;gap:.6rem;
+}
+.dr-track-wrap{
+  position:relative;height:28px;display:flex;align-items:center;
+}
+.dr-track{
+  position:absolute;left:0;right:0;height:3px;
+  background:rgba(255,255,255,.08);border-radius:2px;
+}
+.dr-fill{
+  position:absolute;height:3px;
+  background:linear-gradient(90deg,#c020ff,#ff40a0);
+  border-radius:2px;
+  box-shadow:0 0 8px rgba(200,30,255,.5);
+}
+.dr-track-wrap input[type=range]{
+  position:absolute;width:100%;
+  -webkit-appearance:none;appearance:none;
+  background:transparent;pointer-events:none;
+  height:28px;margin:0;
+}
+.dr-track-wrap input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  pointer-events:all;
+  width:18px;height:18px;border-radius:50%;
+  background:radial-gradient(circle at 40% 35%,#fff 0%,#ff90d0 55%,#c020ff 100%);
+  border:1px solid rgba(255,160,220,.5);
+  box-shadow:0 0 10px rgba(200,30,255,.6),0 2px 4px rgba(0,0,0,.4);
+  cursor:ew-resize;
+  transition:box-shadow .2s;
+}
+.dr-track-wrap input[type=range]::-webkit-slider-thumb:hover{
+  box-shadow:0 0 18px rgba(255,60,200,.9),0 2px 4px rgba(0,0,0,.4);
+}
+.dr-track-wrap input[type=range]::-moz-range-thumb{
+  pointer-events:all;
+  width:18px;height:18px;border-radius:50%;
+  background:radial-gradient(circle at 40% 35%,#fff 0%,#ff90d0 55%,#c020ff 100%);
+  border:1px solid rgba(255,160,220,.5);
+  box-shadow:0 0 10px rgba(200,30,255,.6);
+  cursor:ew-resize;
+}
+.dr-vals{
+  display:flex;justify-content:space-between;
+  font-size:.62rem;letter-spacing:.08em;
+  color:rgba(255,255,255,.5);
+}
+.dr-vals span{ color:#ff90d0; font-weight:600; }
+
+/* ══ PALETTE GRID ══ */
+.pal-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:.55rem;width:100%;
+}
+.pal-swatch{
+  border-radius:3px;border:1px solid rgba(255,255,255,.08);
+  padding:.45rem .3rem .35rem;
+  cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:.28rem;
+  transition:border-color .2s,box-shadow .2s,transform .15s;
+  background:rgba(0,0,0,.25);
+  position:relative;overflow:hidden;
+}
+.pal-swatch:hover{
+  border-color:rgba(255,80,180,.55);
+  transform:translateY(-1px);
+}
+.pal-swatch.selected{
+  border-color:#ff70c0;
+  box-shadow:0 0 14px rgba(255,30,160,.45),inset 0 0 12px rgba(255,20,140,.08);
+}
+.pal-swatch.selected::after{
+  content:'✓';position:absolute;top:2px;right:4px;
+  font-size:.5rem;color:#ff90d0;
+}
+.pal-dots{
+  display:flex;gap:2.5px;
+}
+.pal-dot{
+  width:6px;height:6px;border-radius:50%;
+  box-shadow:0 0 4px currentColor;
+  flex-shrink:0;
+}
+.pal-name{
+  font-size:.48rem;letter-spacing:.1em;text-transform:uppercase;
+  color:rgba(255,255,255,.38);white-space:nowrap;
+}
+
+/* ══════════════════════════════════════════════════════
+   MAIN SCENE
+══════════════════════════════════════════════════════ */
+#scene{
+  display:none;
+  position:fixed;inset:0;
+  background:#000;
+}
+#camBg{
+  /* Camera feed — sits between black bg and WebGL layer */
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  object-fit:cover;
+  opacity:0;           /* set by JS once entered */
+  z-index:1;
+  pointer-events:none;
+  transition:opacity 1.2s ease;
+}
+#glCanvas{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  display:block;
+  z-index:2;
+}
+#ovCanvas{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  display:block;
+  pointer-events:none;
+  z-index:3;
+}
+#camVideo{
+  position:fixed;inset:0;
+  width:100%;height:100%;
+  object-fit:cover;
+  display:none;
+  z-index:-1;
+  pointer-events:none;
+}
+
+/* Debug panel */
+#dbg{
+  display:none;
+  position:absolute;
+  top:20px;left:20px;
+  font-size:.68rem;
+  line-height:2;
+  color:rgba(0,255,160,.85);
+  text-shadow:0 0 10px rgba(0,255,140,.5);
+  pointer-events:none;
+  letter-spacing:.06em;
+  z-index:10;
+  background:rgba(0,0,0,.35);
+  backdrop-filter:blur(6px);
+  padding:10px 16px;
+  border-left:1px solid rgba(0,255,140,.3);
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ START SCREEN ═══════════════ -->
+<div id="startScreen">
+  <!-- camVideo doubles as the blurred bg — positioned behind via z-index -->
+  <div class="s-logo">Aqua Dreams</div>
+  <div class="s-sub">Interactive Deep Sea Experience</div>
+
+  <div class="s-box">
+
+    <!-- Mirror toggle -->
+    <label class="t-row">
+      <input type="checkbox" id="mirrorToggle" checked>
+      <span class="t-sw"></span>
+      <span>ESPEJO DE CÁMARA</span>
+    </label>
+
+    <div class="s-div"></div>
+
+    <!-- Jellyfish size dual-range -->
+    <div class="s-label">TAMAÑO DE MEDUSAS</div>
+    <div class="dr-wrap">
+      <div class="dr-track-wrap">
+        <div class="dr-track"></div>
+        <div class="dr-fill" id="drFill"></div>
+        <input type="range" id="drMin" min="6" max="80" value="16" step="1">
+        <input type="range" id="drMax" min="6" max="80" value="42" step="1">
+      </div>
+      <div class="dr-vals">
+        <span>mín <span id="drMinVal">16</span>px</span>
+        <span>máx <span id="drMaxVal">42</span>px</span>
+      </div>
+    </div>
+
+    <div class="s-div"></div>
+
+    <!-- Palette selector -->
+    <div class="s-label">PALETA DE COLORES</div>
+    <div class="pal-grid" id="palGrid"></div>
+
+    <div class="s-div"></div>
+
+    <button id="enterBtn">SUMERGIRSE</button>
+
+    <div class="s-hint">
+      Mueve tus manos frente a la cámara para interactuar<br>
+      Presiona <strong style="color:rgba(0,255,160,.7)">D</strong> para activar modo debug
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MAIN SCENE ═══════════════ -->
+<div id="scene">
+  <video id="camBg" autoplay playsinline muted></video>
+  <canvas id="glCanvas"></canvas>
+  <canvas id="ovCanvas"></canvas>
+  <video id="camVideo" autoplay playsinline muted></video>
+  <div id="dbg"></div>
+</div>
+
+<!-- MediaPipe Hands (UMD) -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js"
+        crossorigin="anonymous"></script>
+
+<script>
+'use strict';
+
+/* ══════════════════════════════════════════════════════
+   HAND STATE  —  plain JS, single-threaded
+   MediaPipe callback and render loop run on the same
+   thread.  There is no real concurrency here, so SAB +
+   Atomics would only create false safety.  A simple
+   double-buffer swap gives us a stable snapshot to
+   read during the render pass without any partial writes.
+
+   Structure: array of hands, each hand = 21 {x,y,z}
+══════════════════════════════════════════════════════ */
+
+/* Two JS arrays; MediaPipe writes to _back, render reads _front */
+let _handsFront = [];   /* render reads this */
+let _handsBack  = [];   /* MediaPipe writes this */
+
+function writeHandData(multiHandLandmarks, mirrorX) {
+  _handsBack = [];
+  const n = Math.min((multiHandLandmarks || []).length, 2);
+  for (let h = 0; h < n; h++) {
+    const src = multiHandLandmarks[h];
+    const lms = new Array(21);
+    for (let l = 0; l < 21; l++) {
+      lms[l] = {
+        x: mirrorX ? 1 - src[l].x : src[l].x,
+        y: src[l].y,
+        z: src[l].z,
+      };
+    }
+    _handsBack.push(lms);
+  }
+  /* Atomic-equivalent swap: one JS assignment is always coherent */
+  _handsFront = _handsBack;
+}
+
+/* Render loop just reads the stable front buffer */
+function readHandData() { return _handsFront; }
+
+/* ══════════════════════════════════════════════════════
+   CONFIG
+══════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════
+   CONFIG
+══════════════════════════════════════════════════════ */
+/* Hoisted geometry constants — used both by CFG and by buffer-size calc below */
+const CFG_BELL_SEGS = 32;
+const CFG_TENT_N    = 6;
+const CFG_TENT_SEGS = 13;
+
+const CFG = {
+  NUM_JELLY:   11,
+  NUM_PART:   200,
+  REPEL_R:    260,
+  REPEL_F:   1800,
+  FEAR_DECAY:  0.65,
+  BELL_SEGS:  CFG_BELL_SEGS,
+  TENT_N:     CFG_TENT_N,
+  TENT_SEGS:  CFG_TENT_SEGS,
+  TENT_THICK:   2.2,
+  SIZE_MIN:    16,   /* overwritten by start-screen slider */
+  SIZE_MAX:    42,
+  PALETTE: [
+    [1.00, 0.13, 0.52],
+    [0.92, 0.18, 0.90],
+    [0.55, 0.12, 1.00],
+    [0.20, 0.72, 1.00],
+    [1.00, 0.50, 0.82],
+    [0.78, 0.28, 1.00],
+    [0.15, 0.88, 0.72],
+    [1.00, 0.78, 0.10],
+  ],
+};
+
+/* ══════════════════════════════════════════════════════
+   WEBGL SHADERS
+══════════════════════════════════════════════════════ */
+
+/* ── Background: animated deep-sea gradient + caustics ── */
+const BG_VS = `#version 300 es
+in vec2 a_pos;
+void main(){gl_Position=vec4(a_pos,0,1);}`;
+
+const BG_FS = `#version 300 es
+precision highp float;
+uniform float u_t;
+uniform vec2  u_res;
+out vec4 oCol;
+
+float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.545);}
+float n(vec2 p){
+  vec2 i=floor(p),f=fract(p);
+  f=f*f*(3.-2.*f);
+  return mix(mix(h(i),h(i+vec2(1,0)),f.x),
+             mix(h(i+vec2(0,1)),h(i+vec2(1)),f.x),f.y);
+}
+float fbm(vec2 p){
+  return n(p)*.5+n(p*2.)*.25+n(p*4.)*.125;
+}
+
+void main(){
+  vec2 uv=gl_FragCoord.xy/u_res;
+  float t=u_t;
+
+  /* deep sea base gradient — darkest at top, subtle at bottom */
+  vec3 c = mix(
+    vec3(0.008, 0.000, 0.030),   /* near-black indigo top */
+    vec3(0.030, 0.005, 0.080),   /* dark violet bottom */
+    uv.y
+  );
+
+  /* mid-depth glow — centre slightly brighter */
+  float cx = 1.0 - pow(abs(uv.x - 0.5)*2.0, 1.6);
+  c += cx * 0.012 * vec3(0.5, 0.1, 1.0);
+
+  /* caustic light shimmer */
+  float ca = fbm(uv * 5.5 + vec2(t*0.28, t*0.19))
+           * fbm(uv * 8.2 - vec2(t*0.14, t*0.31));
+  c += ca * 0.045 * vec3(0.55, 0.15, 1.0);
+
+  /* downward light shafts from surface */
+  float shaft = pow(
+    max(0., sin(uv.x*11.0 + t*0.18) * sin(uv.x*7.4 - t*0.12)),
+    2.0
+  );
+  c += shaft * (1.0 - uv.y) * 0.018 * vec3(0.7, 0.4, 1.0);
+
+  /* vignette */
+  float v = 1.0 - length((uv - 0.5) * vec2(1.3, 1.0));
+  c *= clamp(v * 1.1, 0.0, 1.0);
+
+  /* Alpha < 1 lets the camera feed below composite through the dark BG */
+  oCol = vec4(c, 0.80);
+}`;
+
+/* ── Geometry: bell + tentacle thick quads ── */
+const GEOM_VS = `#version 300 es
+in vec2 a_pos;
+in vec4 a_col;
+uniform vec2 u_res;
+out vec4 v_col;
+void main(){
+  vec2 clip = (a_pos / u_res) * 2.0 - 1.0;
+  gl_Position = vec4(clip.x, -clip.y, 0.0, 1.0);
+  v_col = a_col;
+}`;
+
+const GEOM_FS = `#version 300 es
+precision mediump float;
+in vec4 v_col;
+out vec4 oCol;
+void main(){ oCol = v_col; }`;
+
+/* ── Points: particles + glow halos ── */
+const PT_VS = `#version 300 es
+in vec2  a_pos;
+in vec4  a_col;
+in float a_sz;
+uniform vec2 u_res;
+out vec4 v_col;
+void main(){
+  vec2 clip = (a_pos / u_res) * 2.0 - 1.0;
+  gl_Position = vec4(clip.x, -clip.y, 0.0, 1.0);
+  gl_PointSize = a_sz;
+  v_col = a_col;
+}`;
+
+const PT_FS = `#version 300 es
+precision mediump float;
+in vec4 v_col;
+out vec4 oCol;
+void main(){
+  vec2 uv = gl_PointCoord - 0.5;
+  float d  = length(uv);
+  /* soft radial falloff */
+  float a  = smoothstep(0.5, 0.04, d);
+  oCol = v_col * a;
+}`;
+
+/* ══════════════════════════════════════════════════════
+   WEBGL STATE
+══════════════════════════════════════════════════════ */
+let gl, W, H;
+let bgProg, geomProg, ptProg;
+let bgVAO, bgVBO;
+let geomVAO, geomVBO;
+let ptVAO,   ptVBO;
+
+/* Vertex layouts */
+const GEOM_STRIDE = 6;  // x y r g b a
+const PT_STRIDE   = 7;  // x y r g b a size
+
+/* ── Buffer size calculation (worst case, 18 pool slots all active)
+   Per jellyfish:
+     Bell dome fan  : (BELL_SEGS + 2) verts              =  34
+     Rim edge lines : ~13 segs × 6                        =  78
+     Tentacles      : TENT_N × (TENT_SEGS-1) × 2quads×6  = 864
+     Total per jelly                                       = 976
+   18 × 976 = 17,568  →  ×1.28 margin = 22,488  → 23,040  */
+const VERTS_PER_JELLY = (CFG_BELL_SEGS + 2) + 78 + (CFG_TENT_N * (CFG_TENT_SEGS - 1) * 12);
+const MAX_GEOM = Math.ceil(18 * VERTS_PER_JELLY * 1.28);
+
+/* Point budget (worst case):
+     Type-B jellies  : POOL_SIZE × 4lights × (1+1+2) ≈ 144
+     Type-A jellies  : POOL_SIZE × 2                  =  36
+     Sparkles        : NUM_PART × 1.12 avg             = 225
+     Total                                             ≈ 405  → 512 with margin */
+const MAX_PT = 512;
+
+const geomBuf  = new Float32Array(MAX_GEOM * GEOM_STRIDE);
+const ptBuf    = new Float32Array(MAX_PT   * PT_STRIDE);
+let geomN = 0, ptN = 0;
+
+/* Overflow counters — reported in debug panel, zero in normal operation */
+let overflowGeom = 0, overflowPt = 0;
+
+/* Draw-call map: [{start, count, mode}] built each frame */
+const drawMap = [];
+
+/* ── GL helpers ── */
+function mkShader(type, src) {
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS))
+    throw new Error('Shader: ' + gl.getShaderInfoLog(s));
+  return s;
+}
+function mkProg(vs, fs) {
+  const p = gl.createProgram();
+  gl.attachShader(p, mkShader(gl.VERTEX_SHADER,   vs));
+  gl.attachShader(p, mkShader(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS))
+    throw new Error('Program: ' + gl.getProgramInfoLog(p));
+  return p;
+}
+function ul(prog, name) { return gl.getUniformLocation(prog, name); }
+
+/* ── Vertex push helpers ── */
+function gPush(x, y, r, g, b, a) {
+  if (geomN >= MAX_GEOM) { overflowGeom++; return; }
+  const i = geomN++ * GEOM_STRIDE;
+  geomBuf[i]=x; geomBuf[i+1]=y;
+  geomBuf[i+2]=r; geomBuf[i+3]=g; geomBuf[i+4]=b; geomBuf[i+5]=a;
+}
+function pPush(x, y, r, g, b, a, sz) {
+  if (ptN >= MAX_PT) { overflowPt++; return; }
+  const i = ptN++ * PT_STRIDE;
+  ptBuf[i]=x; ptBuf[i+1]=y;
+  ptBuf[i+2]=r; ptBuf[i+3]=g; ptBuf[i+4]=b; ptBuf[i+5]=a;
+  ptBuf[i+6]=sz;
+}
+
+/* ── Setup ── */
+function setupGL(canvas) {
+  gl = canvas.getContext('webgl2', {
+    antialias: true,
+    premultipliedAlpha: true,
+    alpha: true,              /* transparent canvas — lets camBg show through */
+  });
+  if (!gl) { alert('WebGL 2 no soportado en este navegador.'); return false; }
+
+  bgProg   = mkProg(BG_VS,   BG_FS);
+  geomProg = mkProg(GEOM_VS, GEOM_FS);
+  ptProg   = mkProg(PT_VS,   PT_FS);
+
+  /* Background full-screen quad */
+  bgVAO = gl.createVertexArray();
+  gl.bindVertexArray(bgVAO);
+  bgVBO = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, bgVBO);
+  gl.bufferData(gl.ARRAY_BUFFER,
+    new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const bLoc = gl.getAttribLocation(bgProg, 'a_pos');
+  gl.enableVertexAttribArray(bLoc);
+  gl.vertexAttribPointer(bLoc, 2, gl.FLOAT, false, 0, 0);
+
+  /* Geometry VAO */
+  geomVAO = gl.createVertexArray();
+  gl.bindVertexArray(geomVAO);
+  geomVBO = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, geomVBO);
+  gl.bufferData(gl.ARRAY_BUFFER, geomBuf, gl.DYNAMIC_DRAW);
+  const f = 4;
+  const gPosL = gl.getAttribLocation(geomProg, 'a_pos');
+  const gColL = gl.getAttribLocation(geomProg, 'a_col');
+  gl.enableVertexAttribArray(gPosL);
+  gl.vertexAttribPointer(gPosL, 2, gl.FLOAT, false, GEOM_STRIDE*f, 0);
+  gl.enableVertexAttribArray(gColL);
+  gl.vertexAttribPointer(gColL, 4, gl.FLOAT, false, GEOM_STRIDE*f, 2*f);
+
+  /* Points VAO */
+  ptVAO = gl.createVertexArray();
+  gl.bindVertexArray(ptVAO);
+  ptVBO = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, ptVBO);
+  gl.bufferData(gl.ARRAY_BUFFER, ptBuf, gl.DYNAMIC_DRAW);
+  const pPosL = gl.getAttribLocation(ptProg, 'a_pos');
+  const pColL = gl.getAttribLocation(ptProg, 'a_col');
+  const pSzL  = gl.getAttribLocation(ptProg, 'a_sz');
+  gl.enableVertexAttribArray(pPosL);
+  gl.vertexAttribPointer(pPosL, 2, gl.FLOAT, false, PT_STRIDE*f, 0);
+  gl.enableVertexAttribArray(pColL);
+  gl.vertexAttribPointer(pColL, 4, gl.FLOAT, false, PT_STRIDE*f, 2*f);
+  gl.enableVertexAttribArray(pSzL);
+  gl.vertexAttribPointer(pSzL,  1, gl.FLOAT, false, PT_STRIDE*f, 6*f);
+
+  gl.bindVertexArray(null);
+  gl.enable(gl.BLEND);
+  return true;
+}
+
+function resizeGL(canvas) {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  if (gl) gl.viewport(0, 0, W, H);
+}
+
+/* ══════════════════════════════════════════════════════
+   MATH HELPERS
+══════════════════════════════════════════════════════ */
+const lerp = (a, b, t) => a + (b - a) * t;
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const rand  = (lo, hi) => lo + Math.random() * (hi - lo);
+const randInt = n => Math.floor(Math.random() * n);
+
+/* ── Push a thick line segment as a quad (2 triangles) ── */
+function pushLineQuad(x0, y0, x1, y1, w, r, g, b, a0, a1) {
+  const dx = x1 - x0, dy = y1 - y0;
+  const len = Math.hypot(dx, dy);
+  if (len < 0.5) return;
+  const nx = -dy / len * w;
+  const ny =  dx / len * w;
+  gPush(x0+nx, y0+ny, r,g,b,a0);
+  gPush(x0-nx, y0-ny, r,g,b,a0);
+  gPush(x1+nx, y1+ny, r,g,b,a1);
+  gPush(x1+nx, y1+ny, r,g,b,a1);
+  gPush(x0-nx, y0-ny, r,g,b,a0);
+  gPush(x1-nx, y1-ny, r,g,b,a1);
+}
+
+/* ══════════════════════════════════════════════════════
+   JELLYFISH
+══════════════════════════════════════════════════════ */
+
+/* Bell style enumeration */
+const BELL_PULSE    = 0;   // whole bell pulses brighter/dimmer
+const BELL_LIGHTS   = 1;   // orb-lights orbit the bell rim
+
+class Jellyfish {
+  constructor() {
+    this.color    = CFG.PALETTE[randInt(CFG.PALETTE.length)];
+    this.size     = rand(CFG.SIZE_MIN, CFG.SIZE_MAX);
+    this.depth    = rand(0.45, 1.0);   /* z-layer */
+    this.phase    = rand(0, Math.PI*2);
+    this.pSpd     = rand(0.5, 0.95);   /* pulse speed */
+    this.nowT     = 0;                 /* updated each frame for buildGeom */
+
+    /* Bell visual type */
+    this.bellType  = Math.random() < 0.5 ? BELL_PULSE : BELL_LIGHTS;
+    this.lightPhase= rand(0, Math.PI*2);
+    this.lightSpd  = rand(1.4, 3.2);
+    this.numLights = randInt(3) + 2;   /* 2–4 orbiting lights */
+
+    /* ── Velocity-based physics (no lerp target) ── */
+    this.x  = rand(0, W);
+    this.y  = rand(0, H);
+    this.vx = rand(-70, 70);
+    this.vy = rand(-55, -12);          /* upward bias */
+
+    /* ── Flee / fear state ── */
+    this.fear      = 0;   /* 0..1 — decays over time */
+    this.fleeDirX  = 0;   /* last flee direction (normalized) */
+    this.fleeDirY  = 0;
+
+    /* ── Pre-cached dome geometry (constant across all frames) ──
+       Angles run π→2π (upper dome only in screen space).
+       Computed once at construction; buildGeom just reads these arrays.     */
+    const segs = CFG.BELL_SEGS;
+    this._dCos    = new Float32Array(segs + 1);
+    this._dSin    = new Float32Array(segs + 1);
+    this._rimEdge = [];          /* indices of segments that form the rim edge */
+    for (let i = 0; i <= segs; i++) {
+      const a = Math.PI + (i / segs) * Math.PI;
+      this._dCos[i] = Math.cos(a);
+      this._dSin[i] = Math.sin(a);
+    }
+    for (let i = 0; i < segs; i++) {
+      /* Rim edge only on the lower 40% of the dome arc */
+      if (this._dSin[i] > -0.45) this._rimEdge.push(i);
+    }
+    this._initTentacles();
+  }
+
+  _initTentacles() {
+    this.tents = [];
+    const n = CFG.TENT_N;
+    for (let t = 0; t < n; t++) {
+      /*
+       * Tentacles spread along the BOTTOM OPENING of the dome.
+       * The dome's lower rim is a horizontal line from (cx-bW, cy) to (cx+bW, cy).
+       * We spread tentacles as evenly-spaced x positions along that line.
+       * frac: -0.5 … +0.5 mapped to x offsets.
+       * angle=π/2 means straight down (sin=1 in screen space).
+       * Each tentacle hangs from that x position at y=cy.
+       */
+      const frac = n > 1 ? (t / (n - 1)) - 0.5 : 0;  // −0.5 … +0.5
+      /* Angle for anchor position on bottom rim — spread from sides to centre */
+      const rimAngle  = Math.PI + (0.5 + frac) * Math.PI;  // π → 2π along the bottom
+      const pts = [];
+      for (let s = 0; s < CFG.TENT_SEGS; s++) {
+        pts.push({ x: this.x + frac * this.size * 0.9, y: this.y + s * 12 });
+      }
+      this.tents.push({
+        frac,      /* −0.5 … +0.5 — used as x offset for anchor */
+        rimAngle,
+        pts,
+        phase: rand(0, Math.PI * 2),
+        speed: rand(0.5, 1.3),
+        amp:   rand(5, 14),
+        segL:  rand(10, 15),
+      });
+    }
+  }
+
+  update(dt, hands, now) {
+    this.nowT = now;
+
+    /* ── Pulse phase (speeds up when scared) ── */
+    this.phase      += dt * (this.pSpd + this.fear * 2.2);
+    this.lightPhase += dt * this.lightSpd;
+
+    /* ── Decay fear ── */
+    this.fear = Math.max(0, this.fear - dt * CFG.FEAR_DECAY);
+
+    /* ── Natural drift ── */
+    this.vx += rand(-1, 1) * 22 * dt;
+    this.vy += (rand(-1, 1) * 8 - 5) * dt;   /* upward bias */
+
+    /* ── Damping (heavier when calm so drift stays gentle) ── */
+    const damp = lerp(0.992, 0.978, this.fear);
+    this.vx *= damp;
+    this.vy *= damp;
+
+    /* ── Hand repulsion — ORGANISM FLEE ── */
+    let triggered = false;
+    for (const hand of hands) {
+      /*  Repulsor points: wrist(0), mid-palm(9), all fingertips  */
+      for (const lmIdx of [0, 9, 4, 8, 12, 16, 20]) {
+        const lm  = hand[lmIdx];
+        const hx  = lm.x * W;
+        const hy  = lm.y * H;
+        const dx  = this.x - hx;
+        const dy  = this.y - hy;
+        const dist = Math.hypot(dx, dy);
+
+        /* Wider field for palm/wrist, tighter for fingertips */
+        const R = lmIdx <= 9 ? CFG.REPEL_R : CFG.REPEL_R * 0.52;
+        if (dist < R && dist > 1) {
+          const t  = 1 - dist / R;
+          /* Cubic falloff: barely felt far away, explosive at close range */
+          const f  = t * t * t * CFG.REPEL_F;
+          const nx = dx / dist;
+          const ny = dy / dist;
+          this.vx += nx * f * dt;
+          this.vy += ny * f * dt;
+          /* Accumulate flee direction */
+          this.fleeDirX = lerp(this.fleeDirX, nx, 0.35);
+          this.fleeDirY = lerp(this.fleeDirY, ny, 0.35);
+          /* Spike fear: closer = more fear */
+          const fearGain = t * t * 2.8 * dt;
+          this.fear = Math.min(1, this.fear + fearGain);
+          triggered = true;
+        }
+      }
+    }
+    if (!triggered && this.fear < 0.05) {
+      /* No threat: slowly re-centre flee direction */
+      this.fleeDirX *= 0.92;
+      this.fleeDirY *= 0.92;
+    }
+
+    /* ── Speed cap: calm vs fleeing ── */
+    const maxSpd = 120 + this.fear * 420;
+    const spd    = Math.hypot(this.vx, this.vy);
+    if (spd > maxSpd) {
+      this.vx = this.vx / spd * maxSpd;
+      this.vy = this.vy / spd * maxSpd;
+    }
+
+    /* ── Integrate position ── */
+    this.x += this.vx * dt;
+    this.y += this.vy * dt;
+    /* No edge wrap — pool handles retirement when off-screen */
+
+    /* ── Tentacle chain physics ── */
+    for (const t of this.tents) {
+      t.phase += dt * t.speed * (1 + this.fear * 1.8);
+      /* Anchor at bottom opening of dome:
+         x spreads across the rim width, y stays at bell centre (dome opening) */
+      const rimW = this.size * 0.90 * this.depth;  /* matches bW */
+      const ax   = this.x + t.frac * rimW;
+      const ay   = this.y;   /* bottom opening of dome */
+      t.pts[0].x = ax;
+      t.pts[0].y = ay;
+      for (let s = 1; s < t.pts.length; s++) {
+        const prev = t.pts[s - 1];
+        const cur  = t.pts[s];
+        const waveAmp = t.amp * (1 - this.fear * 0.65);
+        const wave    = Math.sin(t.phase + s * 0.7 + now * 0.45) * waveAmp;
+        /* Streamline tentacles behind flee direction when scared */
+        const streamX = -this.fleeDirX * t.segL * s * 0.22 * this.fear;
+        const streamY = -this.fleeDirY * t.segL * s * 0.22 * this.fear;
+        const tx = prev.x + wave + streamX;
+        const ty = prev.y + t.segL + streamY;
+        const lSpd = 0.15 + this.fear * 0.18;
+        cur.x = lerp(cur.x, tx, lSpd);
+        cur.y = lerp(cur.y, ty, lSpd);
+      }
+    }
+  }
+
+  /* ── Build geometry into shared buffers ── */
+  buildGeom() {
+    const [r, g, b] = this.color;
+    const d   = this.depth;
+    const now = this.nowT;
+
+    /* Fear contraction: bell contracts sharply, then jets open (propulsion) */
+    const contract    = this.fear > 0.05
+      ? Math.sin(this.phase * 3.5) * this.fear * 0.18
+      : 0;
+    const pulse       = 1 + Math.sin(this.phase) * 0.09 - contract;
+
+    /* Dome dimensions — wider than tall (real jellyfish) */
+    const sz  = this.size * d;
+    const bW  = sz * pulse;
+    const bH  = sz * 0.55 / pulse;  /* flattened dome */
+    const alp = d * (0.82 + this.fear * 0.12);
+
+    /*
+     * Bell dome helper — draws only the UPPER HALF (angles π→2π in screen space).
+     * Reads pre-cached cos/sin arrays: zero trig calls per frame.
+     */
+    const pushDome = (cr, cg, cb, centerAlp, rimFn) => {
+      const bs  = geomN;
+      const cos = this._dCos, sin = this._dSin;
+      gPush(this.x, this.y, cr * 0.35, cg * 0.25, cb * 0.38, centerAlp);
+      for (let i = 0; i <= CFG.BELL_SEGS; i++) {
+        const { pr, pg, pb, pa } = rimFn(cos[i], sin[i], i);
+        gPush(this.x + cos[i] * bW, this.y + sin[i] * bH, pr, pg, pb, pa);
+      }
+      drawMap.push({ s: bs, n: geomN - bs, m: gl.TRIANGLE_FAN });
+
+      /* Thin rim-edge line — reads pre-computed segment list */
+      const rs = geomN;
+      for (const i of this._rimEdge) {
+        pushLineQuad(
+          this.x + cos[i]   * bW, this.y + sin[i]   * bH,
+          this.x + cos[i+1] * bW, this.y + sin[i+1] * bH,
+          1.8 * d, cr * 1.6, cg * 0.8, cb * 1.6, alp * 0.55, alp * 0.55
+        );
+      }
+      if (geomN - rs > 0) drawMap.push({ s: rs, n: geomN - rs, m: gl.TRIANGLES });
+    };
+
+    /* ── TYPE A: Pulsing glow bell ── */
+    if (this.bellType === BELL_PULSE) {
+      const gPulse  = 0.5 + 0.5 * Math.sin(this.phase * 1.4);
+      const fearGlow= this.fear * 0.5;
+
+      pushDome(r, g, b, alp * 0.04, (cos, sin) => {
+        /* Bright at apex (sin≈−1), dim at lateral edges; lateral rim gets white tint */
+        const apex   = Math.max(0, -sin);                      // 0…1 brightest at top
+        const lateral= Math.abs(cos);
+        const rimBrt = 0.45 + apex * 0.42 + lateral * 0.22 + gPulse * 0.25 + fearGlow;
+        return {
+          pr: Math.min(r * rimBrt * 1.8, 1.8),
+          pg: g  * rimBrt * 1.2,
+          pb: Math.min(b * rimBrt * 1.8, 1.8),
+          pa: alp * (0.18 + apex * 0.22 + gPulse * 0.28 + fearGlow * 0.3),
+        };
+      });
+
+      /* Glow halo sprites — wide ambient + tight pulsing core */
+      pPush(this.x, this.y - bH * 0.5, r, g * 0.7, b,
+            alp * (0.05 + gPulse * 0.05), sz * 3.0);
+      pPush(this.x, this.y - bH * 0.3, r * 1.5, g, b * 1.5,
+            alp * (0.09 + gPulse * 0.10 + fearGlow * 0.12), sz * 1.4);
+
+    /* ── TYPE B: Traveling light orbs along the dome rim ── */
+    } else {
+      pushDome(r, g, b, alp * 0.03, (cos, sin) => ({
+        pr: r * 0.65, pg: g * 0.35, pb: b * 0.80,
+        pa: alp * 0.12,
+      }));
+
+      /* Ambient halo centred on dome */
+      pPush(this.x, this.y - bH * 0.4, r, g * 0.5, b, alp * 0.055, sz * 2.6);
+
+      /* Orbiting light orbs — travel along the dome arc (π→2π) */
+      for (let li = 0; li < this.numLights; li++) {
+        /* Map phase to dome arc so lights stay ON the dome surface */
+        const tOffset = (li / this.numLights) * Math.PI * 2;
+        const la  = Math.PI + ((this.lightPhase + tOffset) % (Math.PI * 2)) * 0.5;
+        const lx  = this.x + Math.cos(la) * bW;
+        const ly  = this.y + Math.sin(la) * bH;
+        /* Bright core */
+        pPush(lx, ly, r * 2.2 + 0.1, g * 0.95, b * 2.0 + 0.1,
+              alp * (0.90 + this.fear * 0.1), sz * 0.18 + 3.5);
+        /* Soft halo */
+        pPush(lx, ly, r, g * 0.4, b, alp * 0.25, sz * 0.65 + 9);
+        /* 2-step ghost trail */
+        for (let trail = 1; trail <= 2; trail++) {
+          const tla = la - trail * 0.18;
+          pPush(
+            this.x + Math.cos(tla) * bW,
+            this.y + Math.sin(tla) * bH,
+            r * 1.6, g * 0.5, b * 1.5,
+            alp * (0.22 / trail), sz * 0.12 + 1.8
+          );
+        }
+      }
+    }
+
+    /* ── Tentacles ── */
+    for (const t of this.tents) {
+      const ts = geomN;
+      for (let s = 0; s < t.pts.length - 1; s++) {
+        const fade  = 1 - s / t.pts.length;
+        const thick = CFG.TENT_THICK * fade * d * (1 + this.fear * 0.4);
+        const ta    = alp * fade * 0.48;
+        const { x: x0, y: y0 } = t.pts[s];
+        const { x: x1, y: y1 } = t.pts[s + 1];
+        /* Inner bright core */
+        pushLineQuad(x0, y0, x1, y1, thick * 0.55,
+          r * 1.3 + 0.2, g * 0.75, b * 1.2 + 0.15, ta * 0.95, ta * 0.65);
+        /* Outer soft halo */
+        pushLineQuad(x0, y0, x1, y1, thick * 1.5,
+          r, g * 0.45, b, ta * 0.28, ta * 0.08);
+      }
+      drawMap.push({ s: ts, n: geomN - ts, m: gl.TRIANGLES });
+    }
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   SPARKLE — bioluminescent chemical reactions
+   Each sparkle: flashes in, peaks, fades out at a
+   random position across the ENTIRE screen.
+   No upward drift — they're stationary light bursts.
+══════════════════════════════════════════════════════ */
+const SPARKLE_COLS = [
+  [1.00, 1.00, 1.00],   /* white    */
+  [1.00, 0.55, 0.90],   /* pink     */
+  [0.45, 0.95, 1.00],   /* cyan     */
+  [0.85, 0.55, 1.00],   /* lavender */
+  [0.30, 1.00, 0.75],   /* sea-green*/
+  [1.00, 0.85, 0.30],   /* gold     */
+];
+
+class Sparkle {
+  constructor(randomize) {
+    this._reset(randomize);
+  }
+  _reset(scatter) {
+    /* Always scattered across full screen */
+    this.x    = rand(0, W);
+    this.y    = rand(0, H);
+    /* Duration: how long the flash lives */
+    this.dur  = rand(0.45, 2.2);
+    /* Phase offset so they don't all start at 0 */
+    this.t    = scatter ? rand(0, this.dur) : 0;
+    /* Size variants: tiny pin-pricks + occasional larger blobs */
+    const big  = Math.random() < 0.12;
+    this.sz    = big ? rand(7, 18) : rand(1.2, 4.5);
+    this.col   = SPARKLE_COLS[randInt(SPARKLE_COLS.length)];
+    /* Some sparkles have a gentle drift (< 8 px/s) */
+    this.vx    = rand(-5, 5);
+    this.vy    = rand(-5, 5);
+  }
+  update(dt) {
+    this.t  += dt;
+    this.x  += this.vx * dt;
+    this.y  += this.vy * dt;
+    if (this.t >= this.dur) this._reset(false);
+  }
+  buildPt() {
+    if (ptN >= MAX_PT - 2) return;    /* hard cap guard */
+    const p   = this.t / this.dur;
+    const env = p < 0.3
+      ? p / 0.3
+      : 1 - (p - 0.3) / 0.7;
+    const flicker = 0.85 + 0.15 * Math.sin(this.t * 28 + this.x);
+    const a = env * flicker * 0.82;
+    const [r, gc, b] = this.col;
+    pPush(this.x, this.y, r, gc, b, a, this.sz);
+    /* Corona only for the rare large sparkles (≈12%) — 1 extra push max */
+    if (this.sz > 4 && ptN < MAX_PT - 1) {
+      pPush(this.x, this.y, r * 0.7, gc * 0.6, b * 0.8, a * 0.35, this.sz * 3.2);
+    }
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   JELLYFISH OBJECT POOL
+══════════════════════════════════════════════════════ */
+const POOL_SIZE = 18;          /* total slots — more than visible NUM_JELLY */
+const jellyPool = [];          /* pre-allocated Jellyfish instances */
+let   jellies   = [];          /* active slice (references into pool) */
+
+function _spawnEdge(jf) {
+  /* Enter from a random screen edge with inward velocity */
+  const edge = randInt(4);     /* 0=top 1=right 2=bottom 3=left */
+  const spd  = rand(90, 220);  /* entry speed px/s */
+  const pad  = 30;
+  if (edge === 0) {            /* top → move down */
+    jf.x = rand(-pad, W + pad); jf.y = -pad;
+    jf.vx = rand(-40, 40);     jf.vy =  spd;
+  } else if (edge === 1) {     /* right → move left */
+    jf.x = W + pad;            jf.y = rand(-pad, H + pad);
+    jf.vx = -spd;              jf.vy = rand(-40, 40);
+  } else if (edge === 2) {     /* bottom → move up */
+    jf.x = rand(-pad, W + pad); jf.y = H + pad;
+    jf.vx = rand(-40, 40);     jf.vy = -spd;
+  } else {                     /* left → move right */
+    jf.x = -pad;               jf.y = rand(-pad, H + pad);
+    jf.vx =  spd;              jf.vy = rand(-40, 40);
+  }
+  /* Reset internal state without re-constructing */
+  jf.fear     = 0;
+  jf.fleeDirX = 0;
+  jf.fleeDirY = 0;
+  jf.phase    = rand(0, Math.PI * 2);
+  jf.lightPhase = rand(0, Math.PI * 2);
+  jf.active   = true;
+  /* Re-anchor tentacles at new spawn position */
+  for (const t of jf.tents) {
+    for (const p of t.pts) { p.x = jf.x; p.y = jf.y; }
+  }
+}
+
+function initPool() {
+  for (let i = 0; i < POOL_SIZE; i++) {
+    const jf = new Jellyfish();
+    jf.active = false;
+    jellyPool.push(jf);
+  }
+  /* Activate NUM_JELLY of them, scattered on screen initially */
+  jellies = [];
+  for (let i = 0; i < CFG.NUM_JELLY; i++) {
+    const jf = jellyPool[i];
+    jf.x  = rand(0, W);   jf.y  = rand(0, H);
+    jf.vx = rand(-80, 80); jf.vy = rand(-80, 80);
+    jf.active = true;
+    jellies.push(jf);
+  }
+}
+
+function poolTick() {
+  /* Retire jellies that are far off-screen — return to pool */
+  const margin = 160;
+  for (let i = jellies.length - 1; i >= 0; i--) {
+    const jf = jellies[i];
+    if (jf.x < -margin || jf.x > W + margin ||
+        jf.y < -margin || jf.y > H + margin) {
+      jf.active = false;
+      jellies.splice(i, 1);
+    }
+  }
+  /* Refill up to quota from free pool slots */
+  while (jellies.length < CFG.NUM_JELLY) {
+    const slot = jellyPool.find(j => !j.active);
+    if (!slot) break;
+    _spawnEdge(slot);
+    jellies.push(slot);
+  }
+}
+
+let particles  = [];
+let mirrored   = true;
+let debugMode  = false;
+let animId     = null;
+let lastTs     = 0;
+let fps        = 0, fpsAcc = 0, fpsFrames = 0;
+let ovCtx;
+
+const HAND_CONN = [
+  [0,1],[1,2],[2,3],[3,4],
+  [0,5],[5,6],[6,7],[7,8],
+  [0,9],[9,10],[10,11],[11,12],
+  [0,13],[13,14],[14,15],[15,16],
+  [0,17],[17,18],[18,19],[19,20],
+  [5,9],[9,13],[13,17],
+];
+
+/* ══════════════════════════════════════════════════════
+   HAND GLOW + TRAIL SYSTEM
+   each of the 6 key points (palm + 5 fingertips).
+   Always drawn on ovCtx — independent of debugMode.
+══════════════════════════════════════════════════════ */
+const TRAIL_LEN   = 10;    /* frames kept per point */
+const TRAIL_DECAY = 0.82;  /* alpha multiplier per step */
+const GLOW_POINTS = [0, 4, 8, 12, 16, 20]; /* wrist, fingertips */
+
+/* Two per-hand ring buffers: handTrail[h][pointIdx] = circular array of {x,y,age} */
+const handTrail = [
+  GLOW_POINTS.map(() => []),
+  GLOW_POINTS.map(() => []),
+];
+
+function updateHandTrail(hands) {
+  for (let h = 0; h < 2; h++) {
+    for (let pi = 0; pi < GLOW_POINTS.length; pi++) {
+      const trail = handTrail[h][pi];
+      /* Age existing entries */
+      for (const pt of trail) pt.age++;
+      /* Remove stale entries */
+      while (trail.length > 0 && trail[0].age > TRAIL_LEN) trail.shift();
+      /* Push current position if hand is visible */
+      if (h < hands.length) {
+        const lm = hands[h][GLOW_POINTS[pi]];
+        trail.push({ x: lm.x * W, y: lm.y * H, age: 0 });
+      }
+    }
+  }
+}
+
+function drawHandGlow(hands) {
+  const ctx = ovCtx;
+  const cv  = ctx.canvas;
+
+  /* Clear overlay each frame */
+  ctx.clearRect(0, 0, cv.width, cv.height);
+
+  /* ── Trail ── */
+  for (let h = 0; h < 2; h++) {
+    for (let pi = 0; pi < GLOW_POINTS.length; pi++) {
+      const trail = handTrail[h][pi];
+      const isFingerTip = pi > 0;
+      const maxR = isFingerTip ? 14 : 22; /* fingertips smaller, palm larger */
+
+      for (const pt of trail) {
+        const t   = 1 - pt.age / TRAIL_LEN;     /* 1 = newest, 0 = oldest */
+        const alp = Math.pow(t, 1.6) * 0.45;    /* fades quickly */
+        const r   = maxR * (0.35 + t * 0.65);
+
+        /* Bioluminescent teal-pink gradient */
+        const grad = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, r);
+        grad.addColorStop(0,   `rgba(180,255,240,${alp})`);
+        grad.addColorStop(0.4, `rgba(80,200,255,${alp * 0.6})`);
+        grad.addColorStop(1,   `rgba(200,80,255,0)`);
+
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, r, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+      }
+    }
+  }
+
+  /* ── Live glow on current hand positions ── */
+  for (const hand of hands) {
+    const px = hand.map(lm => ({ x: lm.x * cv.width, y: lm.y * cv.height }));
+
+    /* Palm glow — large soft diffuse */
+    const palmX = px[9].x, palmY = px[9].y;
+    const pg = ctx.createRadialGradient(palmX, palmY, 0, palmX, palmY, 55);
+    pg.addColorStop(0,   'rgba(160,255,230,0.22)');
+    pg.addColorStop(0.45,'rgba(100,180,255,0.10)');
+    pg.addColorStop(1,   'rgba(180,80,255,0)');
+    ctx.beginPath();
+    ctx.arc(palmX, palmY, 55, 0, Math.PI * 2);
+    ctx.fillStyle = pg;
+    ctx.fill();
+
+    /* Fingertip bright halos */
+    for (const fi of [4, 8, 12, 16, 20]) {
+      const fx = px[fi].x, fy = px[fi].y;
+      /* Core bright glow */
+      const fg = ctx.createRadialGradient(fx, fy, 0, fx, fy, 18);
+      fg.addColorStop(0,   'rgba(220,255,255,0.70)');
+      fg.addColorStop(0.3, 'rgba(120,230,255,0.40)');
+      fg.addColorStop(0.7, 'rgba(200,100,255,0.12)');
+      fg.addColorStop(1,   'rgba(180,60,255,0)');
+      ctx.beginPath();
+      ctx.arc(fx, fy, 18, 0, Math.PI * 2);
+      ctx.fillStyle = fg;
+      ctx.fill();
+      /* Tiny bright center dot */
+      ctx.beginPath();
+      ctx.arc(fx, fy, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.fill();
+    }
+
+    /* Wrist glow — subtle anchor */
+    const wx = px[0].x, wy = px[0].y;
+    const wg = ctx.createRadialGradient(wx, wy, 0, wx, wy, 24);
+    wg.addColorStop(0,  'rgba(160,200,255,0.30)');
+    wg.addColorStop(1,  'rgba(120,80,255,0)');
+    ctx.beginPath();
+    ctx.arc(wx, wy, 24, 0, Math.PI * 2);
+    ctx.fillStyle = wg;
+    ctx.fill();
+  }
+
+  /* ── Debug skeleton on top of glow ── */
+  if (!debugMode) return;
+  const dbgEl = document.getElementById('dbg');
+  dbgEl.style.display = 'block';
+  const ovG = overflowGeom > 0 ? `<span style="color:#f44">⚠${overflowGeom}</span>` : '0';
+  const ovP = overflowPt   > 0 ? `<span style="color:#f44">⚠${overflowPt}</span>`   : '0';
+  dbgEl.innerHTML = [
+    `FPS   ${fps.toFixed(1)}`,
+    `Hands ${hands.length}`,
+    `Jelly ${jellies.length} / pool ${POOL_SIZE}`,
+    `Sparkles ${particles.length}`,
+    `GEOM  ${geomN}/${MAX_GEOM}  ov:${ovG}`,
+    `PT    ${ptN}/${MAX_PT}  ov:${ovP}`,
+    `MP errors ${mpErrorCount}`,
+    `Mirror ${mirrored ? 'ON' : 'OFF'}`,
+  ].join('<br>');
+
+  for (const hand of hands) {
+    const m = hand.map(lm => ({
+      x: lm.x * cv.width,
+      y: lm.y * cv.height,
+    }));
+    ctx.strokeStyle = 'rgba(0,255,170,0.6)';
+    ctx.lineWidth   = 1.2;
+    for (const [a, b] of HAND_CONN) {
+      ctx.beginPath();
+      ctx.moveTo(m[a].x, m[a].y);
+      ctx.lineTo(m[b].x, m[b].y);
+      ctx.stroke();
+    }
+    for (let i = 0; i < 21; i++) {
+      ctx.beginPath();
+      const r = i === 0 ? 5 : ([4,8,12,16,20].includes(i) ? 4 : 2.5);
+      ctx.arc(m[i].x, m[i].y, r, 0, Math.PI * 2);
+      ctx.fillStyle = i === 0 ? '#ff70c0' :
+        ([4,8,12,16,20].includes(i) ? '#ff2060' : 'rgba(0,255,160,0.8)');
+      ctx.fill();
+    }
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   MEDIAPIPE HANDS SETUP
+   · Throttled to ≤30 fps (no point sending at 60fps)
+   · Exponential back-off on repeated errors
+   · Visible on-screen warning if tracking stays broken
+══════════════════════════════════════════════════════ */
+let mpHands      = null;
+let handsPending = false;
+let mpErrorCount = 0;
+let mpLastSend   = 0;          /* timestamp of last send */
+const MP_INTERVAL = 1000 / 30; /* ~33 ms → 30 fps ceiling */
+const MP_BACKOFF  = [100, 250, 500, 1000, 2000]; /* ms delays on error */
+
+/* Small DOM warning badge — hidden unless tracking breaks */
+function _ensureWarning() {
+  if (document.getElementById('mpWarn')) return;
+  const el = document.createElement('div');
+  el.id = 'mpWarn';
+  Object.assign(el.style, {
+    display:'none', position:'fixed', bottom:'18px', right:'20px',
+    fontSize:'.62rem', letterSpacing:'.1em', color:'rgba(255,80,80,.85)',
+    textShadow:'0 0 8px rgba(255,0,0,.5)', fontFamily:'Courier New,monospace',
+    pointerEvents:'none', zIndex:'20',
+  });
+  el.textContent = '⚠ HAND TRACKING UNAVAILABLE';
+  document.body.appendChild(el);
+}
+function _setMpWarn(on) {
+  const el = document.getElementById('mpWarn');
+  if (el) el.style.display = on ? 'block' : 'none';
+}
+
+function setupHandTracking(videoEl, mirror) {
+  _ensureWarning();
+  if (typeof Hands === 'undefined') {
+    console.warn('MediaPipe Hands CDN not loaded.');
+    _setMpWarn(true);
+    return;
+  }
+
+  mpHands = new Hands({
+    locateFile: f =>
+      `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/${f}`
+  });
+  mpHands.setOptions({
+    maxNumHands:            2,
+    modelComplexity:        1,
+    minDetectionConfidence: 0.62,
+    minTrackingConfidence:  0.52,
+  });
+  mpHands.onResults(res => {
+    /* Successful result — reset error counter, clear warning */
+    mpErrorCount = 0;
+    handsPending = false;
+    _setMpWarn(false);
+    writeHandData(res.multiHandLandmarks || [], mirror);
+  });
+
+  /* ── Throttled frame-send loop ── */
+  function sendFrame(now) {
+    requestAnimationFrame(sendFrame);
+
+    /* Throttle: skip if less than MP_INTERVAL ms since last send */
+    if (now - mpLastSend < MP_INTERVAL) return;
+    /* Don't stack up pending requests */
+    if (handsPending) return;
+    /* Video must be ready */
+    if (!mpHands || videoEl.readyState < 2) return;
+
+    const backoff = MP_BACKOFF[Math.min(mpErrorCount, MP_BACKOFF.length - 1)];
+    if (mpErrorCount > 0 && now - mpLastSend < backoff) return;
+
+    handsPending = true;
+    mpLastSend   = now;
+
+    mpHands.send({ image: videoEl }).catch(err => {
+      handsPending = false;
+      mpErrorCount++;
+      console.warn(`MediaPipe send failed (attempt ${mpErrorCount}):`, err.message);
+      if (mpErrorCount >= 3) _setMpWarn(true);
+    });
+  }
+  requestAnimationFrame(sendFrame);
+}
+
+/* ══════════════════════════════════════════════════════
+   RENDER
+══════════════════════════════════════════════════════ */
+function render(now) {
+  const dt = Math.min((now - lastTs) / 1000, 0.055);
+  lastTs = now;
+
+  /* FPS rolling average */
+  fpsFrames++;
+  fpsAcc += dt;
+  if (fpsAcc >= 0.5) {
+    fps       = fpsFrames / fpsAcc;
+    fpsFrames = 0;
+    fpsAcc    = 0;
+  }
+
+  const t = now / 1000;
+  const hands = readHandData();
+
+  /* ── Update simulation ── */
+  poolTick();
+  for (const jf of jellies)   jf.update(dt, hands, t);
+  for (const p  of particles)  p.update(dt);
+
+  /* ══ DRAW ══ */
+
+  /* 1. Background (opaque, no blend) */
+  gl.blendFunc(gl.ONE, gl.ZERO);
+  gl.useProgram(bgProg);
+  gl.uniform1f(ul(bgProg, 'u_t'),   t);
+  gl.uniform2f(ul(bgProg, 'u_res'), W, H);
+  gl.bindVertexArray(bgVAO);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+  /* 2. Additive blend for all glowing content */
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+
+  /* 2a. Build ALL geometry + point data together (TYPE B uses both in buildGeom) */
+  geomN = 0; ptN = 0; overflowGeom = 0; overflowPt = 0;
+  drawMap.length = 0;
+
+  for (const jf of jellies) jf.buildGeom();   /* may add to both geomBuf & ptBuf */
+  for (const p of particles) p.buildPt();
+
+  /* Flush geometry */
+  gl.useProgram(geomProg);
+  gl.uniform2f(ul(geomProg, 'u_res'), W, H);
+  gl.bindVertexArray(geomVAO);
+  gl.bindBuffer(gl.ARRAY_BUFFER, geomVBO);
+  gl.bufferSubData(gl.ARRAY_BUFFER, 0, geomBuf.subarray(0, geomN * GEOM_STRIDE));
+  for (const { s, n, m } of drawMap) {
+    if (n > 0) gl.drawArrays(m, s, n);
+  }
+
+  /* Flush points (halos, orbs, particles) */
+  gl.useProgram(ptProg);
+  gl.uniform2f(ul(ptProg, 'u_res'), W, H);
+  gl.bindVertexArray(ptVAO);
+  gl.bindBuffer(gl.ARRAY_BUFFER, ptVBO);
+  gl.bufferSubData(gl.ARRAY_BUFFER, 0, ptBuf.subarray(0, ptN * PT_STRIDE));
+  gl.drawArrays(gl.POINTS, 0, ptN);
+
+  /* 3. Hand glow + trail + optional debug skeleton */
+  updateHandTrail(hands);
+  drawHandGlow(hands);
+
+  animId = requestAnimationFrame(render);
+}
+
+/* ══════════════════════════════════════════════════════
+   INIT SCENE
+══════════════════════════════════════════════════════ */
+function initScene(videoEl, mirror) {
+  mirrored = mirror;
+  const glCanvas = document.getElementById('glCanvas');
+  const ov       = document.getElementById('ovCanvas');
+  const camBg    = document.getElementById('camBg');
+  ovCtx = ov.getContext('2d');
+
+  /* Camera bg — same stream, no new getUserMedia */
+  if (videoEl.srcObject) {
+    camBg.srcObject = videoEl.srcObject;
+    /* Mirror matches user preference */
+    camBg.style.transform = mirror ? 'scaleX(-1)' : 'none';
+    /* Fade in after a short delay (WebGL is already rendering) */
+    setTimeout(() => { camBg.style.opacity = '0.32'; }, 400);
+  }
+
+  if (!setupGL(glCanvas)) return;
+  resizeGL(glCanvas);
+  ov.width  = W;
+  ov.height = H;
+
+  let resizePending = false;
+  window.addEventListener('resize', () => {
+    if (resizePending) return;
+    resizePending = true;
+    requestAnimationFrame(() => {
+      resizePending = false;
+      resizeGL(glCanvas);
+      ov.width  = W;
+      ov.height = H;
+    });
+  });
+
+  /* Spawn jellyfish pool & sparkles */
+  initPool();
+  particles = Array.from({ length: CFG.NUM_PART }, () => new Sparkle(true));
+
+  /* Hand tracking — mirror flag passed so writeHandData flips X correctly */
+  setupHandTracking(videoEl, mirror);
+
+  window.addEventListener('keydown', e => {
+    if (e.key === 'd' || e.key === 'D') {
+      debugMode = !debugMode;
+      if (!debugMode) {
+        document.getElementById('dbg').style.display = 'none';
+      }
+    }
+  });
+
+  lastTs = performance.now();
+  animId = requestAnimationFrame(render);
+}
+
+/* ══════════════════════════════════════════════════════
+   12 PALETTE PRESETS
+   Each entry: { name, colors: [[r,g,b], ...] }
+   Colors are linear [0..1] float triples.
+══════════════════════════════════════════════════════ */
+const PALETTES = [
+  { name:'Abyssal',   colors:[[1,.13,.52],[.92,.18,.9],[.55,.12,1],[.2,.72,1],[.78,.28,1],[.15,.88,.72]] },
+  { name:'Bio-glow',  colors:[[0,1,.8],[.1,.9,.6],[0,.75,1],[.5,1,.9],[.2,1,.5],[0,1,.95]] },
+  { name:'Coral',     colors:[[1,.4,.15],[1,.25,.3],[1,.65,.1],[1,.8,.2],[1,.5,.4],[.95,.3,.25]] },
+  { name:'Aurora',    colors:[[.1,1,.55],[0,.85,.9],[.2,.5,1],[.6,.1,.9],[.9,.05,.7],[0,1,.7]] },
+  { name:'Midnight',  colors:[[.3,.05,.9],[.5,.1,1],[.15,.1,.8],[.7,.1,.9],[.1,.2,.85],[.4,.05,.7]] },
+  { name:'Ember',     colors:[[1,.15,.05],[1,.4,.05],[1,.65,.0],[.9,.2,.05],[1,.25,.15],[.85,.1,.1]] },
+  { name:'Arctic',    colors:[[.7,.95,1],[.85,1,1],[.5,.85,1],[.9,.95,1],[.6,.9,.98],[1,1,1]] },
+  { name:'Toxic',     colors:[[.5,1,.05],[.8,1,.1],[1,.95,0],[.2,1,.3],[.9,1,.05],[1,.5,.9]] },
+  { name:'Sunset',    colors:[[1,.25,.55],[1,.5,.15],[.9,.15,.6],[1,.4,.6],[.7,.1,.5],[1,.6,.3]] },
+  { name:'Navy',      colors:[[.1,.3,.9],[.05,.55,1],[.2,.4,.85],[.0,.65,.9],[.15,.45,1],[.1,.7,.8]] },
+  { name:'Sakura',    colors:[[1,.65,.75],[1,.8,.85],[.95,.45,.65],[1,.7,.8],[.9,.55,.7],[1,.9,.92]] },
+  { name:'Void',      colors:[[.35,.0,.6],[.5,.05,.45],[.2,.0,.5],[.4,.0,.35],[.25,.05,.7],[.15,.0,.4]] },
+];
+
+/* ══════════════════════════════════════════════════════
+   START SCREEN LOGIC
+══════════════════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', async () => {
+  const startScreen  = document.getElementById('startScreen');
+  const scene        = document.getElementById('scene');
+  const camVideo     = document.getElementById('camVideo');
+  const mirrorToggle = document.getElementById('mirrorToggle');
+  const enterBtn     = document.getElementById('enterBtn');
+
+  /* ── Dual-range slider ── */
+  const drMin   = document.getElementById('drMin');
+  const drMax   = document.getElementById('drMax');
+  const drFill  = document.getElementById('drFill');
+  const drMinV  = document.getElementById('drMinVal');
+  const drMaxV  = document.getElementById('drMaxVal');
+  const RANGE_W = 80 - 6;   /* slider full range */
+
+  function updateDualRange() {
+    let lo = parseInt(drMin.value), hi = parseInt(drMax.value);
+    const GAP = 4;            /* minimum gap between handles */
+    if (lo > hi - GAP) { lo = hi - GAP; drMin.value = lo; }
+    if (hi < lo + GAP) { hi = lo + GAP; drMax.value = hi; }
+    const pLo = (lo - 6) / RANGE_W * 100;
+    const pHi = (hi - 6) / RANGE_W * 100;
+    drFill.style.left  = pLo + '%';
+    drFill.style.width = (pHi - pLo) + '%';
+    drMinV.textContent = lo;
+    drMaxV.textContent = hi;
+    CFG.SIZE_MIN = lo;
+    CFG.SIZE_MAX = hi;
+  }
+  drMin.addEventListener('input', updateDualRange);
+  drMax.addEventListener('input', updateDualRange);
+  updateDualRange();   /* initialise fill */
+
+  /* ── Palette grid ── */
+  const grid = document.getElementById('palGrid');
+  let selectedPalIdx = 0;
+
+  function toCSS([r, g, b]) {
+    return `rgb(${Math.round(r*255)},${Math.round(g*255)},${Math.round(b*255)})`;
+  }
+
+  PALETTES.forEach((pal, idx) => {
+    const sw = document.createElement('div');
+    sw.className = 'pal-swatch' + (idx === 0 ? ' selected' : '');
+    sw.dataset.idx = idx;
+
+    /* 4 representative dots from the palette */
+    const dots = document.createElement('div');
+    dots.className = 'pal-dots';
+    const picks = pal.colors.slice(0, 4);
+    picks.forEach(col => {
+      const d = document.createElement('div');
+      d.className = 'pal-dot';
+      d.style.background = toCSS(col);
+      d.style.color      = toCSS(col);   /* box-shadow uses currentColor */
+      dots.appendChild(d);
+    });
+
+    const name = document.createElement('div');
+    name.className = 'pal-name';
+    name.textContent = pal.name;
+
+    sw.appendChild(dots);
+    sw.appendChild(name);
+    grid.appendChild(sw);
+
+    sw.addEventListener('click', () => {
+      grid.querySelectorAll('.pal-swatch').forEach(s => s.classList.remove('selected'));
+      sw.classList.add('selected');
+      selectedPalIdx = idx;
+      CFG.PALETTE = pal.colors;
+    });
+  });
+
+  /* ── Single camera stream ── */
+  let stream = null;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
+      audio: false,
+    });
+    camVideo.srcObject       = stream;
+    camVideo.style.display   = 'block';
+    camVideo.style.filter    = 'blur(18px) brightness(.18) saturate(4) hue-rotate(260deg)';
+    camVideo.style.transform = mirrorToggle.checked ? 'scaleX(-1)' : 'scaleX(1)';
+  } catch (err) {
+    console.warn('Camera not available:', err);
+    enterBtn.textContent = 'ENTRAR (sin cámara)';
+  }
+
+  mirrorToggle.addEventListener('change', () => {
+    camVideo.style.transform = mirrorToggle.checked ? 'scaleX(-1)' : 'scaleX(1)';
+  });
+
+  /* ── Enter ── */
+  enterBtn.addEventListener('click', () => {
+    enterBtn.disabled    = true;
+    enterBtn.textContent = '...';
+
+    startScreen.style.opacity    = '0';
+    startScreen.style.transition = 'opacity 0.9s ease';
+
+    setTimeout(() => {
+      startScreen.style.display = 'none';
+      camVideo.style.filter    = 'none';
+      camVideo.style.transform = 'none';
+      camVideo.style.display   = 'none';
+      scene.style.display      = 'block';
+      initScene(camVideo, mirrorToggle.checked);
+    }, 950);
+  });
+});
+</script>
+</body>
+</html>
