@@ -1,71 +1,94 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
-    <title>Wireframe Space Combat - WebGL</title>
+    <title>Phosphor Burn by KRANK</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { overflow: hidden; background: #000; }
-        canvas { display: block; }
-        #hud {
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            overflow: hidden;
+            background: #000
+        }
+
+        canvas {
+            display: block
+        }
+
+        #hud,
+        #crosshair,
+        #instructions,
+        #titleScreen,
+        #gameOverText,
+        #warning,
+        #altitude,
+        #enemyCount,
+        #objectives,
+        #compass {
             position: fixed;
+            font-family: monospace;
+            pointer-events: none
+        }
+
+        #hud {
             top: 0;
             left: 0;
             right: 0;
             padding: 10px;
             color: #f00;
-            font-family: monospace;
             font-size: 14px;
-            pointer-events: none;
             text-shadow: 0 0 4px #f00;
-            display: none;
+            display: none
         }
-        .hud-row { margin-bottom: 5px; }
+
         #crosshair {
-            position: fixed;
             top: 50%;
             left: 50%;
             width: 40px;
             height: 40px;
-            margin-left: -20px;
-            margin-top: -20px;
-            pointer-events: none;
-            display: none;
+            margin: -20px;
+            display: none
         }
-        #crosshair::before, #crosshair::after {
+
+        #crosshair::before,
+        #crosshair::after {
             content: '';
             position: absolute;
             background: #f00;
-            box-shadow: 0 0 4px #f00;
+            box-shadow: 0 0 4px #f00
         }
+
         #crosshair::before {
             width: 2px;
             height: 100%;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translateX(-50%)
         }
+
         #crosshair::after {
             height: 2px;
             width: 100%;
             top: 50%;
-            transform: translateY(-50%);
+            transform: translateY(-50%)
         }
+
         #instructions {
-            position: fixed;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             color: #f00;
-            font-family: monospace;
             font-size: 12px;
             text-align: center;
-            pointer-events: none;
-            text-shadow: 0 0 4px #f00;
-            opacity: 0.7;
-            display: none;
+            opacity: .7;
+            display: none
         }
+
         #titleScreen {
-            position: fixed;
             top: 0;
             left: 0;
             right: 0;
@@ -75,2076 +98,138 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 100;
+            z-index: 100
         }
+
         #titleScreen .title {
             color: #f00;
-            font-family: monospace;
             font-size: 48px;
             text-shadow: 0 0 20px #f00;
-            margin-bottom: 20px;
+            margin-bottom: 20px
         }
+
         #titleScreen .subtitle {
             color: #f44;
-            font-family: monospace;
             font-size: 18px;
-            text-shadow: 0 0 10px #f00;
-            margin-bottom: 60px;
+            margin-bottom: 60px
         }
+
         #titleScreen .prompt {
             color: #f00;
-            font-family: monospace;
             font-size: 16px;
-            text-shadow: 0 0 8px #f00;
-            animation: blink 1s infinite;
+            animation: blink 1s infinite
         }
-        #levelScreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: #000;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-        #levelScreen .level-text {
-            color: #f00;
-            font-family: monospace;
-            font-size: 64px;
-            text-shadow: 0 0 20px #f00;
-        }
+
         #gameOverText {
-            position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             color: #f00;
-            font-family: monospace;
             font-size: 64px;
             text-shadow: 0 0 20px #f00;
-            pointer-events: none;
             display: none;
-            animation: blink 0.5s infinite;
-            z-index: 100;
-        }
-        #victoryText {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #f00;
-            font-family: monospace;
-            font-size: 48px;
-            text-shadow: 0 0 20px #f00;
-            pointer-events: none;
-            display: none;
-            animation: blink 0.5s infinite;
-            z-index: 100;
+            animation: blink .5s infinite;
             text-align: center;
+            z-index: 100
         }
+
         #warning {
-            position: fixed;
             top: 20%;
             left: 50%;
             transform: translateX(-50%);
             color: #ff0;
-            font-family: monospace;
             font-size: 16px;
-            text-shadow: 0 0 6px #ff0;
-            pointer-events: none;
             display: none;
-            animation: blink 0.3s infinite;
+            animation: blink .3s infinite
         }
-        @keyframes blink {
-            50% { opacity: 0.3; }
-        }
+
         #altitude {
-            position: fixed;
             left: 10px;
             bottom: 60px;
             color: #f00;
-            font-family: monospace;
             font-size: 12px;
-            text-shadow: 0 0 4px #f00;
-            pointer-events: none;
-            display: none;
+            display: none
         }
+
         #enemyCount {
-            position: fixed;
             right: 20px;
             bottom: 20px;
             color: #f44;
-            font-family: monospace;
             font-size: 12px;
-            text-shadow: 0 0 4px #f44;
-            pointer-events: none;
+            display: none
+        }
+
+        #objectives {
+            left: 10px;
+            top: 80px;
+            color: #f00;
+            font-size: 11px;
             display: none;
+            max-width: 280px;
+            line-height: 1.5
+        }
+
+        #objectives .obj-item {
+            margin: 4px 0;
+            padding: 4px;
+            border-left: 2px solid #f00
+        }
+
+        #objectives .obj-item.active {
+            border-color: #ff0;
+            color: #ff0
+        }
+
+        #compass {
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #f00;
+            font-size: 12px;
+            display: none;
+            text-align: center
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: .3
+            }
+        }
+
+        .hud-row {
+            margin-bottom: 5px
         }
     </style>
 </head>
-<body>
-<canvas id="c"></canvas>
-<div id="hud">
-    <div class="hud-row">LEVEL: <span id="levelNum">1</span> - <span id="levelName">SECTOR ALPHA</span> | THROTTLE: <span id="throttle">0</span>% | SPEED: <span id="speed">0</span></div>
-    <div class="hud-row">HULL: <span id="health">██████████</span> <span id="healthPct">100</span>% | MOTHERSHIP: <span id="distance">0</span>m | KILLS: <span id="kills">0</span> | FPS: <span id="fps">60</span></div>
-</div>
-<div id="crosshair"></div>
-<div id="instructions">
-    [MOUSE] Aim | [W/SPACE] Thrust | [S] Brake | [Q/E] Roll | [SHIFT] Boost | [CLICK] Fire
-</div>
-<div id="titleScreen">
-    <div class="title">WIREFRAME COMBAT</div>
-    <div class="subtitle">RED ALARM STYLE</div>
-    <div class="prompt">PRESS ANY KEY TO START</div>
-</div>
-<div id="levelScreen">
-    <div class="level-text">LEVEL <span id="levelScreenNum">1</span></div>
-</div>
-<div id="gameOverText">GAME OVER</div>
-<div id="victoryText">MISSION COMPLETE<br><br>ALL SECTORS CLEARED</div>
-<div id="warning">⚠ INCOMING FIRE ⚠</div>
-<div id="altitude">ALT: <span id="altValue">0</span>m</div>
-<div id="enemyCount">HOSTILES: <span id="hostiles">0</span></div>
 
-<!-- ============================================================ -->
-<!-- MODEL DATA - External JSON structures for 3D models -->
-<!-- ============================================================ -->
-<script id="models-data" type="application/json">
-{
-    "player": {
-        "type": "static",
-        "vertices": [
-            0, 0, -2.5,
-            -0.4, 0.25, -1.2,
-            0.4, 0.25, -1.2,
-            -0.4, -0.15, -1.2,
-            0.4, -0.15, -1.2,
-            -0.6, 0.2, 0,
-            0.6, 0.2, 0,
-            -0.6, -0.25, 0,
-            0.6, -0.25, 0,
-            -2.2, 0, 0.3,
-            2.2, 0, 0.3,
-            -1.0, 0, 0.2,
-            1.0, 0, 0.2,
-            -1.8, 0, 1.0,
-            1.8, 0, 1.0,
-            -0.5, 0.4, 1.2,
-            0.5, 0.4, 1.2,
-            -0.5, -0.2, 1.2,
-            0.5, -0.2, 1.2,
-            0, 0.8, 1.0,
-            0, 0.3, 0.5,
-            0, 0.3, 1.3,
-            -0.25, 0, 1.5,
-            0.25, 0, 1.5,
-            -0.25, 0, 1.8,
-            0.25, 0, 1.8
-        ],
-        "edges": [
-            0,1, 0,2, 0,3, 0,4,
-            1,2, 2,4, 4,3, 3,1,
-            1,5, 2,6, 3,7, 4,8,
-            5,6, 6,8, 8,7, 7,5,
-            11,9, 12,10, 9,13, 10,14, 11,13, 12,14, 7,11, 8,12,
-            5,11, 6,12, 13,17, 14,18,
-            5,15, 6,16, 7,17, 8,18,
-            15,16, 16,18, 18,17, 17,15,
-            19,20, 19,21, 20,21, 20,6, 21,16,
-            17,22, 18,23, 22,24, 23,25, 22,23, 24,25, 15,22, 16,23
-        ],
-        "color": [1.0, 0.0, 0.0, 1.0]
-    },
-    "enemy": {
-        "type": "static",
-        "vertices": [
-            0, 0, -2.0,
-            -1.5, 0.5, 0.8,
-            1.5, 0.5, 0.8,
-            -1.5, -0.5, 0.8,
-            1.5, -0.5, 0.8,
-            -2.5, 0, 0.3,
-            2.5, 0, 0.3,
-            0, 0, 1.5,
-            0, 0.8, 0.4,
-            0, -0.6, 0.4,
-            -1, 0, 1.2,
-            1, 0, 1.2
-        ],
-        "edges": [
-            0,1, 0,2, 0,3, 0,4,
-            1,2, 2,4, 4,3, 3,1,
-            1,5, 3,5, 2,6, 4,6,
-            1,7, 2,7, 3,7, 4,7,
-            5,10, 6,11, 10,7, 11,7,
-            0,8, 0,9, 8,7, 9,7,
-            10,11
-        ],
-        "color": [1.0, 0.27, 0.27, 1.0]
-    },
-    "bulletPlayer": {
-        "type": "static",
-        "vertices": [
-            0, 0, -1,
-            -0.15, 0, 0,
-            0.15, 0, 0,
-            0, -0.15, 0,
-            0, 0.15, 0,
-            0, 0, 0.5
-        ],
-        "edges": [
-            0,1, 0,2, 0,3, 0,4,
-            1,5, 2,5, 3,5, 4,5,
-            1,2, 3,4
-        ],
-        "color": [1.0, 1.0, 0.0, 1.0]
-    },
-    "bulletEnemy": {
-        "type": "static",
-        "vertices": [
-            0, 0, -1,
-            -0.15, 0, 0,
-            0.15, 0, 0,
-            0, -0.15, 0,
-            0, 0.15, 0,
-            0, 0, 0.5
-        ],
-        "edges": [
-            0,1, 0,2, 0,3, 0,4,
-            1,5, 2,5, 3,5, 4,5,
-            1,2, 3,4
-        ],
-        "color": [1.0, 0.53, 0.0, 1.0]
-    },
-    "asteroid": {
-        "type": "procedural",
-        "generator": "asteroid",
-        "params": {
-            "numPoints": 8,
-            "radiusVariance": 0.6,
-            "baseRadius": 0.7
-        },
-        "color": [1.0, 0.0, 0.0, 1.0]
-    },
-    "mothership": {
-        "type": "procedural",
-        "generator": "mothership",
-        "params": {
-            "hullLength": 80,
-            "hullRadius": 30,
-            "segments": 8
-        },
-        "color": [1.0, 0.0, 0.0, 1.0]
-    },
-    "tower": {
-        "type": "procedural",
-        "generator": "tower",
-        "params": {
-            "baseWidth": 5,
-            "topScale": 0.6,
-            "antennaHeight": 8
-        },
-        "color": [1.0, 0.0, 0.0, 1.0]
-    },
-    "building": {
-        "type": "procedural",
-        "generator": "building",
-        "params": {},
-        "color": [0.53, 0.0, 0.0, 1.0]
-    },
-    "mountain": {
-        "type": "procedural",
-        "generator": "mountain",
-        "params": {
-            "depthRatio": 0.5
-        },
-        "color": [0.4, 0.0, 0.0, 1.0]
-    },
-    "groundGrid": {
-        "type": "procedural",
-        "generator": "groundGrid",
-        "params": {
-            "size": 150,
-            "step": 15
-        },
-        "color": [0.27, 0.0, 0.0, 1.0]
-    }
-}
-</script>
-
-<script>
-(function() {
-    'use strict';
-
-    // ============================================================
-    // 1. Object Pools
-    // ============================================================
-    
-    function Pool(ctor, reset, size) {
-        var _free = [], _active = [];
-        for (var i = 0; i < size; i++) _free.push(ctor());
-        return {
-            acquire: function() {
-                var obj = _free.length > 0 ? _free.pop() : ctor();
-                _active.push(obj);
-                return obj;
-            },
-            release: function(obj) {
-                var idx = _active.indexOf(obj);
-                if (idx !== -1) {
-                    _active.splice(idx, 1);
-                    if (reset) reset(obj);
-                    _free.push(obj);
-                }
-            },
-            releaseAll: function() {
-                while (_active.length > 0) {
-                    var obj = _active.pop();
-                    if (reset) reset(obj);
-                    _free.push(obj);
-                }
-            },
-            getActive: function() { return _active; },
-            count: function() { return _active.length; }
-        };
-    }
-    
-    var bulletPool = Pool(
-        function() { return { active: false, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, life: 0, entity: null, isEnemy: false }; },
-        function(b) { b.active = false; b.isEnemy = false; if(b.entity) b.entity.active = false; }, 200
-    );
-    
-    var asteroidPool = Pool(
-        function() { return { active: false, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, rotX: 0, rotY: 0, rotSpeedX: 0, rotSpeedY: 0, radius: 1, health: 1, entity: null }; },
-        function(a) { a.active = false; if(a.entity) a.entity.active = false; }, 50
-    );
-    
-    var enemyPool = Pool(
-        function() { return { active: false, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, rotX: 0, rotY: 0, radius: 2.5, health: 3, fireTimer: 0, entity: null, behavior: 0 }; },
-        function(e) { e.active = false; e.health = 3; if(e.entity) e.entity.active = false; }, 30
-    );
-    
-    var particlePool = Pool(
-        function() { return { active: false, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, life: 0, maxLife: 1 }; },
-        function(p) { p.active = false; }, 300
-    );
-
-    // ============================================================
-    // 2. Math Utils
-    // ============================================================
-    
-    function lerp(a, b, t) { return a + (b - a) * t; }
-    function clamp(v, min, max) { return v < min ? min : (v > max ? max : v); }
-    
-    var Mat4 = {
-        create: function() { return new Float32Array(16); },
-        identity: function(out) {
-            out[0]=1;out[1]=0;out[2]=0;out[3]=0;
-            out[4]=0;out[5]=1;out[6]=0;out[7]=0;
-            out[8]=0;out[9]=0;out[10]=1;out[11]=0;
-            out[12]=0;out[13]=0;out[14]=0;out[15]=1;
-            return out;
-        },
-        perspective: function(out, fovRad, aspect, near, far) {
-            var f = 1.0 / Math.tan(fovRad * 0.5), nf = 1.0 / (near - far);
-            out[0]=f/aspect;out[1]=0;out[2]=0;out[3]=0;
-            out[4]=0;out[5]=f;out[6]=0;out[7]=0;
-            out[8]=0;out[9]=0;out[10]=(far+near)*nf;out[11]=-1;
-            out[12]=0;out[13]=0;out[14]=2*far*near*nf;out[15]=0;
-            return out;
-        },
-        multiply: function(out, a, b) {
-            var a00=a[0],a01=a[4],a02=a[8],a03=a[12];
-            var a10=a[1],a11=a[5],a12=a[9],a13=a[13];
-            var a20=a[2],a21=a[6],a22=a[10],a23=a[14];
-            var a30=a[3],a31=a[7],a32=a[11],a33=a[15];
-            var b0=b[0],b1=b[1],b2=b[2],b3=b[3];
-            out[0]=b0*a00+b1*a01+b2*a02+b3*a03;
-            out[1]=b0*a10+b1*a11+b2*a12+b3*a13;
-            out[2]=b0*a20+b1*a21+b2*a22+b3*a23;
-            out[3]=b0*a30+b1*a31+b2*a32+b3*a33;
-            b0=b[4];b1=b[5];b2=b[6];b3=b[7];
-            out[4]=b0*a00+b1*a01+b2*a02+b3*a03;
-            out[5]=b0*a10+b1*a11+b2*a12+b3*a13;
-            out[6]=b0*a20+b1*a21+b2*a22+b3*a23;
-            out[7]=b0*a30+b1*a31+b2*a32+b3*a33;
-            b0=b[8];b1=b[9];b2=b[10];b3=b[11];
-            out[8]=b0*a00+b1*a01+b2*a02+b3*a03;
-            out[9]=b0*a10+b1*a11+b2*a12+b3*a13;
-            out[10]=b0*a20+b1*a21+b2*a22+b3*a23;
-            out[11]=b0*a30+b1*a31+b2*a32+b3*a33;
-            b0=b[12];b1=b[13];b2=b[14];b3=b[15];
-            out[12]=b0*a00+b1*a01+b2*a02+b3*a03;
-            out[13]=b0*a10+b1*a11+b2*a12+b3*a13;
-            out[14]=b0*a20+b1*a21+b2*a22+b3*a23;
-            out[15]=b0*a30+b1*a31+b2*a32+b3*a33;
-            return out;
-        },
-        translate: function(out, m, x, y, z) {
-            out[0]=m[0];out[1]=m[1];out[2]=m[2];out[3]=m[3];
-            out[4]=m[4];out[5]=m[5];out[6]=m[6];out[7]=m[7];
-            out[8]=m[8];out[9]=m[9];out[10]=m[10];out[11]=m[11];
-            out[12]=m[0]*x+m[4]*y+m[8]*z+m[12];
-            out[13]=m[1]*x+m[5]*y+m[9]*z+m[13];
-            out[14]=m[2]*x+m[6]*y+m[10]*z+m[14];
-            out[15]=m[3]*x+m[7]*y+m[11]*z+m[15];
-            return out;
-        },
-        scale: function(out, m, x, y, z) {
-            out[0]=m[0]*x;out[1]=m[1]*x;out[2]=m[2]*x;out[3]=m[3]*x;
-            out[4]=m[4]*y;out[5]=m[5]*y;out[6]=m[6]*y;out[7]=m[7]*y;
-            out[8]=m[8]*z;out[9]=m[9]*z;out[10]=m[10]*z;out[11]=m[11]*z;
-            out[12]=m[12];out[13]=m[13];out[14]=m[14];out[15]=m[15];
-            return out;
-        },
-        rotateX: function(out, m, rad) {
-            var s=Math.sin(rad),c=Math.cos(rad);
-            var m10=m[4],m11=m[5],m12=m[6],m13=m[7];
-            var m20=m[8],m21=m[9],m22=m[10],m23=m[11];
-            out[0]=m[0];out[1]=m[1];out[2]=m[2];out[3]=m[3];
-            out[4]=m10*c+m20*s;out[5]=m11*c+m21*s;out[6]=m12*c+m22*s;out[7]=m13*c+m23*s;
-            out[8]=m20*c-m10*s;out[9]=m21*c-m11*s;out[10]=m22*c-m12*s;out[11]=m23*c-m13*s;
-            out[12]=m[12];out[13]=m[13];out[14]=m[14];out[15]=m[15];
-            return out;
-        },
-        rotateY: function(out, m, rad) {
-            var s=Math.sin(rad),c=Math.cos(rad);
-            var m00=m[0],m01=m[1],m02=m[2],m03=m[3];
-            var m20=m[8],m21=m[9],m22=m[10],m23=m[11];
-            out[0]=m00*c-m20*s;out[1]=m01*c-m21*s;out[2]=m02*c-m22*s;out[3]=m03*c-m23*s;
-            out[4]=m[4];out[5]=m[5];out[6]=m[6];out[7]=m[7];
-            out[8]=m00*s+m20*c;out[9]=m01*s+m21*c;out[10]=m02*s+m22*c;out[11]=m03*s+m23*c;
-            out[12]=m[12];out[13]=m[13];out[14]=m[14];out[15]=m[15];
-            return out;
-        },
-        rotateZ: function(out, m, rad) {
-            var s=Math.sin(rad),c=Math.cos(rad);
-            var m00=m[0],m01=m[1],m02=m[2],m03=m[3];
-            var m10=m[4],m11=m[5],m12=m[6],m13=m[7];
-            out[0]=m00*c+m10*s;out[1]=m01*c+m11*s;out[2]=m02*c+m12*s;out[3]=m03*c+m13*s;
-            out[4]=m10*c-m00*s;out[5]=m11*c-m01*s;out[6]=m12*c-m02*s;out[7]=m13*c-m03*s;
-            out[8]=m[8];out[9]=m[9];out[10]=m[10];out[11]=m[11];
-            out[12]=m[12];out[13]=m[13];out[14]=m[14];out[15]=m[15];
-            return out;
-        }
-    };
-    
-    function distance3D(x1,y1,z1,x2,y2,z2) {
-        var dx=x2-x1,dy=y2-y1,dz=z2-z1;
-        return Math.sqrt(dx*dx+dy*dy+dz*dz);
-    }
-
-    // ============================================================
-    // 3. Model Manager - Loads and creates entities from JSON
-    // ============================================================
-    
-    var ModelManager = {
-        modelData: null,
-        
-        init: function() {
-            var jsonScript = document.getElementById('models-data');
-            this.modelData = JSON.parse(jsonScript.textContent);
-        },
-        
-        getModelData: function(name) {
-            return this.modelData[name];
-        },
-        
-        // Procedural generators
-        generators: {
-            asteroid: function(params, size) {
-                var s = size || 1;
-                var numPoints = params.numPoints || 8;
-                var baseRadius = params.baseRadius || 0.7;
-                var variance = params.radiusVariance || 0.6;
-                var v = [], e = [];
-                
-                for (var i = 0; i < numPoints; i++) {
-                    var theta = (i / numPoints) * Math.PI * 2;
-                    var r = s * (baseRadius + Math.random() * variance);
-                    v.push(Math.cos(theta) * r, (Math.random() - 0.5) * s, Math.sin(theta) * r);
-                }
-                v.push(0, s * 0.8, 0, 0, -s * 0.8, 0);
-                
-                for (var i = 0; i < numPoints; i++) {
-                    e.push(i, (i + 1) % numPoints, i, numPoints, i, numPoints + 1);
-                }
-                
-                return { vertices: v, edges: e };
-            },
-            
-            mothership: function(params, scale) {
-                var sc = scale || 1;
-                var hullLength = (params.hullLength || 80) * sc;
-                var hullRadius = (params.hullRadius || 30) * sc;
-                var segments = params.segments || 8;
-                var v = [], e = [], idx = 0;
-                
-                // Main hull
-                for (var i = 0; i < segments; i++) {
-                    var angle = (i / segments) * Math.PI * 2;
-                    v.push(Math.cos(angle) * hullRadius, Math.sin(angle) * hullRadius, -hullLength/2);
-                    v.push(Math.cos(angle) * hullRadius, Math.sin(angle) * hullRadius, hullLength/2);
-                }
-                for (var i = 0; i < segments; i++) {
-                    var next = (i + 1) % segments;
-                    e.push(i*2, next*2, i*2+1, next*2+1, i*2, i*2+1);
-                }
-                idx = segments * 2;
-                
-                // Bridge
-                var bh = hullRadius + 12 * sc;
-                v.push(-10*sc, bh, -25*sc, 10*sc, bh, -25*sc, -10*sc, bh, 25*sc, 10*sc, bh, 25*sc);
-                v.push(-6*sc, bh+15*sc, 0, 6*sc, bh+15*sc, 0);
-                e.push(idx,idx+1, idx+2,idx+3, idx,idx+2, idx+1,idx+3);
-                e.push(idx,idx+4, idx+1,idx+5, idx+2,idx+4, idx+3,idx+5, idx+4,idx+5);
-                e.push(2, idx, 4, idx+1, 3, idx+2, 5, idx+3);
-                idx += 6;
-                
-                // Engines
-                for (var p = 0; p < 4; p++) {
-                    var angle = (p / 4) * Math.PI * 2 + Math.PI/4;
-                    var px = Math.cos(angle) * hullRadius * 0.6;
-                    var py = Math.sin(angle) * hullRadius * 0.6;
-                    var es = 5 * sc, baseIdx = idx;
-                    v.push(px-es, py-es, hullLength/2, px+es, py-es, hullLength/2);
-                    v.push(px+es, py+es, hullLength/2, px-es, py+es, hullLength/2);
-                    v.push(px, py, hullLength/2 + 20*sc);
-                    e.push(baseIdx,baseIdx+1, baseIdx+1,baseIdx+2, baseIdx+2,baseIdx+3, baseIdx+3,baseIdx);
-                    e.push(baseIdx,baseIdx+4, baseIdx+1,baseIdx+4, baseIdx+2,baseIdx+4, baseIdx+3,baseIdx+4);
-                    idx += 5;
-                }
-                
-                // Docking bay
-                var ds = 15 * sc;
-                v.push(-ds, -ds*0.6, -hullLength/2 - 12*sc, ds, -ds*0.6, -hullLength/2 - 12*sc);
-                v.push(ds, ds*0.6, -hullLength/2 - 12*sc, -ds, ds*0.6, -hullLength/2 - 12*sc);
-                e.push(idx, idx+1, idx+1, idx+2, idx+2, idx+3, idx+3, idx);
-                e.push(0, idx, 14, idx+1, 12, idx+2, 10, idx+3);
-                idx += 4;
-                
-                // Side hangars
-                for (var side = -1; side <= 1; side += 2) {
-                    var hx = side * (hullRadius + 15*sc), baseIdx = idx;
-                    v.push(hx, -8*sc, -20*sc, hx, -8*sc, 20*sc, hx, 8*sc, 20*sc, hx, 8*sc, -20*sc);
-                    v.push(hx + side*12*sc, 0, 0);
-                    e.push(baseIdx,baseIdx+1, baseIdx+1,baseIdx+2, baseIdx+2,baseIdx+3, baseIdx+3,baseIdx);
-                    e.push(baseIdx,baseIdx+4, baseIdx+1,baseIdx+4, baseIdx+2,baseIdx+4, baseIdx+3,baseIdx+4);
-                    idx += 5;
-                }
-                
-                return { vertices: v, edges: e };
-            },
-            
-            tower: function(params, height) {
-                var h = height || 30;
-                var w = params.baseWidth || 5;
-                var topScale = params.topScale || 0.6;
-                var ah = params.antennaHeight || 8;
-                var v = [
-                    -w, 0, -w, w, 0, -w, w, 0, w, -w, 0, w,
-                    -w*topScale, h, -w*topScale, w*topScale, h, -w*topScale,
-                    w*topScale, h, w*topScale, -w*topScale, h, w*topScale,
-                    0, h+ah, 0
-                ];
-                var e = [0,1, 1,2, 2,3, 3,0, 4,5, 5,6, 6,7, 7,4, 0,4, 1,5, 2,6, 3,7, 4,8, 5,8, 6,8, 7,8];
-                return { vertices: v, edges: e };
-            },
-            
-            building: function(params, w, h, d) {
-                var v = [-w,0,-d, w,0,-d, w,0,d, -w,0,d, -w,h,-d, w,h,-d, w,h,d, -w,h,d];
-                var e = [0,1, 1,2, 2,3, 3,0, 4,5, 5,6, 6,7, 7,4, 0,4, 1,5, 2,6, 3,7];
-                return { vertices: v, edges: e };
-            },
-            
-            mountain: function(params, w, h) {
-                var depthRatio = params.depthRatio || 0.5;
-                var v = [-w, 0, -w*depthRatio, w, 0, -w*depthRatio, w, 0, w*depthRatio, -w, 0, w*depthRatio, 0, h, 0];
-                var e = [0,1, 1,2, 2,3, 3,0, 0,4, 1,4, 2,4, 3,4];
-                return { vertices: v, edges: e };
-            },
-            
-            groundGrid: function(params) {
-                var size = params.size || 150;
-                var step = params.step || 15;
-                var v = [], e = [], idx = 0;
-                
-                for (var x = -size; x <= size; x += step) {
-                    v.push(x, 0, 0, x, 0, size);
-                    e.push(idx, idx+1);
-                    idx += 2;
-                }
-                for (var z = 0; z <= size; z += step) {
-                    v.push(-size, 0, z, size, 0, z);
-                    e.push(idx, idx+1);
-                    idx += 2;
-                }
-                
-                return { vertices: v, edges: e };
-            }
-        },
-        
-        createEntity: function(modelName, customParams) {
-            var data = this.modelData[modelName];
-            if (!data) {
-                console.error('Model not found:', modelName);
-                return null;
-            }
-            
-            var vertices, edges, color;
-            
-            if (data.type === 'static') {
-                vertices = data.vertices.slice();
-                edges = data.edges.slice();
-            } else if (data.type === 'procedural') {
-                var generator = this.generators[data.generator];
-                if (!generator) {
-                    console.error('Generator not found:', data.generator);
-                    return null;
-                }
-                var params = Object.assign({}, data.params, customParams || {});
-                var generated = generator(params, customParams ? customParams.size : undefined, 
-                                          customParams ? customParams.height : undefined,
-                                          customParams ? customParams.width : undefined);
-                vertices = generated.vertices;
-                edges = generated.edges;
-            }
-            
-            color = data.color.slice();
-            
-            return {
-                vertices: new Float32Array(vertices),
-                edges: edges,
-                color: color,
-                transform: Mat4.create(),
-                mvp: Mat4.create(),
-                active: true
-            };
-        },
-        
-        // Specialized creators with parameters
-        createAsteroid: function(size) {
-            return this.createEntity('asteroid', { size: size });
-        },
-        
-        createMothership: function(scale) {
-            return this.createEntity('mothership', { size: scale });
-        },
-        
-        createTower: function(height) {
-            return this.createEntity('tower', { height: height });
-        },
-        
-        createBuilding: function(w, h, d) {
-            var data = this.modelData['building'];
-            var generated = this.generators.building(data.params, w, h, d);
-            return {
-                vertices: new Float32Array(generated.vertices),
-                edges: generated.edges,
-                color: data.color.slice(),
-                transform: Mat4.create(),
-                mvp: Mat4.create(),
-                active: true
-            };
-        },
-        
-        createMountain: function(w, h) {
-            var data = this.modelData['mountain'];
-            var generated = this.generators.mountain(data.params, w, h);
-            return {
-                vertices: new Float32Array(generated.vertices),
-                edges: generated.edges,
-                color: data.color.slice(),
-                transform: Mat4.create(),
-                mvp: Mat4.create(),
-                active: true
-            };
-        },
-        
-        createGroundGrid: function(offsetZ, groundLevel) {
-            var entity = this.createEntity('groundGrid');
-            Mat4.identity(entity.transform);
-            Mat4.translate(entity.transform, entity.transform, 0, groundLevel, offsetZ);
-            return entity;
-        }
-    };
-
-    // ============================================================
-    // 4. Input Manager
-    // ============================================================
-    
-    var InputManager = {
-        keys: {}, mouseDown: false, mouseDX: 0, mouseDY: 0, locked: false,
-        anyKeyPressed: false, clickPressed: false,
-        
-        init: function(canvas) {
-            var self = this;
-            this.canvas = canvas;
-            
-            window.addEventListener('keydown', function(e) { 
-                self.keys[e.code] = true; 
-                self.anyKeyPressed = true;
-            });
-            window.addEventListener('keyup', function(e) { self.keys[e.code] = false; });
-            window.addEventListener('mousedown', function(e) { 
-                if(e.button===0) {
-                    self.mouseDown = true;
-                    self.clickPressed = true;
-                }
-            });
-            window.addEventListener('mouseup', function(e) { if(e.button===0) self.mouseDown = false; });
-            document.addEventListener('mousemove', function(e) {
-                if (self.locked) {
-                    self.mouseDX += e.movementX || 0;
-                    self.mouseDY += e.movementY || 0;
-                }
-            });
-            document.addEventListener('pointerlockchange', function() {
-                self.locked = document.pointerLockElement === canvas;
-                document.getElementById('crosshair').style.display = self.locked ? 'block' : 'none';
-                document.getElementById('instructions').style.display = self.locked ? 'block' : 'none';
-            });
-            canvas.addEventListener('click', function() {
-                if (!self.locked && Game.state === 'playing') canvas.requestPointerLock();
-            });
-        },
-        consumeMouseDelta: function(out) {
-            out.dx = this.mouseDX; out.dy = this.mouseDY;
-            this.mouseDX = 0; this.mouseDY = 0;
-        },
-        consumeAnyKey: function() {
-            var pressed = this.anyKeyPressed;
-            this.anyKeyPressed = false;
-            return pressed;
-        },
-        consumeClick: function() {
-            var pressed = this.clickPressed;
-            this.clickPressed = false;
-            return pressed;
-        }
-    };
-
-    // ============================================================
-    // 5. WebGL Renderer
-    // ============================================================
-    
-    var Renderer = {
-        canvas: null,
-        gl: null,
-        program: null,
-        uniforms: {},
-        attribs: {},
-        lineBuffer: null,
-        width: 0,
-        height: 0,
-        
-        // Shaders
-        vertexShaderSrc: [
-            'attribute vec3 a_position;',
-            'uniform mat4 u_mvp;',
-            'void main() {',
-            '    gl_Position = u_mvp * vec4(a_position, 1.0);',
-            '}'
-        ].join('\n'),
-        
-        fragmentShaderSrc: [
-            'precision mediump float;',
-            'uniform vec4 u_color;',
-            'void main() {',
-            '    gl_FragColor = u_color;',
-            '}'
-        ].join('\n'),
-        
-        // Particle shaders
-        particleVertexSrc: [
-            'attribute vec3 a_position;',
-            'attribute vec4 a_color;',
-            'uniform mat4 u_vp;',
-            'varying vec4 v_color;',
-            'void main() {',
-            '    gl_Position = u_vp * vec4(a_position, 1.0);',
-            '    v_color = a_color;',
-            '}'
-        ].join('\n'),
-        
-        particleFragmentSrc: [
-            'precision mediump float;',
-            'varying vec4 v_color;',
-            'void main() {',
-            '    gl_FragColor = v_color;',
-            '}'
-        ].join('\n'),
-        
-        particleProgram: null,
-        particleUniforms: {},
-        particleAttribs: {},
-        particleBuffer: null,
-        particleColorBuffer: null,
-        
-        // Stars buffer
-        starsBuffer: null,
-        starsCount: 0,
-        
-        init: function() {
-            this.canvas = document.getElementById('c');
-            this.gl = this.canvas.getContext('webgl') || this.canvas.getContext('experimental-webgl');
-            
-            if (!this.gl) {
-                alert('WebGL not supported');
-                return false;
-            }
-            
-            var gl = this.gl;
-            
-            // Compile main shaders
-            var vs = this.compileShader(gl.VERTEX_SHADER, this.vertexShaderSrc);
-            var fs = this.compileShader(gl.FRAGMENT_SHADER, this.fragmentShaderSrc);
-            this.program = this.createProgram(vs, fs);
-            
-            this.uniforms.mvp = gl.getUniformLocation(this.program, 'u_mvp');
-            this.uniforms.color = gl.getUniformLocation(this.program, 'u_color');
-            this.attribs.position = gl.getAttribLocation(this.program, 'a_position');
-            
-            // Compile particle shaders
-            var pvs = this.compileShader(gl.VERTEX_SHADER, this.particleVertexSrc);
-            var pfs = this.compileShader(gl.FRAGMENT_SHADER, this.particleFragmentSrc);
-            this.particleProgram = this.createProgram(pvs, pfs);
-            
-            this.particleUniforms.vp = gl.getUniformLocation(this.particleProgram, 'u_vp');
-            this.particleAttribs.position = gl.getAttribLocation(this.particleProgram, 'a_position');
-            this.particleAttribs.color = gl.getAttribLocation(this.particleProgram, 'a_color');
-            
-            // Create buffers
-            this.lineBuffer = gl.createBuffer();
-            this.particleBuffer = gl.createBuffer();
-            this.particleColorBuffer = gl.createBuffer();
-            this.starsBuffer = gl.createBuffer();
-            
-            // Generate stars
-            this.generateStars();
-            
-            // Setup GL state
-            gl.enable(gl.DEPTH_TEST);
-            gl.depthFunc(gl.LEQUAL);
-            gl.lineWidth(1.5);
-            
-            var self = this;
-            window.addEventListener('resize', function() { self.resize(); });
-            this.resize();
-            
-            return true;
-        },
-        
-        compileShader: function(type, source) {
-            var gl = this.gl;
-            var shader = gl.createShader(type);
-            gl.shaderSource(shader, source);
-            gl.compileShader(shader);
-            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-                console.error('Shader error:', gl.getShaderInfoLog(shader));
-                return null;
-            }
-            return shader;
-        },
-        
-        createProgram: function(vs, fs) {
-            var gl = this.gl;
-            var program = gl.createProgram();
-            gl.attachShader(program, vs);
-            gl.attachShader(program, fs);
-            gl.linkProgram(program);
-            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-                console.error('Program error:', gl.getProgramInfoLog(program));
-                return null;
-            }
-            return program;
-        },
-        
-        generateStars: function() {
-            var stars = [];
-            var seed = 12345;
-            for (var i = 0; i < 200; i++) {
-                seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-                var x = ((seed % 2000) - 1000);
-                seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-                var y = ((seed % 2000) - 1000);
-                seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-                var z = -((seed % 4000) + 500);
-                stars.push(x, y, z);
-            }
-            this.starsCount = stars.length / 3;
-            
-            var gl = this.gl;
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.starsBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(stars), gl.STATIC_DRAW);
-        },
-        
-        resize: function() {
-            this.width = window.innerWidth;
-            this.height = window.innerHeight;
-            this.canvas.width = this.width;
-            this.canvas.height = this.height;
-            this.gl.viewport(0, 0, this.width, this.height);
-        },
-        
-        renderEntity: function(entity, vpMatrix) {
-            if (!entity || !entity.active) return;
-            
-            var gl = this.gl;
-            
-            Mat4.multiply(entity.mvp, vpMatrix, entity.transform);
-            
-            // Build line vertices from edges
-            var verts = entity.vertices;
-            var edges = entity.edges;
-            var lineVerts = new Float32Array(edges.length * 3);
-            
-            for (var i = 0; i < edges.length; i += 2) {
-                var a = edges[i] * 3;
-                var b = edges[i + 1] * 3;
-                var idx = i * 3;
-                lineVerts[idx] = verts[a];
-                lineVerts[idx + 1] = verts[a + 1];
-                lineVerts[idx + 2] = verts[a + 2];
-                lineVerts[idx + 3] = verts[b];
-                lineVerts[idx + 4] = verts[b + 1];
-                lineVerts[idx + 5] = verts[b + 2];
-            }
-            
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.lineBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, lineVerts, gl.DYNAMIC_DRAW);
-            
-            gl.vertexAttribPointer(this.attribs.position, 3, gl.FLOAT, false, 0, 0);
-            gl.enableVertexAttribArray(this.attribs.position);
-            
-            gl.uniformMatrix4fv(this.uniforms.mvp, false, entity.mvp);
-            gl.uniform4fv(this.uniforms.color, entity.color);
-            
-            gl.drawArrays(gl.LINES, 0, edges.length);
-        },
-        
-        renderParticles: function(particles, vpMatrix) {
-            var gl = this.gl;
-            var active = particles.getActive();
-            if (active.length === 0) return;
-            
-            var positions = [];
-            var colors = [];
-            
-            for (var i = 0; i < active.length; i++) {
-                var p = active[i];
-                if (!p.active) continue;
-                
-                var alpha = p.life / p.maxLife;
-                var r, g, b;
-                if (alpha > 0.6) { r = 1; g = 1; b = 0; }
-                else if (alpha > 0.3) { r = 1; g = 0.53; b = 0; }
-                else { r = 1; g = 0.27; b = 0; }
-                
-                positions.push(p.x, p.y, p.z);
-                var vLen = Math.sqrt(p.vx*p.vx + p.vy*p.vy + p.vz*p.vz);
-                if (vLen > 0.01) {
-                    positions.push(p.x - p.vx/vLen*0.6, p.y - p.vy/vLen*0.6, p.z - p.vz/vLen*0.6);
-                } else {
-                    positions.push(p.x, p.y, p.z);
-                }
-                
-                colors.push(r, g, b, alpha, r, g, b, alpha);
-            }
-            
-            if (positions.length === 0) return;
-            
-            gl.useProgram(this.particleProgram);
-            
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.particleBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.DYNAMIC_DRAW);
-            gl.vertexAttribPointer(this.particleAttribs.position, 3, gl.FLOAT, false, 0, 0);
-            gl.enableVertexAttribArray(this.particleAttribs.position);
-            
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.particleColorBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.DYNAMIC_DRAW);
-            gl.vertexAttribPointer(this.particleAttribs.color, 4, gl.FLOAT, false, 0, 0);
-            gl.enableVertexAttribArray(this.particleAttribs.color);
-            
-            gl.uniformMatrix4fv(this.particleUniforms.vp, false, vpMatrix);
-            
-            gl.drawArrays(gl.LINES, 0, positions.length / 3);
-            
-            gl.useProgram(this.program);
-        },
-        
-        renderStars: function(vpMatrix, isSpace) {
-            if (!isSpace) return;
-            
-            var gl = this.gl;
-            
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.starsBuffer);
-            gl.vertexAttribPointer(this.attribs.position, 3, gl.FLOAT, false, 0, 0);
-            gl.enableVertexAttribArray(this.attribs.position);
-            
-            gl.uniformMatrix4fv(this.uniforms.mvp, false, vpMatrix);
-            gl.uniform4f(this.uniforms.color, 0.2, 0.0, 0.0, 1.0);
-            
-            gl.drawArrays(gl.POINTS, 0, this.starsCount);
-        },
-        
-        render: function(vpMatrix) {
-            var gl = this.gl;
-            
-            // Clear
-            gl.clearColor(0, 0, 0, 1);
-            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-            
-            // Skip scene during title/level screens
-            if (Game.state === 'title' || Game.state === 'levelscreen') {
-                return;
-            }
-            
-            var cfg = Game.levelConfigs[Game.level - 1];
-            
-            gl.useProgram(this.program);
-            
-            // Render stars in space levels
-            this.renderStars(vpMatrix, cfg.type === 'space');
-            
-            // Render ground and structures
-            for (var i = 0; i < Game.groundEntities.length; i++) {
-                this.renderEntity(Game.groundEntities[i], vpMatrix);
-            }
-            for (var i = 0; i < Game.structureEntities.length; i++) {
-                this.renderEntity(Game.structureEntities[i], vpMatrix);
-            }
-            
-            // Render mothership
-            this.renderEntity(Game.mothershipEntity, vpMatrix);
-            
-            // Render asteroids
-            var asteroids = asteroidPool.getActive();
-            for (var i = 0; i < asteroids.length; i++) {
-                if (asteroids[i].active) this.renderEntity(asteroids[i].entity, vpMatrix);
-            }
-            
-            // Render enemies
-            var enemies = enemyPool.getActive();
-            for (var i = 0; i < enemies.length; i++) {
-                if (enemies[i].active) this.renderEntity(enemies[i].entity, vpMatrix);
-            }
-            
-            // Render bullets
-            var bullets = bulletPool.getActive();
-            for (var i = 0; i < bullets.length; i++) {
-                if (bullets[i].active) this.renderEntity(bullets[i].entity, vpMatrix);
-            }
-            
-            // Render player
-            if (Player.visible) {
-                this.renderEntity(Player.entity, vpMatrix);
-            }
-            
-            // Render particles
-            this.renderParticles(particlePool, vpMatrix);
-        }
-    };
-
-    // ============================================================
-    // 6. Player Ship Controller
-    // ============================================================
-    
-    var Player = {
-        x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0,
-        pitch: 0, yaw: 0, roll: 0,
-        visualRoll: 0, visualPitch: 0,
-        thrustPitch: 0, brakePitch: 0,
-        mouseSmooth: { dx: 0, dy: 0 },
-        health: 100, maxHealth: 100, throttle: 0, speed: 0,
-        maxSpeed: 80, boostSpeed: 150,
-        fireRate: 0.08, fireTimer: 0, bulletSpeed: 250,
-        entity: null, visible: true,
-        _rotMat: null, _visualRotMat: null,
-        forward: { x: 0, y: 0, z: -1 }, right: { x: 1, y: 0, z: 0 }, up: { x: 0, y: 1, z: 0 },
-        
-        init: function() { 
-            this.entity = ModelManager.createEntity('player');
-            this._rotMat = Mat4.create();
-            this._visualRotMat = Mat4.create();
-            Mat4.identity(this.entity.transform);
-        },
-        
-        reset: function() {
-            var cfg = Game.levelConfigs[Game.level - 1];
-            this.x = 0;
-            this.y = cfg.type === 'ground' ? cfg.groundLevel + 40 : 0;
-            this.z = 0;
-            this.vx = 0; this.vy = 0; this.vz = 0;
-            this.pitch = 0; this.yaw = 0; this.roll = 0;
-            this.visualRoll = 0; this.visualPitch = 0;
-            this.thrustPitch = 0; this.brakePitch = 0;
-            this.mouseSmooth.dx = 0; this.mouseSmooth.dy = 0;
-            this.health = this.maxHealth;
-            this.throttle = 0; this.fireTimer = 0;
-            this.visible = true;
-            this.entity.active = true;
-        },
-        
-        update: function(dt, input) {
-            if (Game.state !== 'playing') return;
-            
-            this.mouseSmooth.dx = lerp(this.mouseSmooth.dx, input.dx, 0.3);
-            this.mouseSmooth.dy = lerp(this.mouseSmooth.dy, input.dy, 0.3);
-            
-            var sens = 0.002;
-            this.yaw -= input.dx * sens;
-            this.pitch -= input.dy * sens;
-            this.pitch = clamp(this.pitch, -Math.PI * 0.45, Math.PI * 0.45);
-            
-            var rollSpeed = 2.5 * dt;
-            if (InputManager.keys['KeyQ']) this.roll += rollSpeed;
-            if (InputManager.keys['KeyE']) this.roll -= rollSpeed;
-            this.roll *= 0.95;
-            
-            this.visualRoll = lerp(this.visualRoll, -clamp(this.mouseSmooth.dx * 0.03, -0.5, 0.5), 0.1);
-            this.visualPitch = lerp(this.visualPitch, clamp(this.mouseSmooth.dy * 0.015, -0.25, 0.25), 0.1);
-            
-            Mat4.identity(this._rotMat);
-            Mat4.rotateY(this._rotMat, this._rotMat, this.yaw);
-            Mat4.rotateX(this._rotMat, this._rotMat, this.pitch);
-            Mat4.rotateZ(this._rotMat, this._rotMat, this.roll);
-            
-            this.forward.x = -this._rotMat[8];
-            this.forward.y = -this._rotMat[9];
-            this.forward.z = -this._rotMat[10];
-            this.right.x = this._rotMat[0];
-            this.right.y = this._rotMat[1];
-            this.right.z = this._rotMat[2];
-            this.up.x = this._rotMat[4];
-            this.up.y = this._rotMat[5];
-            this.up.z = this._rotMat[6];
-            
-            var boosting = InputManager.keys['ShiftLeft'] || InputManager.keys['ShiftRight'];
-            var maxSpd = boosting ? this.boostSpeed : this.maxSpeed;
-            var isThrusting = InputManager.keys['KeyW'] || InputManager.keys['Space'];
-            var isBraking = InputManager.keys['KeyS'];
-            
-            if (isThrusting) this.throttle += dt * (boosting ? 200 : 100);
-            else if (isBraking) this.throttle -= dt * 150;
-            else this.throttle *= 0.98;
-            this.throttle = clamp(this.throttle, 0, 100);
-            
-            this.thrustPitch = lerp(this.thrustPitch, isThrusting && this.throttle > 50 ? 0.15 : 0, dt * 4);
-            this.brakePitch = lerp(this.brakePitch, isBraking && this.speed > 10 ? -0.2 : 0, dt * 5);
-            
-            var targetSpeed = (this.throttle / 100) * maxSpd;
-            var accel = 30 * dt;
-            this.vx += this.forward.x * targetSpeed * accel;
-            this.vy += this.forward.y * targetSpeed * accel;
-            this.vz += this.forward.z * targetSpeed * accel;
-            
-            this.vx *= 0.98; this.vy *= 0.98; this.vz *= 0.98;
-            
-            this.speed = Math.sqrt(this.vx*this.vx + this.vy*this.vy + this.vz*this.vz);
-            if (this.speed > maxSpd) {
-                var scale = maxSpd / this.speed;
-                this.vx *= scale; this.vy *= scale; this.vz *= scale;
-                this.speed = maxSpd;
-            }
-            
-            this.x += this.vx * dt;
-            this.y += this.vy * dt;
-            this.z += this.vz * dt;
-            
-            var cfg = Game.levelConfigs[Game.level - 1];
-            if (cfg.type === 'ground') {
-                var minAlt = cfg.groundLevel + 3;
-                if (this.y < minAlt) {
-                    this.y = minAlt;
-                    if (this.vy < -5) {
-                        this.damage(10);
-                        Camera.shake(1);
-                    }
-                    this.vy = Math.abs(this.vy) * 0.3;
-                }
-            }
-            
-            this.fireTimer -= dt;
-            if (InputManager.mouseDown && this.fireTimer <= 0 && InputManager.locked) {
-                this.shoot();
-                this.fireTimer = this.fireRate;
-            }
-            
-            Mat4.identity(this._visualRotMat);
-            Mat4.rotateY(this._visualRotMat, this._visualRotMat, this.yaw);
-            Mat4.rotateX(this._visualRotMat, this._visualRotMat, this.pitch);
-            Mat4.rotateZ(this._visualRotMat, this._visualRotMat, this.roll + this.visualRoll);
-            Mat4.rotateX(this._visualRotMat, this._visualRotMat, this.visualPitch + this.thrustPitch + this.brakePitch);
-            
-            Mat4.identity(this.entity.transform);
-            Mat4.translate(this.entity.transform, this.entity.transform, this.x, this.y, this.z);
-            Mat4.multiply(this.entity.transform, this.entity.transform, this._visualRotMat);
-        },
-        
-        shoot: function() {
-            for (var side = -1; side <= 1; side += 2) {
-                var bullet = bulletPool.acquire();
-                bullet.active = true;
-                bullet.isEnemy = false;
-                bullet.x = this.x + this.forward.x * 2.5 + this.right.x * side * 0.8;
-                bullet.y = this.y + this.forward.y * 2.5 + this.right.y * side * 0.8;
-                bullet.z = this.z + this.forward.z * 2.5 + this.right.z * side * 0.8;
-                bullet.vx = this.forward.x * this.bulletSpeed + this.vx * 0.5;
-                bullet.vy = this.forward.y * this.bulletSpeed + this.vy * 0.5;
-                bullet.vz = this.forward.z * this.bulletSpeed + this.vz * 0.5;
-                bullet.life = 3;
-                if (!bullet.entity) bullet.entity = ModelManager.createEntity('bulletPlayer');
-                bullet.entity.active = true;
-            }
-        },
-        
-        damage: function(amount) {
-            this.health -= amount;
-            Camera.shake(amount * 0.05);
-            if (this.health <= 0) { 
-                this.health = 0; 
-                Game.playerDeath();
-            }
-        }
-    };
-
-    // ============================================================
-    // 7. Game Manager
-    // ============================================================
-    
-    var Game = {
-        state: 'title',
-        level: 1,
-        maxLevels: 3,
-        kills: 0,
-        totalKills: 0,
-        mothershipPos: { x: 0, y: 0, z: -2000 },
-        mothershipEntity: null,
-        groundEntities: [],
-        structureEntities: [],
-        victoryDistance: 100,
-        warningTimer: 0,
-        levelScreenTimer: 0,
-        deathTimer: 0,
-        gameOverTimer: 0,
-        enemySpawnDelay: 1.5,
-        levelTime: 0,
-        
-        levelConfigs: [
-            {
-                name: "SECTOR ALPHA", subtitle: "Deep Space", type: "space",
-                mothershipDistance: 1200, mothershipScale: 1.0,
-                maxAsteroids: 20, maxEnemies: 8,
-                asteroidSpawnRate: 2, enemySpawnRate: 3,
-                enemyFireRate: 2.5, enemyBulletSpeed: 90, enemyAccuracy: 0.5,
-                groundLevel: -1000, initialEnemies: 4, initialAsteroids: 15
-            },
-            {
-                name: "PLANETARY ASSAULT", subtitle: "Surface Attack", type: "ground",
-                mothershipDistance: 1500, mothershipScale: 2.0,
-                maxAsteroids: 5, maxEnemies: 12,
-                asteroidSpawnRate: 5, enemySpawnRate: 2.5,
-                enemyFireRate: 1.8, enemyBulletSpeed: 110, enemyAccuracy: 0.65,
-                groundLevel: 0, initialEnemies: 5, initialAsteroids: 8
-            },
-            {
-                name: "FINAL APPROACH", subtitle: "Mothership Assault", type: "space",
-                mothershipDistance: 2000, mothershipScale: 3.5,
-                maxAsteroids: 30, maxEnemies: 18,
-                asteroidSpawnRate: 1.5, enemySpawnRate: 2,
-                enemyFireRate: 1.2, enemyBulletSpeed: 130, enemyAccuracy: 0.8,
-                groundLevel: -1000, initialEnemies: 6, initialAsteroids: 20
-            }
-        ],
-        
-        asteroidSpawnTimer: 0,
-        enemySpawnTimer: 0,
-        
-        init: function() { 
-            this.showTitleScreen();
-        },
-        
-        showTitleScreen: function() {
-            this.state = 'title';
-            document.getElementById('titleScreen').style.display = 'flex';
-            document.getElementById('levelScreen').style.display = 'none';
-            document.getElementById('gameOverText').style.display = 'none';
-            document.getElementById('victoryText').style.display = 'none';
-            document.getElementById('hud').style.display = 'none';
-            document.getElementById('enemyCount').style.display = 'none';
-        },
-        
-        showLevelScreen: function() {
-            this.state = 'levelscreen';
-            this.levelScreenTimer = 2.0;
-            document.getElementById('titleScreen').style.display = 'none';
-            document.getElementById('levelScreen').style.display = 'flex';
-            document.getElementById('levelScreenNum').textContent = this.level;
-            document.getElementById('gameOverText').style.display = 'none';
-            document.getElementById('victoryText').style.display = 'none';
-            document.getElementById('hud').style.display = 'none';
-            document.getElementById('enemyCount').style.display = 'none';
-            
-            this.setupLevel();
-        },
-        
-        setupLevel: function() {
-            var cfg = this.levelConfigs[this.level - 1];
-            
-            this.mothershipPos.x = 0;
-            this.mothershipPos.y = cfg.type === 'ground' ? cfg.groundLevel + 80 : 0;
-            this.mothershipPos.z = -cfg.mothershipDistance;
-            
-            this.mothershipEntity = ModelManager.createMothership(cfg.mothershipScale);
-            Mat4.identity(this.mothershipEntity.transform);
-            Mat4.translate(this.mothershipEntity.transform, this.mothershipEntity.transform,
-                this.mothershipPos.x, this.mothershipPos.y, this.mothershipPos.z);
-            
-            if (cfg.type === 'ground') {
-                this.createGroundStructures(cfg);
-            } else {
-                this.groundEntities = [];
-                this.structureEntities = [];
-            }
-            
-            this.asteroidSpawnTimer = 0.5;
-            this.enemySpawnTimer = 0.5;
-            this.enemySpawnDelay = 1.5;
-            this.levelTime = 0;
-            this.kills = 0;
-            this.warningTimer = 0;
-            
-            bulletPool.releaseAll();
-            asteroidPool.releaseAll();
-            enemyPool.releaseAll();
-            particlePool.releaseAll();
-            
-            Player.reset();
-        },
-        
-        startLevel: function() {
-            this.state = 'playing';
-            document.getElementById('levelScreen').style.display = 'none';
-            document.getElementById('hud').style.display = 'block';
-            document.getElementById('enemyCount').style.display = 'block';
-            
-            var cfg = this.levelConfigs[this.level - 1];
-            if (cfg.type === 'ground') {
-                document.getElementById('altitude').style.display = 'block';
-            } else {
-                document.getElementById('altitude').style.display = 'none';
-            }
-            
-            this.spawnInitialAsteroids();
-            
-            Renderer.canvas.requestPointerLock();
-        },
-        
-        createGroundStructures: function(cfg) {
-            this.groundEntities = [];
-            this.structureEntities = [];
-            
-            var gridSize = 150;
-            var numGrids = Math.ceil(cfg.mothershipDistance / gridSize) + 4;
-            
-            for (var gz = -2; gz < numGrids; gz++) {
-                var grid = ModelManager.createGroundGrid(-gz * gridSize, cfg.groundLevel);
-                this.groundEntities.push(grid);
-            }
-            
-            for (var i = 0; i < 50; i++) {
-                var z = -30 - Math.random() * (cfg.mothershipDistance - 150);
-                var x = (Math.random() - 0.5) * 250;
-                var type = Math.random();
-                var ent;
-                
-                if (type < 0.4) {
-                    ent = ModelManager.createTower(12 + Math.random() * 35);
-                } else if (type < 0.7) {
-                    ent = ModelManager.createBuilding(
-                        4 + Math.random() * 8,
-                        8 + Math.random() * 25,
-                        4 + Math.random() * 8
-                    );
-                } else {
-                    ent = ModelManager.createMountain(
-                        15 + Math.random() * 30,
-                        20 + Math.random() * 40
-                    );
-                }
-                
-                Mat4.identity(ent.transform);
-                Mat4.translate(ent.transform, ent.transform, x, cfg.groundLevel, z);
-                this.structureEntities.push(ent);
-            }
-            
-            for (var i = 0; i < 20; i++) {
-                var angle = (i / 20) * Math.PI * 2;
-                var dist = 350 + Math.random() * 150;
-                var mount = ModelManager.createMountain(30 + Math.random() * 50, 40 + Math.random() * 60);
-                Mat4.identity(mount.transform);
-                Mat4.translate(mount.transform, mount.transform,
-                    Math.cos(angle) * dist, cfg.groundLevel, -cfg.mothershipDistance / 2 + Math.sin(angle) * dist);
-                this.structureEntities.push(mount);
-            }
-        },
-        
-        spawnInitialAsteroids: function() {
-            var cfg = this.levelConfigs[this.level - 1];
-            for (var i = 0; i < cfg.initialAsteroids; i++) {
-                this.spawnAsteroidAcrossLevel();
-            }
-        },
-        
-        spawnInitialEnemies: function() {
-            var cfg = this.levelConfigs[this.level - 1];
-            for (var i = 0; i < cfg.initialEnemies; i++) {
-                this.spawnEnemyAcrossLevel();
-            }
-        },
-        
-        reset: function() {
-            this.level = 1;
-            this.totalKills = 0;
-            
-            bulletPool.releaseAll();
-            asteroidPool.releaseAll();
-            enemyPool.releaseAll();
-            particlePool.releaseAll();
-            
-            this.showTitleScreen();
-        },
-        
-        nextLevel: function() {
-            this.totalKills += this.kills;
-            this.level++;
-            
-            if (this.level > this.maxLevels) {
-                this.victory();
-                return;
-            }
-            
-            bulletPool.releaseAll();
-            asteroidPool.releaseAll();
-            enemyPool.releaseAll();
-            particlePool.releaseAll();
-            
-            this.showLevelScreen();
-        },
-        
-        playerDeath: function() {
-            this.state = 'dying';
-            this.deathTimer = 2.0;
-            Player.visible = false;
-            Player.entity.active = false;
-            
-            this.spawnExplosion(Player.x, Player.y, Player.z, 50);
-            Camera.shake(3);
-            
-            document.exitPointerLock();
-        },
-        
-        showGameOver: function() {
-            this.state = 'gameover';
-            this.gameOverTimer = 3.0;
-            document.getElementById('gameOverText').style.display = 'block';
-            document.getElementById('hud').style.display = 'none';
-            document.getElementById('enemyCount').style.display = 'none';
-            document.getElementById('altitude').style.display = 'none';
-        },
-        
-        victory: function() {
-            this.state = 'victory';
-            document.exitPointerLock();
-            document.getElementById('victoryText').style.display = 'block';
-            document.getElementById('hud').style.display = 'none';
-            document.getElementById('enemyCount').style.display = 'none';
-            document.getElementById('altitude').style.display = 'none';
-        },
-        
-        update: function(dt) {
-            if (this.state === 'title') {
-                if (InputManager.consumeAnyKey() || InputManager.consumeClick()) {
-                    this.showLevelScreen();
-                }
-                return;
-            }
-            
-            if (this.state === 'levelscreen') {
-                this.levelScreenTimer -= dt;
-                if (this.levelScreenTimer <= 0) {
-                    this.startLevel();
-                }
-                return;
-            }
-            
-            if (this.state === 'dying') {
-                this.deathTimer -= dt;
-                this.updateParticles(dt);
-                if (this.deathTimer <= 0) {
-                    this.showGameOver();
-                }
-                return;
-            }
-            
-            if (this.state === 'gameover') {
-                this.gameOverTimer -= dt;
-                if (this.gameOverTimer <= 0) {
-                    if (InputManager.consumeAnyKey() || InputManager.consumeClick()) {
-                        this.reset();
-                    }
-                }
-                return;
-            }
-            
-            if (this.state === 'victory') {
-                if (InputManager.consumeAnyKey() || InputManager.consumeClick()) {
-                    this.reset();
-                }
-                return;
-            }
-            
-            if (this.state !== 'playing') return;
-            
-            this.levelTime += dt;
-            
-            var cfg = this.levelConfigs[this.level - 1];
-            
-            if (this.warningTimer > 0) {
-                this.warningTimer -= dt;
-                document.getElementById('warning').style.display = 'block';
-            } else {
-                document.getElementById('warning').style.display = 'none';
-            }
-            
-            this.asteroidSpawnTimer -= dt;
-            if (this.asteroidSpawnTimer <= 0 && asteroidPool.count() < cfg.maxAsteroids) {
-                this.spawnAsteroidAcrossLevel();
-                this.asteroidSpawnTimer = cfg.asteroidSpawnRate * (0.5 + Math.random() * 0.5);
-            }
-            
-            if (this.enemySpawnDelay > 0) {
-                this.enemySpawnDelay -= dt;
-                if (this.enemySpawnDelay <= 0) {
-                    this.spawnInitialEnemies();
-                }
-            } else {
-                this.enemySpawnTimer -= dt;
-                if (this.enemySpawnTimer <= 0 && enemyPool.count() < cfg.maxEnemies) {
-                    this.spawnEnemyAcrossLevel();
-                    this.enemySpawnTimer = cfg.enemySpawnRate * (0.5 + Math.random() * 0.5);
-                }
-            }
-            
-            this.updateBullets(dt, cfg);
-            this.updateAsteroids(dt, cfg);
-            this.updateEnemies(dt, cfg);
-            this.updateParticles(dt);
-            
-            var motherDist = distance3D(Player.x, Player.y, Player.z,
-                this.mothershipPos.x, this.mothershipPos.y, this.mothershipPos.z);
-            if (motherDist < this.victoryDistance + cfg.mothershipScale * 40) {
-                this.levelComplete();
-            }
-        },
-        
-        levelComplete: function() {
-            document.exitPointerLock();
-            this.nextLevel();
-        },
-        
-        updateBullets: function(dt, cfg) {
-            var bullets = bulletPool.getActive();
-            for (var i = bullets.length - 1; i >= 0; i--) {
-                var b = bullets[i];
-                if (!b.active) continue;
-                
-                b.x += b.vx * dt;
-                b.y += b.vy * dt;
-                b.z += b.vz * dt;
-                b.life -= dt;
-                
-                if (cfg.type === 'ground' && b.y < cfg.groundLevel) {
-                    this.spawnExplosion(b.x, cfg.groundLevel, b.z, 2);
-                    b.active = false;
-                    if (b.entity) b.entity.active = false;
-                    bulletPool.release(b);
-                    continue;
-                }
-                
-                if (b.isEnemy) {
-                    var pDist = distance3D(b.x, b.y, b.z, Player.x, Player.y, Player.z);
-                    if (pDist < 3) {
-                        Player.damage(12);
-                        this.spawnExplosion(b.x, b.y, b.z, 3);
-                        b.active = false;
-                        if (b.entity) b.entity.active = false;
-                        bulletPool.release(b);
-                        continue;
-                    }
-                }
-                
-                if (b.life <= 0) {
-                    b.active = false;
-                    if (b.entity) b.entity.active = false;
-                    bulletPool.release(b);
-                    continue;
-                }
-                
-                if (b.entity) {
-                    Mat4.identity(b.entity.transform);
-                    Mat4.translate(b.entity.transform, b.entity.transform, b.x, b.y, b.z);
-                    var vlen = Math.sqrt(b.vx*b.vx + b.vy*b.vy + b.vz*b.vz);
-                    if (vlen > 0.01) {
-                        Mat4.rotateY(b.entity.transform, b.entity.transform, Math.atan2(b.vx, -b.vz));
-                        Mat4.rotateX(b.entity.transform, b.entity.transform, -Math.asin(b.vy / vlen));
-                    }
-                }
-            }
-        },
-        
-        updateAsteroids: function(dt, cfg) {
-            var asteroids = asteroidPool.getActive();
-            var bullets = bulletPool.getActive();
-            
-            for (var i = asteroids.length - 1; i >= 0; i--) {
-                var a = asteroids[i];
-                if (!a.active) continue;
-                
-                a.x += a.vx * dt;
-                a.y += a.vy * dt;
-                a.z += a.vz * dt;
-                a.rotX += a.rotSpeedX * dt;
-                a.rotY += a.rotSpeedY * dt;
-                
-                if (cfg.type === 'ground' && a.y < cfg.groundLevel + a.radius) {
-                    a.y = cfg.groundLevel + a.radius;
-                    a.vy = Math.abs(a.vy) * 0.5;
-                }
-                
-                var dist = distance3D(a.x, a.y, a.z, Player.x, Player.y, Player.z);
-                if (dist > 600) {
-                    a.active = false;
-                    if (a.entity) a.entity.active = false;
-                    asteroidPool.release(a);
-                    continue;
-                }
-                
-                if (dist < a.radius + 2.5) {
-                    Player.damage(15);
-                    this.spawnExplosion(a.x, a.y, a.z, 10);
-                    a.active = false;
-                    if (a.entity) a.entity.active = false;
-                    asteroidPool.release(a);
-                    continue;
-                }
-                
-                for (var j = bullets.length - 1; j >= 0; j--) {
-                    var b = bullets[j];
-                    if (!b.active || b.isEnemy) continue;
-                    if (distance3D(a.x, a.y, a.z, b.x, b.y, b.z) < a.radius + 0.5) {
-                        a.health--;
-                        this.spawnExplosion(b.x, b.y, b.z, 2);
-                        b.active = false;
-                        if (b.entity) b.entity.active = false;
-                        bulletPool.release(b);
-                        if (a.health <= 0) {
-                            this.spawnExplosion(a.x, a.y, a.z, 12);
-                            a.active = false;
-                            if (a.entity) a.entity.active = false;
-                            asteroidPool.release(a);
-                            this.kills++;
-                        }
-                        break;
-                    }
-                }
-                
-                if (a.active && a.entity) {
-                    Mat4.identity(a.entity.transform);
-                    Mat4.translate(a.entity.transform, a.entity.transform, a.x, a.y, a.z);
-                    Mat4.rotateX(a.entity.transform, a.entity.transform, a.rotX);
-                    Mat4.rotateY(a.entity.transform, a.entity.transform, a.rotY);
-                }
-            }
-        },
-        
-        updateEnemies: function(dt, cfg) {
-            var enemies = enemyPool.getActive();
-            var bullets = bulletPool.getActive();
-            
-            for (var i = enemies.length - 1; i >= 0; i--) {
-                var e = enemies[i];
-                if (!e.active) continue;
-                
-                var dx = Player.x - e.x;
-                var dy = Player.y - e.y;
-                var dz = Player.z - e.z;
-                var dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
-                
-                if (dist > 600) {
-                    e.active = false;
-                    if (e.entity) e.entity.active = false;
-                    enemyPool.release(e);
-                    continue;
-                }
-                
-                var speed = 25 + this.level * 8;
-                var idealDist = 35;
-                
-                if (dist > idealDist + 10) {
-                    e.vx = lerp(e.vx, (dx / dist) * speed, dt * 3);
-                    e.vy = lerp(e.vy, (dy / dist) * speed * 0.5, dt * 2);
-                    e.vz = lerp(e.vz, (dz / dist) * speed, dt * 3);
-                } else if (dist < idealDist - 10) {
-                    e.vx = lerp(e.vx, -(dx / dist) * speed * 0.7, dt * 3);
-                    e.vy = lerp(e.vy, -(dy / dist) * speed * 0.3, dt * 2);
-                    e.vz = lerp(e.vz, -(dz / dist) * speed * 0.7, dt * 3);
-                } else {
-                    var strafeDir = (e.behavior % 2 === 0) ? 1 : -1;
-                    var perpX = -dz / dist;
-                    var perpZ = dx / dist;
-                    e.vx = lerp(e.vx, perpX * speed * 0.6 * strafeDir, dt * 2);
-                    e.vz = lerp(e.vz, perpZ * speed * 0.6 * strafeDir, dt * 2);
-                }
-                
-                var wave = Math.sin(performance.now() * 0.003 + i * 1.7) * 8;
-                e.vx += Math.cos(e.rotY + Math.PI/2) * wave * dt;
-                e.vz += Math.sin(e.rotY + Math.PI/2) * wave * dt;
-                
-                e.x += e.vx * dt;
-                e.y += e.vy * dt;
-                e.z += e.vz * dt;
-                
-                if (cfg.type === 'ground' && e.y < cfg.groundLevel + 10) {
-                    e.y = cfg.groundLevel + 10;
-                    e.vy = Math.abs(e.vy) * 0.5 + 5;
-                }
-                
-                e.rotY = Math.atan2(dx, dz);
-                e.rotX = Math.atan2(dy, Math.sqrt(dx*dx + dz*dz)) * 0.3;
-                
-                e.fireTimer -= dt;
-                if (e.fireTimer <= 0 && dist < 200 && dist > 15) {
-                    this.enemyShoot(e, cfg);
-                    e.fireTimer = cfg.enemyFireRate * (0.6 + Math.random() * 0.8);
-                }
-                
-                if (dist < e.radius + 3) {
-                    Player.damage(25);
-                    this.spawnExplosion(e.x, e.y, e.z, 15);
-                    e.active = false;
-                    if (e.entity) e.entity.active = false;
-                    enemyPool.release(e);
-                    continue;
-                }
-                
-                for (var j = bullets.length - 1; j >= 0; j--) {
-                    var b = bullets[j];
-                    if (!b.active || b.isEnemy) continue;
-                    if (distance3D(e.x, e.y, e.z, b.x, b.y, b.z) < e.radius + 0.8) {
-                        e.health--;
-                        this.spawnExplosion(b.x, b.y, b.z, 4);
-                        b.active = false;
-                        if (b.entity) b.entity.active = false;
-                        bulletPool.release(b);
-                        if (e.health <= 0) {
-                            this.spawnExplosion(e.x, e.y, e.z, 20);
-                            e.active = false;
-                            if (e.entity) e.entity.active = false;
-                            enemyPool.release(e);
-                            this.kills++;
-                        }
-                        break;
-                    }
-                }
-                
-                if (e.active && e.entity) {
-                    Mat4.identity(e.entity.transform);
-                    Mat4.translate(e.entity.transform, e.entity.transform, e.x, e.y, e.z);
-                    Mat4.rotateY(e.entity.transform, e.entity.transform, e.rotY);
-                    Mat4.rotateX(e.entity.transform, e.entity.transform, e.rotX);
-                }
-            }
-        },
-        
-        updateParticles: function(dt) {
-            var particles = particlePool.getActive();
-            for (var i = particles.length - 1; i >= 0; i--) {
-                var p = particles[i];
-                p.x += p.vx * dt;
-                p.y += p.vy * dt;
-                p.z += p.vz * dt;
-                p.vx *= 0.96; p.vy *= 0.96; p.vz *= 0.96;
-                p.life -= dt;
-                if (p.life <= 0) particlePool.release(p);
-            }
-        },
-        
-        enemyShoot: function(enemy, cfg) {
-            var bullet = bulletPool.acquire();
-            bullet.active = true;
-            bullet.isEnemy = true;
-            
-            var dx = Player.x - enemy.x;
-            var dy = Player.y - enemy.y;
-            var dz = Player.z - enemy.z;
-            var dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
-            
-            var flightTime = dist / cfg.enemyBulletSpeed;
-            dx += Player.vx * flightTime * cfg.enemyAccuracy;
-            dy += Player.vy * flightTime * cfg.enemyAccuracy;
-            dz += Player.vz * flightTime * cfg.enemyAccuracy;
-            
-            var spread = (1 - cfg.enemyAccuracy) * 0.15;
-            dx += (Math.random() - 0.5) * spread * dist;
-            dy += (Math.random() - 0.5) * spread * dist;
-            dz += (Math.random() - 0.5) * spread * dist;
-            
-            dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
-            
-            bullet.x = enemy.x + dx/dist * 2;
-            bullet.y = enemy.y + dy/dist * 2;
-            bullet.z = enemy.z + dz/dist * 2;
-            bullet.vx = (dx / dist) * cfg.enemyBulletSpeed;
-            bullet.vy = (dy / dist) * cfg.enemyBulletSpeed;
-            bullet.vz = (dz / dist) * cfg.enemyBulletSpeed;
-            bullet.life = 4;
-            
-            if (!bullet.entity) bullet.entity = ModelManager.createEntity('bulletEnemy');
-            bullet.entity.active = true;
-            
-            this.warningTimer = 0.4;
-        },
-        
-        spawnAsteroidAcrossLevel: function() {
-            var cfg = this.levelConfigs[this.level - 1];
-            var a = asteroidPool.acquire();
-            a.active = true;
-            
-            var levelWidth = 200;
-            var levelDepth = cfg.mothershipDistance;
-            
-            a.x = (Math.random() - 0.5) * levelWidth;
-            a.z = -Math.random() * levelDepth;
-            a.y = cfg.type === 'ground' ? cfg.groundLevel + 5 + Math.random() * 60 : (Math.random() - 0.5) * 100;
-            
-            a.vx = (Math.random() - 0.5) * 10;
-            a.vy = cfg.type === 'ground' ? -Math.random() * 5 : (Math.random() - 0.5) * 6;
-            a.vz = (Math.random() - 0.5) * 10;
-            a.rotX = Math.random() * Math.PI * 2;
-            a.rotY = Math.random() * Math.PI * 2;
-            a.rotSpeedX = (Math.random() - 0.5) * 2;
-            a.rotSpeedY = (Math.random() - 0.5) * 2;
-            a.radius = 2 + Math.random() * 3;
-            a.health = Math.ceil(a.radius / 2);
-            
-            if (!a.entity) a.entity = ModelManager.createAsteroid(a.radius);
-            a.entity.active = true;
-        },
-        
-        spawnEnemyAcrossLevel: function() {
-            var cfg = this.levelConfigs[this.level - 1];
-            var e = enemyPool.acquire();
-            e.active = true;
-            
-            var levelWidth = 180;
-            var levelDepth = cfg.mothershipDistance;
-            
-            e.x = (Math.random() - 0.5) * levelWidth;
-            e.z = -50 - Math.random() * (levelDepth - 100);
-            e.y = cfg.type === 'ground' ? cfg.groundLevel + 20 + Math.random() * 50 : (Math.random() - 0.5) * 80;
-            
-            e.vx = 0; e.vy = 0; e.vz = 0;
-            e.rotY = Math.atan2(Player.x - e.x, Player.z - e.z);
-            e.rotX = 0;
-            e.radius = 2.5;
-            e.health = 2 + this.level;
-            e.fireTimer = 0.5 + Math.random();
-            e.behavior = Math.floor(Math.random() * 4);
-            
-            if (!e.entity) e.entity = ModelManager.createEntity('enemy');
-            e.entity.active = true;
-        },
-        
-        spawnExplosion: function(x, y, z, count) {
-            for (var i = 0; i < count; i++) {
-                var p = particlePool.acquire();
-                p.active = true;
-                p.x = x; p.y = y; p.z = z;
-                var speed = 15 + Math.random() * 35;
-                var theta = Math.random() * Math.PI * 2;
-                var phi = Math.random() * Math.PI;
-                p.vx = Math.sin(phi) * Math.cos(theta) * speed;
-                p.vy = Math.sin(phi) * Math.sin(theta) * speed;
-                p.vz = Math.cos(phi) * speed;
-                p.life = 0.3 + Math.random() * 0.4;
-                p.maxLife = p.life;
-            }
-        }
-    };
-
-    // ============================================================
-    // 8. Camera
-    // ============================================================
-    
-    var Camera = {
-        _viewMatrix: null,
-        _projMatrix: null,
-        _vpMatrix: null,
-        fov: Math.PI / 3, near: 0.5, far: 5000,
-        shakeX: 0, shakeY: 0,
-        
-        init: function() {
-            this._viewMatrix = Mat4.create();
-            this._projMatrix = Mat4.create();
-            this._vpMatrix = Mat4.create();
-        },
-        
-        update: function(aspect) {
-            var camX = Player.x - Player.forward.x * 8 + Player.up.x * 3 + this.shakeX;
-            var camY = Player.y - Player.forward.y * 8 + Player.up.y * 3 + this.shakeY;
-            var camZ = Player.z - Player.forward.z * 8 + Player.up.z * 3;
-            this.shakeX *= 0.9; this.shakeY *= 0.9;
-            
-            var lookX = Player.x + Player.forward.x * 20;
-            var lookY = Player.y + Player.forward.y * 20;
-            var lookZ = Player.z + Player.forward.z * 20;
-            
-            var zx = camX - lookX, zy = camY - lookY, zz = camZ - lookZ;
-            var len = Math.sqrt(zx*zx + zy*zy + zz*zz);
-            if (len > 0.0001) { zx/=len; zy/=len; zz/=len; }
-            
-            var upX = Player.up.x, upY = Player.up.y, upZ = Player.up.z;
-            var xx = upY*zz - upZ*zy, xy = upZ*zx - upX*zz, xz = upX*zy - upY*zx;
-            len = Math.sqrt(xx*xx + xy*xy + xz*xz);
-            if (len > 0.0001) { xx/=len; xy/=len; xz/=len; }
-            
-            var yx = zy*xz - zz*xy, yy = zz*xx - zx*xz, yz = zx*xy - zy*xx;
-            
-            this._viewMatrix[0]=xx; this._viewMatrix[1]=yx; this._viewMatrix[2]=zx; this._viewMatrix[3]=0;
-            this._viewMatrix[4]=xy; this._viewMatrix[5]=yy; this._viewMatrix[6]=zy; this._viewMatrix[7]=0;
-            this._viewMatrix[8]=xz; this._viewMatrix[9]=yz; this._viewMatrix[10]=zz; this._viewMatrix[11]=0;
-            this._viewMatrix[12]=-(xx*camX+xy*camY+xz*camZ);
-            this._viewMatrix[13]=-(yx*camX+yy*camY+yz*camZ);
-            this._viewMatrix[14]=-(zx*camX+zy*camY+zz*camZ);
-            this._viewMatrix[15]=1;
-            
-            Mat4.perspective(this._projMatrix, this.fov, aspect, this.near, this.far);
-            Mat4.multiply(this._vpMatrix, this._projMatrix, this._viewMatrix);
-            return this._vpMatrix;
-        },
-        
-        shake: function(amount) {
-            this.shakeX += (Math.random() - 0.5) * amount;
-            this.shakeY += (Math.random() - 0.5) * amount;
-        }
-    };
-
-    // ============================================================
-    // 9. Engine
-    // ============================================================
-    
-    var Engine = {
-        FIXED_STEP: 1/60, MAX_DELTA: 0.1,
-        running: false, rafId: null, accumulator: 0, lastTime: 0,
-        fpsFrames: null, fpsIndex: 0, fpsSum: 0,
-        _mouseDelta: { dx: 0, dy: 0 },
-        
-        init: function() {
-            ModelManager.init();
-            
-            if (!Renderer.init()) {
-                return false;
-            }
-            
-            Camera.init();
-            InputManager.init(Renderer.canvas);
-            Player.init();
-            Game.init();
-            
-            this.fpsFrames = new Float32Array(60);
-            
-            return true;
-        },
-        
-        start: function() {
-            this.running = true;
-            this.lastTime = performance.now() / 1000;
-            for (var i = 0; i < 60; i++) this.fpsFrames[i] = 60;
-            this.fpsSum = 3600;
-            
-            var self = this;
-            (function loop(ts) {
-                if (!self.running) return;
-                self.rafId = requestAnimationFrame(loop);
-                self._tick(ts / 1000);
-            })(performance.now());
-        },
-        
-        _tick: function(time) {
-            var delta = Math.min(time - this.lastTime, this.MAX_DELTA);
-            this.lastTime = time;
-            
-            var fps = delta > 0 ? 1/delta : 60;
-            this.fpsSum -= this.fpsFrames[this.fpsIndex];
-            this.fpsFrames[this.fpsIndex] = fps;
-            this.fpsSum += fps;
-            this.fpsIndex = (this.fpsIndex + 1) % 60;
-            
-            this.accumulator += delta;
-            while (this.accumulator >= this.FIXED_STEP) {
-                InputManager.consumeMouseDelta(this._mouseDelta);
-                Player.update(this.FIXED_STEP, this._mouseDelta);
-                Game.update(this.FIXED_STEP);
-                this.accumulator -= this.FIXED_STEP;
-            }
-            
-            Renderer.render(Camera.update(Renderer.width / Renderer.height));
-            this._updateHUD();
-        },
-        
-        _updateHUD: function() {
-            if (Game.state !== 'playing') return;
-            
-            var cfg = Game.levelConfigs[Game.level - 1];
-            document.getElementById('fps').textContent = Math.round(this.fpsSum / 60);
-            document.getElementById('speed').textContent = Math.round(Player.speed);
-            document.getElementById('throttle').textContent = Math.round(Player.throttle);
-            document.getElementById('kills').textContent = Game.kills + Game.totalKills;
-            document.getElementById('levelNum').textContent = Game.level;
-            document.getElementById('levelName').textContent = cfg.name;
-            document.getElementById('hostiles').textContent = enemyPool.count();
-            
-            var bars = Math.ceil((Player.health / Player.maxHealth) * 10);
-            var healthStr = '';
-            for (var i = 0; i < 10; i++) healthStr += i < bars ? '█' : '░';
-            document.getElementById('health').textContent = healthStr;
-            document.getElementById('healthPct').textContent = Math.round(Player.health);
-            
-            document.getElementById('distance').textContent = Math.round(
-                distance3D(Player.x, Player.y, Player.z, Game.mothershipPos.x, Game.mothershipPos.y, Game.mothershipPos.z)
-            );
-            
-            if (cfg.type === 'ground') {
-                document.getElementById('altValue').textContent = Math.round(Player.y - cfg.groundLevel);
-            }
-        }
-    };
-
-    // Bootstrap
-    if (Engine.init()) {
-        Engine.start();
-    }
-    
-    window.Engine = Engine;
-    window.Game = Game;
-    window.Player = Player;
-    window.ModelManager = ModelManager;
-})();
-</script>
+<body> <canvas id="c"></canvas>
+    <div id="hud">
+        <div class="hud-row">OPEN WORLD | THROTTLE: <span id="throttle">0</span>% | SPEED: <span id="speed">0</span>
+        </div>
+        <div class="hud-row">HULL: <span id="health">██████████</span> <span id="healthPct">100</span>% | SCORE: <span
+                id="score">0</span> | KILLS: <span id="kills">0</span> | FPS: <span id="fps">60</span></div>
+    </div>
+    <div id="crosshair"></div>
+    <div id="instructions">[MOUSE] Aim | [W/SPACE] Thrust | [S] Brake | [Q/E] Roll | [SHIFT] Boost | [CLICK] Fire |
+        [TAB] Objectives</div>
+    <div id="titleScreen">
+        <div class="title">PHOSPHOR BURN</div>
+        <div class="subtitle">Vectorbean Space Simulator</div>
+        <div class="prompt">PRESS ANY KEY TO START</div>
+    </div>
+    <div id="gameOverText">GAME OVER</div>
+    <div id="warning">⚠ INCOMING FIRE ⚠</div>
+    <div id="altitude">ALT: <span id="altValue">0</span>m</div>
+    <div id="enemyCount">HOSTILES: <span id="hostiles">0</span></div>
+    <div id="objectives">
+        <div style="margin-bottom:8px;color:#ff0">== OBJECTIVES ==</div>
+        <div id="objList"></div>
+    </div>
+    <div id="compass"><span id="compassDir">N</span> | NEAREST: <span id="nearestObj">---</span> <span
+            id="nearestDist">0</span>m</div>
+    <script>
+         (function () { function Pool(ctor, reset, size) { var free = [], active = []; for (var i = 0; i < size; i++)free.push(ctor()); return { acquire: function () { var o = free.length ? free.pop() : ctor(); active.push(o); return o }, release: function (o) { var idx = active.indexOf(o); if (idx !== -1) { active.splice(idx, 1); if (reset) reset(o); free.push(o) } }, releaseAll: function () { while (active.length) { var o = active.pop(); if (reset) reset(o); free.push(o) } }, getActive: function () { return active }, count: function () { return active.length } } } var bulletPool = Pool(function () { return { active: false, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, life: 0, entity: null, isEnemy: false } }, function (b) { b.active = false; b.isEnemy = false; if (b.entity) b.entity.active = false }, 200); var asteroidPool = Pool(function () { return { active: false, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, rotX: 0, rotY: 0, rotSpeedX: 0, rotSpeedY: 0, radius: 1, health: 1, entity: null } }, function (a) { a.active = false; if (a.entity) a.entity.active = false }, 50); var enemyPool = Pool(function () { return { active: false, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, rotX: 0, rotY: 0, radius: 2.5, health: 3, fireTimer: 0, entity: null, behavior: 0, objectiveId: null } }, function (e) { e.active = false; e.health = 3; e.objectiveId = null; if (e.entity) e.entity.active = false }, 50); var particlePool = Pool(function () { return { active: false, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, life: 0, maxLife: 1 } }, function (p) { p.active = false }, 300); function lerp(a, b, t) { return a + (b - a) * t } function clamp(v, min, max) { return v < min ? min : (v > max ? max : v) } function dist3D(x1, y1, z1, x2, y2, z2) { var dx = x2 - x1, dy = y2 - y1, dz = z2 - z1; return Math.sqrt(dx * dx + dy * dy + dz * dz) } function dist2D(x1, z1, x2, z2) { var dx = x2 - x1, dz = z2 - z1; return Math.sqrt(dx * dx + dz * dz) } function seededRandom(seed) { return function () { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return (seed % 1000000) / 1000000 } } var Mat4 = { create: function () { return new Float32Array(16) }, identity: function (o) { o[0] = 1; o[1] = 0; o[2] = 0; o[3] = 0; o[4] = 0; o[5] = 1; o[6] = 0; o[7] = 0; o[8] = 0; o[9] = 0; o[10] = 1; o[11] = 0; o[12] = 0; o[13] = 0; o[14] = 0; o[15] = 1; return o }, perspective: function (o, f, a, n, f2) { var t = 1 / Math.tan(f * .5), nf = 1 / (n - f2); o[0] = t / a; o[1] = 0; o[2] = 0; o[3] = 0; o[4] = 0; o[5] = t; o[6] = 0; o[7] = 0; o[8] = 0; o[9] = 0; o[10] = (f2 + n) * nf; o[11] = -1; o[12] = 0; o[13] = 0; o[14] = 2 * f2 * n * nf; o[15] = 0; return o }, multiply: function (o, a, b) { var a00 = a[0], a01 = a[4], a02 = a[8], a03 = a[12], a10 = a[1], a11 = a[5], a12 = a[9], a13 = a[13], a20 = a[2], a21 = a[6], a22 = a[10], a23 = a[14], a30 = a[3], a31 = a[7], a32 = a[11], a33 = a[15], b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3]; o[0] = b0 * a00 + b1 * a01 + b2 * a02 + b3 * a03; o[1] = b0 * a10 + b1 * a11 + b2 * a12 + b3 * a13; o[2] = b0 * a20 + b1 * a21 + b2 * a22 + b3 * a23; o[3] = b0 * a30 + b1 * a31 + b2 * a32 + b3 * a33; b0 = b[4]; b1 = b[5]; b2 = b[6]; b3 = b[7]; o[4] = b0 * a00 + b1 * a01 + b2 * a02 + b3 * a03; o[5] = b0 * a10 + b1 * a11 + b2 * a12 + b3 * a13; o[6] = b0 * a20 + b1 * a21 + b2 * a22 + b3 * a23; o[7] = b0 * a30 + b1 * a31 + b2 * a32 + b3 * a33; b0 = b[8]; b1 = b[9]; b2 = b[10]; b3 = b[11]; o[8] = b0 * a00 + b1 * a01 + b2 * a02 + b3 * a03; o[9] = b0 * a10 + b1 * a11 + b2 * a12 + b3 * a13; o[10] = b0 * a20 + b1 * a21 + b2 * a22 + b3 * a23; o[11] = b0 * a30 + b1 * a31 + b2 * a32 + b3 * a33; b0 = b[12]; b1 = b[13]; b2 = b[14]; b3 = b[15]; o[12] = b0 * a00 + b1 * a01 + b2 * a02 + b3 * a03; o[13] = b0 * a10 + b1 * a11 + b2 * a12 + b3 * a13; o[14] = b0 * a20 + b1 * a21 + b2 * a22 + b3 * a23; o[15] = b0 * a30 + b1 * a31 + b2 * a32 + b3 * a33; return o }, translate: function (o, m, x, y, z) { o[0] = m[0]; o[1] = m[1]; o[2] = m[2]; o[3] = m[3]; o[4] = m[4]; o[5] = m[5]; o[6] = m[6]; o[7] = m[7]; o[8] = m[8]; o[9] = m[9]; o[10] = m[10]; o[11] = m[11]; o[12] = m[0] * x + m[4] * y + m[8] * z + m[12]; o[13] = m[1] * x + m[5] * y + m[9] * z + m[13]; o[14] = m[2] * x + m[6] * y + m[10] * z + m[14]; o[15] = m[3] * x + m[7] * y + m[11] * z + m[15]; return o }, scale: function (o, m, x, y, z) { o[0] = m[0] * x; o[1] = m[1] * x; o[2] = m[2] * x; o[3] = m[3] * x; o[4] = m[4] * y; o[5] = m[5] * y; o[6] = m[6] * y; o[7] = m[7] * y; o[8] = m[8] * z; o[9] = m[9] * z; o[10] = m[10] * z; o[11] = m[11] * z; o[12] = m[12]; o[13] = m[13]; o[14] = m[14]; o[15] = m[15]; return o }, rotateX: function (o, m, r) { var s = Math.sin(r), c = Math.cos(r), m10 = m[4], m11 = m[5], m12 = m[6], m13 = m[7], m20 = m[8], m21 = m[9], m22 = m[10], m23 = m[11]; o[0] = m[0]; o[1] = m[1]; o[2] = m[2]; o[3] = m[3]; o[4] = m10 * c + m20 * s; o[5] = m11 * c + m21 * s; o[6] = m12 * c + m22 * s; o[7] = m13 * c + m23 * s; o[8] = m20 * c - m10 * s; o[9] = m21 * c - m11 * s; o[10] = m22 * c - m12 * s; o[11] = m23 * c - m13 * s; o[12] = m[12]; o[13] = m[13]; o[14] = m[14]; o[15] = m[15]; return o }, rotateY: function (o, m, r) { var s = Math.sin(r), c = Math.cos(r), m00 = m[0], m01 = m[1], m02 = m[2], m03 = m[3], m20 = m[8], m21 = m[9], m22 = m[10], m23 = m[11]; o[0] = m00 * c - m20 * s; o[1] = m01 * c - m21 * s; o[2] = m02 * c - m22 * s; o[3] = m03 * c - m23 * s; o[4] = m[4]; o[5] = m[5]; o[6] = m[6]; o[7] = m[7]; o[8] = m00 * s + m20 * c; o[9] = m01 * s + m21 * c; o[10] = m02 * s + m22 * c; o[11] = m03 * s + m23 * c; o[12] = m[12]; o[13] = m[13]; o[14] = m[14]; o[15] = m[15]; return o }, rotateZ: function (o, m, r) { var s = Math.sin(r), c = Math.cos(r), m00 = m[0], m01 = m[1], m02 = m[2], m03 = m[3], m10 = m[4], m11 = m[5], m12 = m[6], m13 = m[7]; o[0] = m00 * c + m10 * s; o[1] = m01 * c + m11 * s; o[2] = m02 * c + m12 * s; o[3] = m03 * c + m13 * s; o[4] = m10 * c - m00 * s; o[5] = m11 * c - m01 * s; o[6] = m12 * c - m02 * s; o[7] = m13 * c - m03 * s; o[8] = m[8]; o[9] = m[9]; o[10] = m[10]; o[11] = m[11]; o[12] = m[12]; o[13] = m[13]; o[14] = m[14]; o[15] = m[15]; return o } }; var MM = { modelData: null, init: function () { this.modelData = { player: { type: "static", vertices: [0, 0, -2.5, -0.4, 0.25, -1.2, 0.4, 0.25, -1.2, -0.4, -0.15, -1.2, 0.4, -0.15, -1.2, -0.6, 0.2, 0, 0.6, 0.2, 0, -0.6, -0.25, 0, 0.6, -0.25, 0, -2.2, 0, 0.3, 2.2, 0, 0.3, -1, 0, 0.2, 1, 0, 0.2, -1.8, 0, 1, 1.8, 0, 1, -0.5, 0.4, 1.2, 0.5, 0.4, 1.2, -0.5, -0.2, 1.2, 0.5, -0.2, 1.2, 0, 0.8, 1, 0, 0.3, 0.5, 0, 0.3, 1.3, -0.25, 0, 1.5, 0.25, 0, 1.5, -0.25, 0, 1.8, 0.25, 0, 1.8], edges: [0, 1, 0, 2, 0, 3, 0, 4, 1, 2, 2, 4, 4, 3, 3, 1, 1, 5, 2, 6, 3, 7, 4, 8, 5, 6, 6, 8, 8, 7, 7, 5, 11, 9, 12, 10, 9, 13, 10, 14, 11, 13, 12, 14, 7, 11, 8, 12, 5, 11, 6, 12, 13, 17, 14, 18, 5, 15, 6, 16, 7, 17, 8, 18, 15, 16, 16, 18, 18, 17, 17, 15, 19, 20, 19, 21, 20, 21, 20, 6, 21, 16, 17, 22, 18, 23, 22, 24, 23, 25, 22, 23, 24, 25, 15, 22, 16, 23], color: [1, 0, 0, 1] }, enemy: { type: "static", vertices: [0, 0, -2, -1.5, 0.5, 0.8, 1.5, 0.5, 0.8, -1.5, -0.5, 0.8, 1.5, -0.5, 0.8, -2.5, 0, 0.3, 2.5, 0, 0.3, 0, 0, 1.5, 0, 0.8, 0.4, 0, -0.6, 0.4, -1, 0, 1.2, 1, 0, 1.2], edges: [0, 1, 0, 2, 0, 3, 0, 4, 1, 2, 2, 4, 4, 3, 3, 1, 1, 5, 3, 5, 2, 6, 4, 6, 1, 7, 2, 7, 3, 7, 4, 7, 5, 10, 6, 11, 10, 7, 11, 7, 0, 8, 0, 9, 8, 7, 9, 7, 10, 11], color: [1, 0.27, 0.27, 1] }, bulletPlayer: { type: "static", vertices: [0, 0, -1, -0.15, 0, 0, 0.15, 0, 0, 0, -0.15, 0, 0, 0.15, 0, 0, 0, 0.5], edges: [0, 1, 0, 2, 0, 3, 0, 4, 1, 5, 2, 5, 3, 5, 4, 5, 1, 2, 3, 4], color: [1, 1, 0, 1] }, bulletEnemy: { type: "static", vertices: [0, 0, -1, -0.15, 0, 0, 0.15, 0, 0, 0, -0.15, 0, 0, 0.15, 0, 0, 0, 0.5], edges: [0, 1, 0, 2, 0, 3, 0, 4, 1, 5, 2, 5, 3, 5, 4, 5, 1, 2, 3, 4], color: [1, 0.53, 0, 1] } } }, getModelData: function (n) { return this.modelData[n] }, generators: { asteroid: function (p, s) { var num = p.numPoints || 8, br = p.baseRadius || 0.7, vr = p.radiusVariance || 0.6, v = [], e = []; for (var i = 0; i < num; i++) { var th = (i / num) * Math.PI * 2, r = s * (br + Math.random() * vr); v.push(Math.cos(th) * r, (Math.random() - .5) * s, Math.sin(th) * r) } v.push(0, s * .8, 0, 0, -s * .8, 0); for (i = 0; i < num; i++) { e.push(i, (i + 1) % num, i, num, i, num + 1) } return { vertices: v, edges: e } }, tower: function (p, h) { var w = p.baseWidth || 5, ts = p.topScale || .6, ah = p.antennaHeight || 8, v = [-w, 0, -w, w, 0, -w, w, 0, w, -w, 0, w, -w * ts, h, -w * ts, w * ts, h, -w * ts, w * ts, h, w * ts, -w * ts, h, w * ts, 0, h + ah, 0], e = [0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7, 4, 8, 5, 8, 6, 8, 7, 8]; return { vertices: v, edges: e } }, building: function (p, w, h, d) { var v = [-w, 0, -d, w, 0, -d, w, 0, d, -w, 0, d, -w, h, -d, w, h, -d, w, h, d, -w, h, d], e = [0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7]; return { vertices: v, edges: e } }, mountain: function (p, w, h) { var dr = p.depthRatio || .5, v = [-w, 0, -w * dr, w, 0, -w * dr, w, 0, w * dr, -w, 0, w * dr, 0, h, 0], e = [0, 1, 1, 2, 2, 3, 3, 0, 0, 4, 1, 4, 2, 4, 3, 4]; return { vertices: v, edges: e } }, groundGrid: function (p) { var sz = p.size || 150, st = p.step || 15, v = [], e = [], idx = 0; for (var x = -sz; x <= sz; x += st) { v.push(x, 0, -sz, x, 0, sz); e.push(idx, idx + 1); idx += 2 } for (var z = -sz; z <= sz; z += st) { v.push(-sz, 0, z, sz, 0, z); e.push(idx, idx + 1); idx += 2 } return { vertices: v, edges: e } }, radar: function (p, h) { var v = [], e = [], bw = 3; v.push(-bw, 0, -bw, bw, 0, -bw, bw, 0, bw, -bw, 0, bw, -bw * .5, h, -bw * .5, bw * .5, h, -bw * .5, bw * .5, h, bw * .5, -bw * .5, h, bw * .5); e.push(0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7); var dh = h + 5, dr = 8; for (var i = 0; i < 8; i++) { var a = (i / 8) * Math.PI * 2; v.push(Math.cos(a) * dr, dh, Math.sin(a) * dr) } v.push(0, dh, 0); for (i = 0; i < 8; i++) { e.push(8 + i, 8 + (i + 1) % 8, 8 + i, 16) } return { vertices: v, edges: e } }, depot: function (p, w, h, d) { var v = [-w, 0, -d, w, 0, -d, w, 0, d, -w, 0, d, -w, h, -d, w, h, -d, w, h, d, -w, h, d, -w * .8, h + 4, 0, w * .8, h + 4, 0], e = [0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7, 4, 8, 5, 8, 6, 9, 7, 9, 8, 9]; return { vertices: v, edges: e } }, beacon: function (p, h) { var v = [0, 0, 0, 0, h, 0, -2, h * .7, 0, 2, h * .7, 0, 0, h * .7, -2, 0, h * .7, 2], e = [0, 1, 2, 3, 4, 5, 1, 2, 1, 3, 1, 4, 1, 5]; return { vertices: v, edges: e } } }, createEntity: function (n, c) { var d = this.modelData[n]; if (!d) return null; var verts, edges, col; if (d.type === 'static') { verts = d.vertices.slice(); edges = d.edges.slice() } else { var gen = this.generators[d.generator]; if (!gen) return null; var params = Object.assign({}, d.params, c || {}); var g = gen(params, c?.size, c?.height, c?.width); verts = g.vertices; edges = g.edges } col = d.color.slice(); return { vertices: new Float32Array(verts), edges: edges, color: col, transform: Mat4.create(), mvp: Mat4.create(), active: true } }, createAsteroid: function (s) { var g = this.generators.asteroid({ numPoints: 8, baseRadius: .7, radiusVariance: .6 }, s); return { vertices: new Float32Array(g.vertices), edges: g.edges, color: [1, 0, 0, 1], transform: Mat4.create(), mvp: Mat4.create(), active: true } }, createTower: function (h) { var g = this.generators.tower({ baseWidth: 5, topScale: .6, antennaHeight: 8 }, h); return { vertices: new Float32Array(g.vertices), edges: g.edges, color: [1, 0, 0, 1], transform: Mat4.create(), mvp: Mat4.create(), active: true } }, createBuilding: function (w, h, d) { var g = this.generators.building({}, w, h, d); return { vertices: new Float32Array(g.vertices), edges: g.edges, color: [0.53, 0, 0, 1], transform: Mat4.create(), mvp: Mat4.create(), active: true } }, createMountain: function (w, h) { var g = this.generators.mountain({ depthRatio: .5 }, w, h); return { vertices: new Float32Array(g.vertices), edges: g.edges, color: [0.4, 0, 0, 1], transform: Mat4.create(), mvp: Mat4.create(), active: true } }, createGroundGrid: function (x, z, lev) { var g = this.generators.groundGrid({ size: 150, step: 15 }); var e = { vertices: new Float32Array(g.vertices), edges: g.edges, color: [0.27, 0, 0, 1], transform: Mat4.create(), mvp: Mat4.create(), active: true }; Mat4.identity(e.transform); Mat4.translate(e.transform, e.transform, x, lev, z); return e }, createRadar: function (h) { var g = this.generators.radar({}, h); return { vertices: new Float32Array(g.vertices), edges: g.edges, color: [1, 0.5, 0, 1], transform: Mat4.create(), mvp: Mat4.create(), active: true } }, createDepot: function (w, h, d) { var g = this.generators.depot({}, w, h, d); return { vertices: new Float32Array(g.vertices), edges: g.edges, color: [1, 0.3, 0.3, 1], transform: Mat4.create(), mvp: Mat4.create(), active: true } }, createBeacon: function (h) { var g = this.generators.beacon({}, h); return { vertices: new Float32Array(g.vertices), edges: g.edges, color: [0, 1, 0, 1], transform: Mat4.create(), mvp: Mat4.create(), active: true } } }; var IM = { keys: {}, mouseDown: false, mouseDX: 0, mouseDY: 0, locked: false, anyKeyPressed: false, clickPressed: false, tabPressed: false, init: function (can) { var self = this; this.canvas = can; window.addEventListener('keydown', function (e) { self.keys[e.code] = true; self.anyKeyPressed = true; if (e.code === 'Tab') { e.preventDefault(); self.tabPressed = true } }); window.addEventListener('keyup', function (e) { self.keys[e.code] = false }); window.addEventListener('mousedown', function (e) { if (e.button === 0) { self.mouseDown = true; self.clickPressed = true } }); window.addEventListener('mouseup', function (e) { if (e.button === 0) self.mouseDown = false }); document.addEventListener('mousemove', function (e) { if (self.locked) { self.mouseDX += e.movementX || 0; self.mouseDY += e.movementY || 0 } }); document.addEventListener('pointerlockchange', function () { self.locked = document.pointerLockElement === can; document.getElementById('crosshair').style.display = self.locked ? 'block' : 'none'; document.getElementById('instructions').style.display = self.locked ? 'block' : 'none' }); can.addEventListener('click', function () { if (!self.locked && Game.state === 'playing') can.requestPointerLock() }) }, consumeMouseDelta: function (o) { o.dx = this.mouseDX; o.dy = this.mouseDY; this.mouseDX = 0; this.mouseDY = 0 }, consumeAnyKey: function () { var p = this.anyKeyPressed; this.anyKeyPressed = false; return p }, consumeClick: function () { var p = this.clickPressed; this.clickPressed = false; return p }, consumeTab: function () { var p = this.tabPressed; this.tabPressed = false; return p } }; var R = { canvas: null, gl: null, program: null, uniforms: {}, attribs: {}, lineBuffer: null, width: 0, height: 0, vertexShaderSrc: 'attribute vec3 a_position;uniform mat4 u_mvp;void main(){gl_Position=u_mvp*vec4(a_position,1.0);}', fragmentShaderSrc: 'precision mediump float;uniform vec4 u_color;void main(){gl_FragColor=u_color;}', particleVertexSrc: 'attribute vec3 a_position;attribute vec4 a_color;uniform mat4 u_vp;varying vec4 v_color;void main(){gl_Position=u_vp*vec4(a_position,1.0);v_color=a_color;}', particleFragmentSrc: 'precision mediump float;varying vec4 v_color;void main(){gl_FragColor=v_color;}', particleProgram: null, particleUniforms: {}, particleAttribs: {}, particleBuffer: null, particleColorBuffer: null, init: function () { this.canvas = document.getElementById('c'); this.gl = this.canvas.getContext('webgl') || this.canvas.getContext('experimental-webgl'); if (!this.gl) { alert('WebGL not supported'); return false } var gl = this.gl; function comp(t, s) { var sh = gl.createShader(t); gl.shaderSource(sh, s); gl.compileShader(sh); return sh } function prog(vs, fs) { var p = gl.createProgram(); gl.attachShader(p, vs); gl.attachShader(p, fs); gl.linkProgram(p); return p } var vs = comp(gl.VERTEX_SHADER, this.vertexShaderSrc), fs = comp(gl.FRAGMENT_SHADER, this.fragmentShaderSrc); this.program = prog(vs, fs); this.uniforms.mvp = gl.getUniformLocation(this.program, 'u_mvp'); this.uniforms.color = gl.getUniformLocation(this.program, 'u_color'); this.attribs.position = gl.getAttribLocation(this.program, 'a_position'); var pvs = comp(gl.VERTEX_SHADER, this.particleVertexSrc), pfs = comp(gl.FRAGMENT_SHADER, this.particleFragmentSrc); this.particleProgram = prog(pvs, pfs); this.particleUniforms.vp = gl.getUniformLocation(this.particleProgram, 'u_vp'); this.particleAttribs.position = gl.getAttribLocation(this.particleProgram, 'a_position'); this.particleAttribs.color = gl.getAttribLocation(this.particleProgram, 'a_color'); this.lineBuffer = gl.createBuffer(); this.particleBuffer = gl.createBuffer(); this.particleColorBuffer = gl.createBuffer(); gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.lineWidth(1.5); window.addEventListener('resize', function () { R.resize() }); this.resize(); return true }, resize: function () { this.width = window.innerWidth; this.height = window.innerHeight; this.canvas.width = this.width; this.canvas.height = this.height; this.gl.viewport(0, 0, this.width, this.height) }, renderEntity: function (e, vp) { if (!e || !e.active) return; var gl = this.gl; Mat4.multiply(e.mvp, vp, e.transform); var verts = e.vertices, edges = e.edges, lineVerts = new Float32Array(edges.length * 3); for (var i = 0; i < edges.length; i += 2) { var a = edges[i] * 3, b = edges[i + 1] * 3, idx = i * 3; lineVerts[idx] = verts[a]; lineVerts[idx + 1] = verts[a + 1]; lineVerts[idx + 2] = verts[a + 2]; lineVerts[idx + 3] = verts[b]; lineVerts[idx + 4] = verts[b + 1]; lineVerts[idx + 5] = verts[b + 2] } gl.bindBuffer(gl.ARRAY_BUFFER, this.lineBuffer); gl.bufferData(gl.ARRAY_BUFFER, lineVerts, gl.DYNAMIC_DRAW); gl.vertexAttribPointer(this.attribs.position, 3, gl.FLOAT, false, 0, 0); gl.enableVertexAttribArray(this.attribs.position); gl.uniformMatrix4fv(this.uniforms.mvp, false, e.mvp); gl.uniform4fv(this.uniforms.color, e.color); gl.drawArrays(gl.LINES, 0, edges.length) }, renderParticles: function (part, vp) { var gl = this.gl, act = part.getActive(); if (act.length === 0) return; var pos = [], col = []; for (var i = 0; i < act.length; i++) { var p = act[i]; if (!p.active) continue; var a = p.life / p.maxLife, r, g, b; if (a > .6) { r = 1; g = 1; b = 0 } else if (a > .3) { r = 1; g = .53; b = 0 } else { r = 1; g = .27; b = 0 } pos.push(p.x, p.y, p.z); var vl = Math.sqrt(p.vx * p.vx + p.vy * p.vy + p.vz * p.vz); if (vl > .01) { pos.push(p.x - p.vx / vl * .6, p.y - p.vy / vl * .6, p.z - p.vz / vl * .6) } else pos.push(p.x, p.y, p.z); col.push(r, g, b, a, r, g, b, a) } if (pos.length === 0) return; gl.useProgram(this.particleProgram); gl.bindBuffer(gl.ARRAY_BUFFER, this.particleBuffer); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(pos), gl.DYNAMIC_DRAW); gl.vertexAttribPointer(this.particleAttribs.position, 3, gl.FLOAT, false, 0, 0); gl.enableVertexAttribArray(this.particleAttribs.position); gl.bindBuffer(gl.ARRAY_BUFFER, this.particleColorBuffer); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(col), gl.DYNAMIC_DRAW); gl.vertexAttribPointer(this.particleAttribs.color, 4, gl.FLOAT, false, 0, 0); gl.enableVertexAttribArray(this.particleAttribs.color); gl.uniformMatrix4fv(this.particleUniforms.vp, false, vp); gl.drawArrays(gl.LINES, 0, pos.length / 3); gl.useProgram(this.program) }, render: function (vp) { var gl = this.gl; gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); if (Game.state === 'title') return; gl.useProgram(this.program); for (var i = 0; i < World.groundChunks.length; i++)this.renderEntity(World.groundChunks[i], vp); for (i = 0; i < World.structures.length; i++)if (World.structures[i].active) this.renderEntity(World.structures[i], vp); for (i = 0; i < World.objectives.length; i++) { var obj = World.objectives[i]; if (!obj.completed) { for (var j = 0; j < obj.entities.length; j++)if (obj.entities[j].active) this.renderEntity(obj.entities[j], vp) } } var asts = asteroidPool.getActive(); for (i = 0; i < asts.length; i++)if (asts[i].active) this.renderEntity(asts[i].entity, vp); var ens = enemyPool.getActive(); for (i = 0; i < ens.length; i++)if (ens[i].active) this.renderEntity(ens[i].entity, vp); var bls = bulletPool.getActive(); for (i = 0; i < bls.length; i++)if (bls[i].active) this.renderEntity(bls[i].entity, vp); if (Player.visible) this.renderEntity(Player.entity, vp); this.renderParticles(particlePool, vp) } }; var Player = { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, pitch: 0, yaw: 0, roll: 0, visualRoll: 0, visualPitch: 0, thrustPitch: 0, brakePitch: 0, mouseSmooth: { dx: 0, dy: 0 }, health: 100, maxHealth: 100, throttle: 0, speed: 0, maxSpeed: 80, boostSpeed: 150, fireRate: .08, fireTimer: 0, bulletSpeed: 250, entity: null, visible: true, _rotMat: null, _visualRotMat: null, forward: { x: 0, y: 0, z: -1 }, right: { x: 1, y: 0, z: 0 }, up: { x: 0, y: 1, z: 0 }, init: function () { this.entity = MM.createEntity('player'); this._rotMat = Mat4.create(); this._visualRotMat = Mat4.create(); Mat4.identity(this.entity.transform) }, reset: function () { this.x = 0; this.y = World.groundLevel + 40; this.z = 0; this.vx = 0; this.vy = 0; this.vz = 0; this.pitch = 0; this.yaw = 0; this.roll = 0; this.visualRoll = 0; this.visualPitch = 0; this.thrustPitch = 0; this.brakePitch = 0; this.mouseSmooth.dx = 0; this.mouseSmooth.dy = 0; this.health = this.maxHealth; this.throttle = 0; this.fireTimer = 0; this.visible = true; this.entity.active = true }, update: function (dt, inp) { if (Game.state !== 'playing') return; this.mouseSmooth.dx = lerp(this.mouseSmooth.dx, inp.dx, .3); this.mouseSmooth.dy = lerp(this.mouseSmooth.dy, inp.dy, .3); var sens = .002; this.yaw -= inp.dx * sens; this.pitch -= inp.dy * sens; this.pitch = clamp(this.pitch, -Math.PI * .45, Math.PI * .45); var rs = 2.5 * dt; if (IM.keys['KeyQ']) this.roll += rs; if (IM.keys['KeyE']) this.roll -= rs; this.roll *= .95; this.visualRoll = lerp(this.visualRoll, -clamp(this.mouseSmooth.dx * .03, -.5, .5), .1); this.visualPitch = lerp(this.visualPitch, clamp(this.mouseSmooth.dy * .015, -.25, .25), .1); Mat4.identity(this._rotMat); Mat4.rotateY(this._rotMat, this._rotMat, this.yaw); Mat4.rotateX(this._rotMat, this._rotMat, this.pitch); Mat4.rotateZ(this._rotMat, this._rotMat, this.roll); this.forward.x = -this._rotMat[8]; this.forward.y = -this._rotMat[9]; this.forward.z = -this._rotMat[10]; this.right.x = this._rotMat[0]; this.right.y = this._rotMat[1]; this.right.z = this._rotMat[2]; this.up.x = this._rotMat[4]; this.up.y = this._rotMat[5]; this.up.z = this._rotMat[6]; var boost = IM.keys['ShiftLeft'] || IM.keys['ShiftRight'], maxSpd = boost ? this.boostSpeed : this.maxSpeed, thrust = IM.keys['KeyW'] || IM.keys['Space'], brake = IM.keys['KeyS']; if (thrust) this.throttle += dt * (boost ? 200 : 100); else if (brake) this.throttle -= dt * 150; else this.throttle *= .98; this.throttle = clamp(this.throttle, 0, 100); this.thrustPitch = lerp(this.thrustPitch, thrust && this.throttle > 50 ? .15 : 0, dt * 4); this.brakePitch = lerp(this.brakePitch, brake && this.speed > 10 ? -.2 : 0, dt * 5); var tgt = (this.throttle / 100) * maxSpd, acc = 30 * dt; this.vx += this.forward.x * tgt * acc; this.vy += this.forward.y * tgt * acc; this.vz += this.forward.z * tgt * acc; this.vx *= .98; this.vy *= .98; this.vz *= .98; this.speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy + this.vz * this.vz); if (this.speed > maxSpd) { var sc = maxSpd / this.speed; this.vx *= sc; this.vy *= sc; this.vz *= sc; this.speed = maxSpd } this.x += this.vx * dt; this.y += this.vy * dt; this.z += this.vz * dt; var minAlt = World.groundLevel + 3; if (this.y < minAlt) { this.y = minAlt; if (this.vy < -5) { this.damage(10); Camera.shake(1) } this.vy = Math.abs(this.vy) * .3 } this.fireTimer -= dt; if (IM.mouseDown && this.fireTimer <= 0 && IM.locked) { this.shoot(); this.fireTimer = this.fireRate } Mat4.identity(this._visualRotMat); Mat4.rotateY(this._visualRotMat, this._visualRotMat, this.yaw); Mat4.rotateX(this._visualRotMat, this._visualRotMat, this.pitch); Mat4.rotateZ(this._visualRotMat, this._visualRotMat, this.roll + this.visualRoll); Mat4.rotateX(this._visualRotMat, this._visualRotMat, this.visualPitch + this.thrustPitch + this.brakePitch); Mat4.identity(this.entity.transform); Mat4.translate(this.entity.transform, this.entity.transform, this.x, this.y, this.z); Mat4.multiply(this.entity.transform, this.entity.transform, this._visualRotMat) }, shoot: function () { for (var s = -1; s <= 1; s += 2) { var b = bulletPool.acquire(); b.active = true; b.isEnemy = false; b.x = this.x + this.forward.x * 2.5 + this.right.x * s * .8; b.y = this.y + this.forward.y * 2.5 + this.right.y * s * .8; b.z = this.z + this.forward.z * 2.5 + this.right.z * s * .8; b.vx = this.forward.x * this.bulletSpeed + this.vx * .5; b.vy = this.forward.y * this.bulletSpeed + this.vy * .5; b.vz = this.forward.z * this.bulletSpeed + this.vz * .5; b.life = 3; if (!b.entity) b.entity = MM.createEntity('bulletPlayer'); b.entity.active = true } }, damage: function (amt) { this.health -= amt; Camera.shake(amt * .05); if (this.health <= 0) { this.health = 0; Game.playerDeath() } } }; var Camera = { _viewMatrix: null, _projMatrix: null, _vpMatrix: null, fov: Math.PI / 3, near: .5, far: 5000, shakeX: 0, shakeY: 0, init: function () { this._viewMatrix = Mat4.create(); this._projMatrix = Mat4.create(); this._vpMatrix = Mat4.create() }, update: function (aspect) { var cx = Player.x - Player.forward.x * 8 + Player.up.x * 3 + this.shakeX, cy = Player.y - Player.forward.y * 8 + Player.up.y * 3 + this.shakeY, cz = Player.z - Player.forward.z * 8 + Player.up.z * 3; this.shakeX *= .9; this.shakeY *= .9; var lx = Player.x + Player.forward.x * 20, ly = Player.y + Player.forward.y * 20, lz = Player.z + Player.forward.z * 20, zx = cx - lx, zy = cy - ly, zz = cz - lz, len = Math.sqrt(zx * zx + zy * zy + zz * zz); if (len > .0001) { zx /= len; zy /= len; zz /= len } var ux = Player.up.x, uy = Player.up.y, uz = Player.up.z, xx = uy * zz - uz * zy, xy = uz * zx - ux * zz, xz = ux * zy - uy * zx; len = Math.sqrt(xx * xx + xy * xy + xz * xz); if (len > .0001) { xx /= len; xy /= len; xz /= len } var yx = zy * xz - zz * xy, yy = zz * xx - zx * xz, yz = zx * xy - zy * xx; this._viewMatrix[0] = xx; this._viewMatrix[1] = yx; this._viewMatrix[2] = zx; this._viewMatrix[3] = 0; this._viewMatrix[4] = xy; this._viewMatrix[5] = yy; this._viewMatrix[6] = zy; this._viewMatrix[7] = 0; this._viewMatrix[8] = xz; this._viewMatrix[9] = yz; this._viewMatrix[10] = zz; this._viewMatrix[11] = 0; this._viewMatrix[12] = -(xx * cx + xy * cy + xz * cz); this._viewMatrix[13] = -(yx * cx + yy * cy + yz * cz); this._viewMatrix[14] = -(zx * cx + zy * cy + zz * cz); this._viewMatrix[15] = 1; Mat4.perspective(this._projMatrix, this.fov, aspect, this.near, this.far); Mat4.multiply(this._vpMatrix, this._projMatrix, this._viewMatrix); return this._vpMatrix }, shake: function (amt) { this.shakeX += (Math.random() - .5) * amt; this.shakeY += (Math.random() - .5) * amt } }; var World = { groundLevel: 0, chunkSize: 300, viewDistance: 3, groundChunks: [], structures: [], objectives: [], loadedChunks: {}, objectiveIdCounter: 0, objectiveTypes: ['RADAR', 'BASE', 'DEPOT', 'RESCUE', 'PATROL'], init: function () { this.groundChunks = []; this.structures = []; this.objectives = []; this.loadedChunks = {}; this.objectiveIdCounter = 0 }, getChunkKey: function (cx, cz) { return cx + ',' + cz }, update: function () { var pcx = Math.floor(Player.x / this.chunkSize), pcz = Math.floor(Player.z / this.chunkSize); for (var dx = -this.viewDistance; dx <= this.viewDistance; dx++) { for (var dz = -this.viewDistance; dz <= this.viewDistance; dz++) { var cx = pcx + dx, cz = pcz + dz, key = this.getChunkKey(cx, cz); if (!this.loadedChunks[key]) { this.generateChunk(cx, cz); this.loadedChunks[key] = true } } } this.cleanupDistantChunks(pcx, pcz) }, generateChunk: function (cx, cz) { var wx = cx * this.chunkSize, wz = cz * this.chunkSize; var grid = MM.createGroundGrid(wx + this.chunkSize / 2, wz + this.chunkSize / 2, this.groundLevel); this.groundChunks.push(grid); var seed = cx * 73856093 ^ cz * 19349663; var rng = seededRandom(seed); for (var i = 0; i < 5; i++) { var x = wx + rng() * this.chunkSize, z = wz + rng() * this.chunkSize, typ = rng(); var ent; if (typ < .3) { ent = MM.createMountain(15 + rng() * 40, 25 + rng() * 50) } else if (typ < .5) { ent = MM.createTower(15 + rng() * 30) } else { ent = MM.createBuilding(4 + rng() * 8, 10 + rng() * 25, 4 + rng() * 8) } Mat4.identity(ent.transform); Mat4.translate(ent.transform, ent.transform, x, this.groundLevel, z); this.structures.push(ent) } if (rng() < 0.35) { this.generateObjective(wx + this.chunkSize / 2, wz + this.chunkSize / 2, rng) } }, generateObjective: function (baseX, baseZ, rng) { var type = this.objectiveTypes[Math.floor(rng() * this.objectiveTypes.length)]; var obj = { id: this.objectiveIdCounter++, type: type, x: baseX + (rng() - .5) * 200, z: baseZ + (rng() - .5) * 200, y: this.groundLevel, completed: false, entities: [], targets: [], enemyCount: 0, maxEnemies: 3 + Math.floor(rng() * 5), spawnTimer: 0 }; switch (type) { case 'RADAR': var radar = MM.createRadar(25 + rng() * 15); Mat4.identity(radar.transform); Mat4.translate(radar.transform, radar.transform, obj.x, this.groundLevel, obj.z); radar.objTarget = true; radar.health = 5; obj.entities.push(radar); obj.targets.push(radar); break; case 'BASE': var numBuildings = 3 + Math.floor(rng() * 4); for (var i = 0; i < numBuildings; i++) { var ang = (i / numBuildings) * Math.PI * 2, dist = 20 + rng() * 15; var bld = MM.createBuilding(5 + rng() * 5, 8 + rng() * 15, 5 + rng() * 5); Mat4.identity(bld.transform); Mat4.translate(bld.transform, bld.transform, obj.x + Math.cos(ang) * dist, this.groundLevel, obj.z + Math.sin(ang) * dist); bld.objTarget = true; bld.health = 3; bld.color = [1, .4, .4, 1]; obj.entities.push(bld); obj.targets.push(bld) } obj.maxEnemies += 2; break; case 'DEPOT': var depot = MM.createDepot(12, 10, 15); Mat4.identity(depot.transform); Mat4.translate(depot.transform, depot.transform, obj.x, this.groundLevel, obj.z); depot.objTarget = true; depot.health = 8; obj.entities.push(depot); obj.targets.push(depot); for (var j = 0; j < 2; j++) { var tw = MM.createTower(20); Mat4.identity(tw.transform); Mat4.translate(tw.transform, tw.transform, obj.x + (j === 0 ? -25 : 25), this.groundLevel, obj.z); obj.entities.push(tw) } break; case 'RESCUE': var beacon = MM.createBeacon(12); Mat4.identity(beacon.transform); Mat4.translate(beacon.transform, beacon.transform, obj.x, this.groundLevel, obj.z); beacon.isBeacon = true; obj.entities.push(beacon); obj.rescueRadius = 30; obj.rescueTime = 0; obj.rescueRequired = 3; break; case 'PATROL': obj.patrolPoints = []; for (var k = 0; k < 4; k++) { obj.patrolPoints.push({ x: obj.x + (rng() - .5) * 150, z: obj.z + (rng() - .5) * 150 }) } obj.patrolIndex = 0; obj.patrolEnemiesKilled = 0; obj.patrolEnemiesRequired = 5; obj.maxEnemies = 2; break }this.objectives.push(obj) }, cleanupDistantChunks: function (pcx, pcz) { var maxDist = this.viewDistance + 2; for (var i = this.groundChunks.length - 1; i >= 0; i--) { var g = this.groundChunks[i], gx = (g.transform[12] - this.chunkSize / 2) / this.chunkSize, gz = (g.transform[14] - this.chunkSize / 2) / this.chunkSize; if (Math.abs(gx - pcx) > maxDist || Math.abs(gz - pcz) > maxDist) { this.groundChunks.splice(i, 1) } } for (i = this.structures.length - 1; i >= 0; i--) { var s = this.structures[i], d = dist2D(s.transform[12], s.transform[14], Player.x, Player.z); if (d > this.chunkSize * (maxDist + 1)) { this.structures.splice(i, 1) } } }, getNearestObjective: function () { var nearest = null, minDist = Infinity; for (var i = 0; i < this.objectives.length; i++) { var obj = this.objectives[i]; if (obj.completed) continue; var d = dist2D(obj.x, obj.z, Player.x, Player.z); if (d < minDist) { minDist = d; nearest = obj } } return { obj: nearest, dist: minDist } } }; var Game = { state: 'title', kills: 0, score: 0, warningTimer: 0, deathTimer: 0, gameOverTimer: 0, showObjectives: false, asteroidSpawnTimer: 0, init: function () { this.showTitleScreen() }, showTitleScreen: function () { this.state = 'title'; document.getElementById('titleScreen').style.display = 'flex'; document.getElementById('gameOverText').style.display = 'none'; document.getElementById('hud').style.display = 'none'; document.getElementById('enemyCount').style.display = 'none'; document.getElementById('objectives').style.display = 'none'; document.getElementById('compass').style.display = 'none'; document.getElementById('altitude').style.display = 'none' }, startGame: function () { this.state = 'playing'; this.kills = 0; this.score = 0; this.warningTimer = 0; this.asteroidSpawnTimer = 0; document.getElementById('titleScreen').style.display = 'none'; document.getElementById('hud').style.display = 'block'; document.getElementById('enemyCount').style.display = 'block'; document.getElementById('altitude').style.display = 'block'; document.getElementById('objectives').style.display = 'block'; document.getElementById('compass').style.display = 'block'; World.init(); bulletPool.releaseAll(); asteroidPool.releaseAll(); enemyPool.releaseAll(); particlePool.releaseAll(); Player.reset(); World.update(); R.canvas.requestPointerLock() }, reset: function () { bulletPool.releaseAll(); asteroidPool.releaseAll(); enemyPool.releaseAll(); particlePool.releaseAll(); this.showTitleScreen() }, playerDeath: function () { this.state = 'dying'; this.deathTimer = 2; Player.visible = false; Player.entity.active = false; this.spawnExplosion(Player.x, Player.y, Player.z, 50); Camera.shake(3); document.exitPointerLock() }, showGameOver: function () { this.state = 'gameover'; this.gameOverTimer = 3; document.getElementById('gameOverText').style.display = 'block'; document.getElementById('hud').style.display = 'none'; document.getElementById('objectives').style.display = 'none'; document.getElementById('compass').style.display = 'none' }, update: function (dt) { if (this.state === 'title') { if (IM.consumeAnyKey() || IM.consumeClick()) this.startGame(); return } if (this.state === 'dying') { this.deathTimer -= dt; this.updateParticles(dt); if (this.deathTimer <= 0) this.showGameOver(); return } if (this.state === 'gameover') { this.gameOverTimer -= dt; if (this.gameOverTimer <= 0) { if (IM.consumeAnyKey() || IM.consumeClick()) this.reset() } return } if (this.state !== 'playing') return; if (IM.consumeTab()) this.showObjectives = !this.showObjectives; document.getElementById('objectives').style.display = this.showObjectives ? 'block' : 'none'; World.update(); if (this.warningTimer > 0) { this.warningTimer -= dt; document.getElementById('warning').style.display = 'block' } else document.getElementById('warning').style.display = 'none'; this.asteroidSpawnTimer -= dt; if (this.asteroidSpawnTimer <= 0 && asteroidPool.count() < 15) { this.spawnAsteroidNearPlayer(); this.asteroidSpawnTimer = 3 + Math.random() * 2 } this.updateObjectives(dt); this.updateBullets(dt); this.updateAsteroids(dt); this.updateEnemies(dt); this.updateParticles(dt); this.updateUI() }, updateObjectives: function (dt) { for (var i = 0; i < World.objectives.length; i++) { var obj = World.objectives[i]; if (obj.completed) continue; var dist = dist2D(obj.x, obj.z, Player.x, Player.z); if (dist > 800) continue; if (obj.type === 'RESCUE') { if (dist < obj.rescueRadius && Player.speed < 5 && Player.y < World.groundLevel + 15) { obj.rescueTime += dt; if (obj.rescueTime >= obj.rescueRequired) { obj.completed = true; this.score += 500; this.spawnExplosion(obj.x, World.groundLevel + 5, obj.z, 20) } } } if (obj.type === 'PATROL') { if (obj.patrolEnemiesKilled >= obj.patrolEnemiesRequired) { obj.completed = true; this.score += 400 } } obj.spawnTimer -= dt; if (obj.spawnTimer <= 0 && obj.enemyCount < obj.maxEnemies && dist < 400) { this.spawnEnemyAtObjective(obj); obj.spawnTimer = 2 + Math.random() * 3 } var allDestroyed = true; for (var j = 0; j < obj.targets.length; j++) { if (obj.targets[j].active) allDestroyed = false } if (obj.targets.length > 0 && allDestroyed) { obj.completed = true; this.score += (obj.type === 'RADAR' ? 200 : obj.type === 'BASE' ? 500 : 300) } } }, updateBullets: function (dt) { var bls = bulletPool.getActive(); for (var i = bls.length - 1; i >= 0; i--) { var b = bls[i]; if (!b.active) continue; b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt; b.life -= dt; if (b.y < World.groundLevel) { this.spawnExplosion(b.x, World.groundLevel, b.z, 2); b.active = false; if (b.entity) b.entity.active = false; bulletPool.release(b); continue } if (b.isEnemy) { var pDist = dist3D(b.x, b.y, b.z, Player.x, Player.y, Player.z); if (pDist < 3) { Player.damage(12); this.spawnExplosion(b.x, b.y, b.z, 3); b.active = false; if (b.entity) b.entity.active = false; bulletPool.release(b); continue } } if (!b.isEnemy) { for (var oi = 0; oi < World.objectives.length; oi++) { var obj = World.objectives[oi]; if (obj.completed) continue; for (var ti = 0; ti < obj.targets.length; ti++) { var tgt = obj.targets[ti]; if (!tgt.active) continue; var td = dist3D(b.x, b.y, b.z, tgt.transform[12], tgt.transform[13] + 5, tgt.transform[14]); if (td < 10) { tgt.health--; this.spawnExplosion(b.x, b.y, b.z, 5); if (tgt.health <= 0) { tgt.active = false; this.spawnExplosion(tgt.transform[12], tgt.transform[13] + 5, tgt.transform[14], 25); this.score += 50 } b.active = false; if (b.entity) b.entity.active = false; bulletPool.release(b); break } } if (!b.active) break } } if (b.life <= 0) { b.active = false; if (b.entity) b.entity.active = false; bulletPool.release(b); continue } if (b.entity) { Mat4.identity(b.entity.transform); Mat4.translate(b.entity.transform, b.entity.transform, b.x, b.y, b.z); var vl = Math.sqrt(b.vx * b.vx + b.vy * b.vy + b.vz * b.vz); if (vl > .01) { Mat4.rotateY(b.entity.transform, b.entity.transform, Math.atan2(b.vx, -b.vz)); Mat4.rotateX(b.entity.transform, b.entity.transform, -Math.asin(b.vy / vl)) } } } }, updateAsteroids: function (dt) { var asts = asteroidPool.getActive(), bls = bulletPool.getActive(); for (var i = asts.length - 1; i >= 0; i--) { var a = asts[i]; if (!a.active) continue; a.x += a.vx * dt; a.y += a.vy * dt; a.z += a.vz * dt; a.rotX += a.rotSpeedX * dt; a.rotY += a.rotSpeedY * dt; if (a.y < World.groundLevel + a.radius) { a.y = World.groundLevel + a.radius; a.vy = Math.abs(a.vy) * .5 } var dist = dist3D(a.x, a.y, a.z, Player.x, Player.y, Player.z); if (dist > 500) { a.active = false; if (a.entity) a.entity.active = false; asteroidPool.release(a); continue } if (dist < a.radius + 2.5) { Player.damage(15); this.spawnExplosion(a.x, a.y, a.z, 10); a.active = false; if (a.entity) a.entity.active = false; asteroidPool.release(a); continue } for (var j = bls.length - 1; j >= 0; j--) { var b = bls[j]; if (!b.active || b.isEnemy) continue; if (dist3D(a.x, a.y, a.z, b.x, b.y, b.z) < a.radius + .5) { a.health--; this.spawnExplosion(b.x, b.y, b.z, 2); b.active = false; if (b.entity) b.entity.active = false; bulletPool.release(b); if (a.health <= 0) { this.spawnExplosion(a.x, a.y, a.z, 12); a.active = false; if (a.entity) a.entity.active = false; asteroidPool.release(a); this.kills++; this.score += 10 } break } } if (a.active && a.entity) { Mat4.identity(a.entity.transform); Mat4.translate(a.entity.transform, a.entity.transform, a.x, a.y, a.z); Mat4.rotateX(a.entity.transform, a.entity.transform, a.rotX); Mat4.rotateY(a.entity.transform, a.entity.transform, a.rotY) } } }, updateEnemies: function (dt) { var ens = enemyPool.getActive(), bls = bulletPool.getActive(); for (var i = ens.length - 1; i >= 0; i--) { var e = ens[i]; if (!e.active) continue; var dx = Player.x - e.x, dy = Player.y - e.y, dz = Player.z - e.z, dist = Math.sqrt(dx * dx + dy * dy + dz * dz); if (dist > 500) { e.active = false; if (e.entity) e.entity.active = false; if (e.objectiveId !== null) { for (var oi = 0; oi < World.objectives.length; oi++) { if (World.objectives[oi].id === e.objectiveId) World.objectives[oi].enemyCount-- } } enemyPool.release(e); continue } var speed = 30, ideal = 40; if (dist > ideal + 10) { e.vx = lerp(e.vx, (dx / dist) * speed, dt * 3); e.vy = lerp(e.vy, (dy / dist) * speed * .5, dt * 2); e.vz = lerp(e.vz, (dz / dist) * speed, dt * 3) } else if (dist < ideal - 10) { e.vx = lerp(e.vx, -(dx / dist) * speed * .7, dt * 3); e.vy = lerp(e.vy, -(dy / dist) * speed * .3, dt * 2); e.vz = lerp(e.vz, -(dz / dist) * speed * .7, dt * 3) } else { var strafe = (e.behavior % 2 === 0) ? 1 : -1, perpX = -dz / dist, perpZ = dx / dist; e.vx = lerp(e.vx, perpX * speed * .6 * strafe, dt * 2); e.vz = lerp(e.vz, perpZ * speed * .6 * strafe, dt * 2) } e.x += e.vx * dt; e.y += e.vy * dt; e.z += e.vz * dt; if (e.y < World.groundLevel + 10) { e.y = World.groundLevel + 10; e.vy = Math.abs(e.vy) * .5 + 5 } e.rotY = Math.atan2(dx, dz); e.rotX = Math.atan2(dy, Math.sqrt(dx * dx + dz * dz)) * .3; e.fireTimer -= dt; if (e.fireTimer <= 0 && dist < 180 && dist > 15) { var bull = bulletPool.acquire(); bull.active = true; bull.isEnemy = true; var dx2 = Player.x - e.x + Player.vx * .3, dy2 = Player.y - e.y + Player.vy * .3, dz2 = Player.z - e.z + Player.vz * .3, dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2 + dz2 * dz2); bull.x = e.x + dx2 / dist2 * 2; bull.y = e.y + dy2 / dist2 * 2; bull.z = e.z + dz2 / dist2 * 2; bull.vx = (dx2 / dist2) * 100; bull.vy = (dy2 / dist2) * 100; bull.vz = (dz2 / dist2) * 100; bull.life = 4; if (!bull.entity) bull.entity = MM.createEntity('bulletEnemy'); bull.entity.active = true; this.warningTimer = .4; e.fireTimer = 2 + Math.random() } if (dist < e.radius + 3) { Player.damage(25); this.spawnExplosion(e.x, e.y, e.z, 15); e.active = false; if (e.entity) e.entity.active = false; enemyPool.release(e); continue } for (var j = bls.length - 1; j >= 0; j--) { var b = bls[j]; if (!b.active || b.isEnemy) continue; if (dist3D(e.x, e.y, e.z, b.x, b.y, b.z) < e.radius + .8) { e.health--; this.spawnExplosion(b.x, b.y, b.z, 4); b.active = false; if (b.entity) b.entity.active = false; bulletPool.release(b); if (e.health <= 0) { this.spawnExplosion(e.x, e.y, e.z, 20); if (e.objectiveId !== null) { for (oi = 0; oi < World.objectives.length; oi++) { var obj = World.objectives[oi]; if (obj.id === e.objectiveId) { obj.enemyCount--; if (obj.type === 'PATROL') obj.patrolEnemiesKilled++ } } } e.active = false; if (e.entity) e.entity.active = false; enemyPool.release(e); this.kills++; this.score += 25 } break } } if (e.active && e.entity) { Mat4.identity(e.entity.transform); Mat4.translate(e.entity.transform, e.entity.transform, e.x, e.y, e.z); Mat4.rotateY(e.entity.transform, e.entity.transform, e.rotY); Mat4.rotateX(e.entity.transform, e.entity.transform, e.rotX) } } }, updateParticles: function (dt) { var parts = particlePool.getActive(); for (var i = parts.length - 1; i >= 0; i--) { var p = parts[i]; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.vx *= .96; p.vy *= .96; p.vz *= .96; p.life -= dt; if (p.life <= 0) particlePool.release(p) } }, updateUI: function () { var objList = document.getElementById('objList'), html = '', activeCount = 0; var nearest = World.getNearestObjective(); for (var i = 0; i < World.objectives.length; i++) { var obj = World.objectives[i]; if (obj.completed) continue; var d = dist2D(obj.x, obj.z, Player.x, Player.z); if (d > 1500) continue; activeCount++; var status = ''; if (obj.type === 'RESCUE') { status = ' [' + Math.floor(obj.rescueTime / obj.rescueRequired * 100) + '%]' } else if (obj.type === 'PATROL') { status = ' [' + obj.patrolEnemiesKilled + '/' + obj.patrolEnemiesRequired + ']' } var isActive = nearest.obj && nearest.obj.id === obj.id; html += '<div class="obj-item' + (isActive ? ' active' : '') + '">' + obj.type + ': ' + Math.round(d) + 'm' + status + '</div>' } if (activeCount === 0) html = '<div style="opacity:0.5">Explore to find objectives...</div>'; objList.innerHTML = html; var yaw = Player.yaw, dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'], idx = Math.round((-yaw / (Math.PI * 2) + .5) * 8) % 8; if (idx < 0) idx += 8; document.getElementById('compassDir').textContent = dirs[idx]; if (nearest.obj) { var ang = Math.atan2(nearest.obj.x - Player.x, nearest.obj.z - Player.z), relAng = ang + Player.yaw, arrow = '↑'; if (relAng > Math.PI * .25 && relAng < Math.PI * .75) arrow = '→'; else if (relAng > Math.PI * .75 || relAng < -Math.PI * .75) arrow = '↓'; else if (relAng > -Math.PI * .75 && relAng < -Math.PI * .25) arrow = '←'; document.getElementById('nearestObj').textContent = nearest.obj.type + ' ' + arrow; document.getElementById('nearestDist').textContent = Math.round(nearest.dist) } else { document.getElementById('nearestObj').textContent = '---'; document.getElementById('nearestDist').textContent = '0' } }, spawnAsteroidNearPlayer: function () { var a = asteroidPool.acquire(); a.active = true; var ang = Math.random() * Math.PI * 2, dist = 150 + Math.random() * 200; a.x = Player.x + Math.cos(ang) * dist; a.z = Player.z + Math.sin(ang) * dist; a.y = World.groundLevel + 20 + Math.random() * 60; a.vx = (Math.random() - .5) * 15; a.vy = -Math.random() * 8; a.vz = (Math.random() - .5) * 15; a.rotX = Math.random() * Math.PI * 2; a.rotY = Math.random() * Math.PI * 2; a.rotSpeedX = (Math.random() - .5) * 2; a.rotSpeedY = (Math.random() - .5) * 2; a.radius = 2 + Math.random() * 3; a.health = Math.ceil(a.radius / 2); if (!a.entity) a.entity = MM.createAsteroid(a.radius); a.entity.active = true }, spawnEnemyAtObjective: function (obj) { var e = enemyPool.acquire(); e.active = true; e.objectiveId = obj.id; obj.enemyCount++; var ang = Math.random() * Math.PI * 2, dist = 30 + Math.random() * 50; e.x = obj.x + Math.cos(ang) * dist; e.z = obj.z + Math.sin(ang) * dist; e.y = World.groundLevel + 20 + Math.random() * 30; e.vx = 0; e.vy = 0; e.vz = 0; e.rotY = Math.atan2(Player.x - e.x, Player.z - e.z); e.rotX = 0; e.radius = 2.5; e.health = 3; e.fireTimer = .5 + Math.random(); e.behavior = Math.floor(Math.random() * 4); if (!e.entity) e.entity = MM.createEntity('enemy'); e.entity.active = true }, spawnExplosion: function (x, y, z, cnt) { for (var i = 0; i < cnt; i++) { var p = particlePool.acquire(); p.active = true; p.x = x; p.y = y; p.z = z; var sp = 15 + Math.random() * 35, th = Math.random() * Math.PI * 2, ph = Math.random() * Math.PI; p.vx = Math.sin(ph) * Math.cos(th) * sp; p.vy = Math.sin(ph) * Math.sin(th) * sp; p.vz = Math.cos(ph) * sp; p.life = .3 + Math.random() * .4; p.maxLife = p.life } } }; var Engine = { FIXED_STEP: 1 / 60, MAX_DELTA: .1, running: false, rafId: null, accumulator: 0, lastTime: 0, fpsFrames: null, fpsIndex: 0, fpsSum: 0, _mouseDelta: { dx: 0, dy: 0 }, init: function () { MM.init(); if (!R.init()) return false; Camera.init(); IM.init(R.canvas); Player.init(); Game.init(); this.fpsFrames = new Float32Array(60); return true }, start: function () { this.running = true; this.lastTime = performance.now() / 1000; for (var i = 0; i < 60; i++)this.fpsFrames[i] = 60; this.fpsSum = 3600; var self = this; (function loop(ts) { if (!self.running) return; self.rafId = requestAnimationFrame(loop); self._tick(ts / 1000) })(performance.now()) }, _tick: function (time) { var delta = Math.min(time - this.lastTime, this.MAX_DELTA); this.lastTime = time; var fps = delta > 0 ? 1 / delta : 60; this.fpsSum -= this.fpsFrames[this.fpsIndex]; this.fpsFrames[this.fpsIndex] = fps; this.fpsSum += fps; this.fpsIndex = (this.fpsIndex + 1) % 60; this.accumulator += delta; while (this.accumulator >= this.FIXED_STEP) { IM.consumeMouseDelta(this._mouseDelta); Player.update(this.FIXED_STEP, this._mouseDelta); Game.update(this.FIXED_STEP); this.accumulator -= this.FIXED_STEP } R.render(Camera.update(R.width / R.height)); if (Game.state === 'playing') { document.getElementById('fps').textContent = Math.round(this.fpsSum / 60); document.getElementById('speed').textContent = Math.round(Player.speed); document.getElementById('throttle').textContent = Math.round(Player.throttle); document.getElementById('kills').textContent = Game.kills; document.getElementById('score').textContent = Game.score; document.getElementById('hostiles').textContent = enemyPool.count(); var bars = Math.ceil((Player.health / Player.maxHealth) * 10), hs = ''; for (var i = 0; i < 10; i++)hs += i < bars ? '█' : '░'; document.getElementById('health').textContent = hs; document.getElementById('healthPct').textContent = Math.round(Player.health); document.getElementById('altValue').textContent = Math.round(Player.y - World.groundLevel) } } }; if (Engine.init()) Engine.start(); })(); 
+         </script>
 </body>
+
 </html>
