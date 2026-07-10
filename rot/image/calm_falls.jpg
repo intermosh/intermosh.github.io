@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="de">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="author" content="Marcel 'ryg' Hering" />
+
+    <title>
+        TODO: 404_error        :: rmarchiv.de :: your online rpgmaker resource</title>
+
+    
+    
+
+<meta name="site_name" content="rmarchiv.de" />
+<meta property="og:site_name" content="rmarchiv.de" />
+    
+
+<meta name="url" content="https://rmarchiv.de/logo/def7cdf80a1dd01ea3ee297ed019a500.png" />
+<meta property="og:url" content="https://rmarchiv.de/logo/def7cdf80a1dd01ea3ee297ed019a500.png" />
+    
+
+<meta name="locale" content="de_DE" />
+<meta property="og:locale" content="de_DE" />
+
+        
+        <title>
+        TODO: 404_error    </title>
+
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+    <link rel="canonical" href="http://www.rmarchiv.de/"/>
+
+            <link rel="preload" as="style" href="https://rmarchiv.de/build/assets/app-CTdLOcxC.css" /><link rel="modulepreload" href="https://rmarchiv.de/build/assets/app-Dn-5R-Ka.js" /><link rel="modulepreload" href="https://rmarchiv.de/build/assets/chunk-QTnfLwEv.js" /><link rel="modulepreload" href="https://rmarchiv.de/build/assets/bootstrap.esm-aPRksHbe.js" /><link rel="stylesheet" href="https://rmarchiv.de/build/assets/app-CTdLOcxC.css" /><script type="module" src="https://rmarchiv.de/build/assets/app-Dn-5R-Ka.js"></script>        <link rel="preload" as="style" href="https://rmarchiv.de/build/assets/app-Dtgazc45.css" /><link rel="stylesheet" href="https://rmarchiv.de/build/assets/app-Dtgazc45.css" />        <script type="text/javascript">
+        <!--
+        var pixelWidth = screen.width;
+        var rmarchiv = {};
+        rmarchiv.isMobile = false;
+        //-->
+    </script>
+</head>
+<body>
+
+
+<div class="mt-1 mb-1">
+            <a href="/">
+        <img class="mx-auto d-block h-100 w-100" style="object-fit: contain; max-height:100px" src="https://rmarchiv.de/logo/get/18" alt="Logo: Voll das Logo"/>
+    </a>
+    <p class="text-center small d-sm-none mb-1">logo 'Voll das Logo' by <a href='https://rmarchiv.de/users/64' class='user'>TheDragonMB</a> :: rmarchiv.de is brought to you with love.</p>
+    <p class="text-center d-none d-sm-block">logo 'Voll das Logo' by <a href='https://rmarchiv.de/users/64' class='user'>TheDragonMB</a> :: rmarchiv.de is brought to you with love.</p>
+    </div>
+
+<nav class="navbar navbar-expand-lg navbar-custom">
+    <div class="container-fluid">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav" aria-controls="topNav" aria-expanded="false" aria-label="Navigation umschalten">
+                <i class="fa fa-bars fa-lg py-1" style="color: #ffbf00;"></i>
+            </button>
+            <form method="POST" action="https://rmarchiv.de/search" class="d-lg-none col-9 col-sm-6">
+                <input type="hidden" name="_token" value="" autocomplete="off">                <input class="d-none" id="inputTerm" autocomplete="off" type='text' name='term' size='64' placeholder="Suche hier" />
+                <div id="autocomplete"></div>
+                <div id="searchcontainer"></div>
+                <script type="module">
+                    createAutocomplete(
+                    {   apiPath:()=>{return "ac_search_new"},
+                        placeholder:"Suche",
+                        searchbarSelector:"#autocomplete",
+                        panelSelector:"#searchcontainer",
+                        inputSelector:"#inputTerm",
+                        noResults:'Es konnte nichts gefunden werden',
+                        type:"games",
+                        action:"navigate",
+                        additonalSubProps: {},
+                        additionalProps:{onSubmit: ()=>{document.querySelector("#autocomplete").closest("form").submit()}}
+                    })
+                </script>
+            </form>
+            <div class="collapse navbar-collapse" id="topNav">
+                <hr class="d-block d-lg-none mx-1 mt-2 mb-1">
+                    <div class="dropdown-divider"></div>
+                </hr>
+                <ul class="navbar-nav w-100 flex-row justify-content-lg-between ps-3 ps-lg-0">
+                    <div class="navbar-nav d-flex">
+                        <li class="d-none d-lg-flex nav-item align-items-center mx-1 my-1"><a class="nav-link w-auto fa fa-house" href="https://rmarchiv.de"></a></li>
+                        <li class="nav-item  d-flex align-items-center"><a class="nav-link" href="https://rmarchiv.de/news">News</a></li>
+                        <li class="nav-item  d-flex align-items-center"><a class="nav-link" href="https://rmarchiv.de/games">Spiele</a></li>
+                        <li class="nav-item  d-flex align-items-center"><a class="nav-link" href="https://rmarchiv.de/resources">Ressourcen</a></li>
+                        <li class="nav-item  d-flex align-items-center"><a class="nav-link" href="https://rmarchiv.de/developer">Entwickler</a></li>
+                        <li class="nav-item  d-flex align-items-center"><a class="nav-link" href="https://rmarchiv.de/makers">Maker</a></li>
+                        <li class="nav-item  d-flex align-items-center"><a class="nav-link" href="https://rmarchiv.de/awards">Awards</a></li>
+                        <li class="nav-item  d-flex align-items-center"><a class="nav-link" href="https://rmarchiv.de/users">Benutzer</a></li>
+                        <noscript>
+                            <li class="nav-item  d-flex align-items-center"><a class="nav-link" href="https://rmarchiv.de/search">Suche</a></li>
+                        </noscript>
+                        <li class="nav-item  d-flex align-items-center"><a class="nav-link" href="https://rmarchiv.de/board">Forum</a></li>
+                        <li class="nav-item  d-flex align-items-center"><a class="nav-link" href="https://rmarchiv.de/faq">FAQ</a></li>
+                    </div>
+                    <div class="navbar-nav d-none d-lg-flex me-2 gap-1">
+                                                                            <li class="nav-item px-1 d-none d-lg-flex align-items-center"><a class="nav-link rounded-pill bg-rm-back d-flex flex-row align-items-center gap-2" href="https://rmarchiv.de/login"><i class="fa fa-sign-in w-auto"></i><span class="d-xl-block d-none">Anmelden</span></a></li>
+                            <li class="nav-item px-1 d-none d-lg-flex align-items-center"><a class="nav-link rounded-pill bg-rm-back d-flex flex-row align-items-center gap-2" href="https://rmarchiv.de/register"><i class="fa fa-address-card w-auto"></i><span class="d-xl-block d-none">Registrieren</span></a></li>
+                                            </div>
+                    <ul class="inner-icons d-flex flex-column d-lg-none gap-1 w-100" id="authCollapsedParent">
+                                                    <li class="nav-item px-1 d-flex d-lg-none align-items-center"><a class="nav-link p-2 rounded-pill bg-rm-back d-flex flex-row align-items-center gap-2" href="https://rmarchiv.de/login"><i class="fa fa-sign-in w-auto"></i><span class="d-block">Anmelden</span></a></li>
+                            <li class="nav-item px-1 d-flex d-lg-none align-items-center"><a class="nav-link p-2 rounded-pill bg-rm-back d-flex flex-row align-items-center gap-2" href="https://rmarchiv.de/register"><i class="fa fa-address-card w-auto"></i><span class="d-block">Registrieren</span></a></li>
+                                            </ul>
+                </ul>
+
+                <form method="POST" action="https://rmarchiv.de/search" class="d-none d-lg-block flex-grow-1 col-3 mw-40">
+                    <input type="hidden" name="_token" value="" autocomplete="off">                    <input class="d-none" id="inputTerm-large" autocomplete="off" type='text' name='term' size='64' placeholder="Suche hier" />
+                    <div id="autocomplete-large"></div>
+                    <div id="searchcontainer-large"></div>
+                    <script type="module">
+                        createAutocomplete(
+                        {   apiPath:()=>{return "ac_search_new"},
+                            placeholder:"Suche",
+                            searchbarSelector:"#autocomplete-large",
+                            panelSelector:"#searchcontainer-large",
+                            inputSelector:"#inputTerm-large",
+                            noResults:'Es konnte nichts gefunden werden',
+                            type:"games",
+                            action:"navigate",
+                            additonalSubProps: {},
+                            additionalProps:{onSubmit: ()=>{document.querySelector("#autocomplete-large").closest("form").submit()}}
+                        })
+                    </script>
+                </form>
+            </div>
+
+    </div>
+</nav>
+
+            <div class="col-md-12 mt-3">
+                <div id="content">
+        <h1>vier null vier</h1>
+        <br>
+        <h2>Herzlichen Glückwunsch!</h2>
+        <br>
+        <h3>Du hast eine Seite gefunden, die es nicht gibt.</h3>
+        <h3>Sei stolz, aber versuche es noch mal <a href="https://rmarchiv.de">hiermit</a>.</h3>
+    </div>
+        </div>
+    
+
+
+<footer class="text-center">
+    <ul class="list-unstyled">
+        <li>
+            <a href="/">rmarchiv.de</a> 0.2.23c10.de &copy; 2016-2026 by RMArchiv Team
+        </li>
+        <li>
+            Feedback für Features oder Bugs an <a href="mailto:webmaster@rmarchiv.de">webmaster@rmarchiv.de</a>
+        </li>
+        <li>
+            <a href="https://rmarchiv.de/impressum">Impressum</a> - <a href="https://rmarchiv.de/datenschutz">Datenschutzerklärung</a>
+        </li>
+        <li>
+            <a href="#">Benutzer Online: 0</a>
+        </li>
+            </ul>
+</footer>
+<!-- Cookies -->
+<div id="cookies" class="js-cookie-consent cookies">
+    <input style="display:none" type="checkbox" id="cookies-close" class="js-cookie-consent-agree">
+    <label for="cookies-close" class="cookies-close">Akzeptieren</label>
+    <p class="cookies-message">Diese Seite verwendet Cookies um das Nutzererlebnis zu steigern.</p>
+</div>
+<!-- End Cookies -->
+    <script>
+
+        window.laravelCookieConsent = (function () {
+
+            const COOKIE_VALUE = 1;
+            const COOKIE_DOMAIN = '.rmarchiv.de';
+
+            function consentWithCookies() {
+                setCookie('laravel_cookie_consent', COOKIE_VALUE, 7300);
+                hideCookieDialog();
+            }
+
+            function cookieExists(name) {
+                return (document.cookie.split('; ').indexOf(name + '=' + COOKIE_VALUE) !== -1);
+            }
+
+            function hideCookieDialog() {
+                const dialogs = document.getElementsByClassName('js-cookie-consent');
+
+                for (let i = 0; i < dialogs.length; ++i) {
+                    dialogs[i].style.display = 'none';
+                }
+            }
+
+            function setCookie(name, value, expirationInDays) {
+                const date = new Date();
+                date.setTime(date.getTime() + (expirationInDays * 24 * 60 * 60 * 1000));
+                document.cookie = name + '=' + value
+                    + ';expires=' + date.toUTCString()
+                    + ';domain=' + COOKIE_DOMAIN
+                    + ';path=/;secure'
+                    + ';samesite=lax';
+            }
+
+            if (cookieExists('laravel_cookie_consent')) {
+                hideCookieDialog();
+            }
+
+            const buttons = document.getElementsByClassName('js-cookie-consent-agree');
+
+            for (let i = 0; i < buttons.length; ++i) {
+                buttons[i].addEventListener('click', consentWithCookies);
+            }
+
+            return {
+                consentWithCookies: consentWithCookies,
+                hideCookieDialog: hideCookieDialog
+            };
+        })();
+    </script>
+
+
+</body>
+
+<!--[if lt IE 9]><script src="http://ie7-js.googlecode.com/svn/version/2.1(beta4)/IE9.js"></script><![endif]-->
+<!--[if IE]><script src="http:////html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+<!-- Matomo -->
+<script type="text/javascript">
+	var _paq = window._paq || [];
+	/* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+		_paq.push(['trackPageView']);
+	_paq.push(['enableLinkTracking']);
+	(function() {
+		var u="//stats.rmarchiv.de/";
+		_paq.push(['setTrackerUrl', u+'matomo.php']);
+		_paq.push(['setSiteId', '1']);
+		var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+		g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+	})();
+</script>
+<!-- End Matomo Code -->
+</html>

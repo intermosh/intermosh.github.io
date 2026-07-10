@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Rot Beneath — Archivo Curado</title>
+<style>
+  :root{
+    --bg:#0c0c0c;
+    --bg-panel:#141414;
+    --line:#3a3a3a;
+    --line-strong:#e8e8e8;
+    --ink:#ededed;
+    --ink-dim:#9a9a9a;
+    --ink-faint:#6b6b6b;
+    --white:#f2f2f2;
+    --black:#000000;
+    --red:#a8384a;
+    --red-dim:#7a2a37;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Century Gothic','Futura','Avenir Next','Segoe UI',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+  }
+  ::selection{background:var(--red);color:var(--white);}
+  a{color:var(--ink);}
+
+  /* ============ HEADER ============ */
+  header.masthead{
+    border-bottom:3px solid var(--line-strong);
+    padding: calc(8px*5) calc(8px*4) calc(8px*4);
+    text-align:center;
+  }
+  .wordmark{
+    font-size: 2.8rem;
+    letter-spacing: 0.06em;
+    text-transform:uppercase;
+    font-weight:700;
+    margin-bottom:14px;
+  }
+  .wordmark .rot{color:var(--red);}
+  .masthead-sub{
+    font-size:0.78rem;
+    letter-spacing:0.15em;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+    margin-bottom: 28px;
+  }
+  .masthead-meta{
+    display:flex; justify-content:center; gap:40px; flex-wrap:wrap;
+    font-size:0.72rem; color:var(--ink-faint); text-transform:uppercase; letter-spacing:0.1em;
+    border-top:1px solid var(--line); padding-top:18px; max-width:900px; margin:0 auto;
+  }
+  .masthead-meta b{color:var(--red); font-weight:700;}
+
+  /* ============ STATS STRIP ============ */
+  .stats{
+    display:grid;
+    grid-template-columns: repeat(10, 1fr);
+    border-bottom:3px solid var(--line-strong);
+  }
+  .stat{
+    padding: 20px 10px;
+    border-right:1px solid var(--line);
+    text-align:center;
+    cursor:pointer;
+    transition: background .15s ease;
+  }
+  .stat:last-child{border-right:none;}
+  .stat:hover{background:var(--bg-panel);}
+  .stat.active{background:var(--red);}
+  .stat.active .stat-num, .stat.active .stat-label{color:var(--white);}
+  .stat-num{
+    font-size:1.7rem; font-weight:700; display:block; line-height:1; color:var(--ink);
+  }
+  .stat-label{
+    font-size:0.6rem; text-transform:uppercase; letter-spacing:0.08em;
+    color:var(--ink-dim); margin-top:6px; display:block;
+  }
+
+  /* ============ CONTROLS ============ */
+  #controls{max-width:1300px;margin:0 auto;padding: 26px 24px;}
+  #search{
+    width:100%;padding:14px 16px;background:var(--bg-panel);
+    border:1px solid var(--line);color:#fff;
+    font-family:inherit;font-size:0.9rem;outline:none;transition:border .2s;
+  }
+  #search:focus{border-color:var(--red);}
+  .filters{display:flex;gap:32px;margin-top:20px;flex-wrap:wrap;}
+  .fg{flex:1;min-width:260px;}
+  .fl{display:block;color:var(--ink-faint);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:10px;}
+  .bw{display:flex;flex-wrap:wrap;gap:1px; background:var(--line);}
+  .btn{
+    background:var(--bg);border:none;color:var(--ink-dim);
+    padding:9px 16px;font-family:inherit;font-size:0.7rem;text-transform:uppercase;
+    cursor:pointer;transition:all .15s;letter-spacing:0.08em;
+  }
+  .btn:hover{color:var(--ink);}
+  .btn.on{background:var(--red);color:#fff;}
+
+  /* ============ GRID ============ */
+  #grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
+    gap:1px;background:var(--line);
+    max-width:1300px;margin:0 auto;padding:0 24px 40px;
+  }
+  .card{
+    background:var(--bg);border:none;padding:0 20px 20px;transition:background .2s;position:relative;
+    display:flex;flex-direction:column;
+  }
+  .card-img{
+    width:100%;height:180px;object-fit:cover;display:block;margin-bottom:14px;
+    filter:brightness(0.92) saturate(0.85);
+    transition:filter .2s;
+  }
+  .card:hover .card-img{filter:brightness(1) saturate(1);}
+  .card:hover{background:var(--bg-panel);}
+  .card::before{
+    content:'';position:absolute;top:0;left:0;width:0;height:2px;background:var(--red);
+    transition:width .3s ease;
+  }
+  .card:hover::before{width:100%;}
+  .ch{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:10px;}
+  .ct{font-size:0.92rem;color:#fff;text-transform:uppercase;letter-spacing:0.03em;line-height:1.3;font-weight:700;}
+  .tag{
+    background:transparent;border:1px solid var(--red);color:var(--red);
+    padding:3px 8px;font-size:0.58rem;font-weight:700;text-transform:uppercase;
+    letter-spacing:0.08em;white-space:nowrap;flex:none;
+  }
+  .meta{display:flex;gap:10px;font-size:0.72rem;color:var(--ink-faint);margin-bottom:10px;flex-wrap:wrap;}
+  .meta .rg{color:var(--red);font-weight:700;}
+  .desc{font-size:0.82rem;color:var(--ink-dim);line-height:1.55;margin-bottom:12px;}
+  .links{padding-top:12px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:5px;}
+  .links-label{font-size:0.6rem;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:2px;}
+  .links a{color:var(--ink-dim);font-size:0.74rem;text-decoration:none;transition:color .15s;word-break:break-word;line-height:1.4;}
+  .links a:hover{color:var(--red);text-decoration:underline;}
+  .no-link{color:var(--ink-faint);font-size:0.72rem;font-style:italic;}
+
+  .empty-state{
+    grid-column:1/-1;padding:60px 20px;text-align:center;color:var(--ink-faint);
+    border:1px dashed var(--line);font-size:0.85rem;text-transform:uppercase;letter-spacing:0.1em;
+  }
+
+  /* ============ METHOD PLACEHOLDER ============ */
+  main.after{max-width:1300px;margin:0 auto;padding:20px 24px 80px;}
+  .section-label{display:flex;align-items:center;gap:16px;margin: 50px 0 24px;}
+  .section-label .num{
+    font-size:0.75rem;border:1.5px solid var(--red);color:var(--red);width:26px;height:26px;
+    display:flex;align-items:center;justify-content:center;flex:none;
+  }
+  .section-label h2{font-size:1rem;text-transform:uppercase;letter-spacing:0.14em;margin:0;font-weight:700;}
+  .section-label .rule{flex:1;height:1px;background:var(--line);}
+  .method-placeholder{
+    border:1.5px dashed var(--line);padding:40px 30px;color:var(--ink-faint);
+    font-size:0.85rem;line-height:1.7;
+  }
+  .method-placeholder b{color:var(--ink);}
+  .method-placeholder .tag-todo{
+    display:inline-block;border:1px solid var(--red);color:var(--red);
+    font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;padding:3px 8px;margin-bottom:14px;
+  }
+
+  footer{
+    border-top:3px solid var(--line-strong);padding:26px 24px;text-align:center;
+    font-size:0.68rem;color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.1em;
+  }
+
+  @media(max-width:900px){.stats{grid-template-columns:repeat(5,1fr);}}
+  @media(max-width:640px){
+    .filters{flex-direction:column;}
+    .wordmark{font-size:1.8rem;}
+    #grid{grid-template-columns:1fr;}
+    .stats{grid-template-columns:repeat(3,1fr);}
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wordmark"><span class="rot">THE ROT</span> BENEATH</div>
+  <div class="masthead-sub">Archive of Transgressive & Depraved Interactive Works</div>
+  <div class="masthead-meta">
+    <!-- <div>Todos los enlaces a Wikipedia eliminados</div> -->
+  </div>
+</header>
+
+<div class="stats" id="statsRow"></div>
+
+<div id="controls">
+  <input type="text" id="search" placeholder="Buscar títulos, creadores, descripciones...">
+  <div class="filters">
+    <div class="fg"><label class="fl">Región</label><div id="rf" class="bw"></div></div>
+    <div class="fg"><label class="fl">Categoría</label><div id="cf" class="bw"></div></div>
+  </div>
+</div>
+
+<main id="grid"></main>
+
+<!-- <main class="after">
+  <div class="section-label"><div class="num">§</div><h2>Metodología de búsqueda</h2><div class="rule"></div></div>
+  <div class="method-placeholder">
+    <span class="tag-todo">Pendiente</span><br>
+    [ PLACEHOLDER — completar con la metodología usada para construir este archivo: criterios de inclusión, fuentes consultadas, proceso de verificación de enlaces, corridas de agente utilizadas, e idiomas cubiertos. ]
+  </div>
+</main> -->
+
+<!-- <footer>archivo de trabajo — the rot beneath · no publicar sin revisión editorial</footer> -->
+
+<script>
+const D = [{"t":"Ethnic Cleansing","y":"2002","d":"National Alliance","r":"US","c":"HATE","x":"White-supremacist FPS. Propaganda with a gun.","l":[{"u":"https://archive.org/details/ethnic-cleansing-the-video-game","n":"Internet Archive — Directorio de archivos"},{"u":"https://tvtropes.org/pmwiki/pmwiki.php/VideoGame/EthnicCleansing","n":"TV Tropes"}]},{"t":"KZ Manager","y":"1990","d":"Anonymous","r":"EU","c":"HATE","x":"Nazi camp management sim. Banality of evil.","l":[{"u":"https://tvtropes.org/pmwiki/pmwiki.php/VideoGame/KZManager","n":"TV Tropes — Página temática"},{"u":"https://video-games.fandom.com/wiki/KZ_Manager","n":"Fandom"}]},{"t":"ZOG's Nightmare","y":"2002","d":"Resistance Records","r":"US","c":"HATE","x":"Sequel to Ethnic Cleansing. Race war FPS.","l":[{"u":"https://www.wikidata.org/wiki/Q64461534","n":"Wikidata — Entrada de base de datos"},{"u":"https://gamerprofiles.com/game/x8Vmz/ZOG-s-Nightmare/gamerprofiles-partners","n":"GamerProfiles — Ficha del juego"},{"u":"https://www.counterextremism.com/blog/emerging-threat-extremist-made-video-games","n":"Counter-Extremism"}]},{"t":"Concentration Camp Rat Hunt","y":"2000","d":"Gerhard Lauck","r":"US","c":"HATE","x":"Shoot the Blacks / Camp hunting bundle.","l":[{"u":"https://www.wired.com/2002/02/games-elevate-hate-to-next-level","n":"WIRED — Artículo periodístico mencionando el juego"},{"u":"https://www.supremecourt.gov/opinions/URLs_Cited/OT2010/08-1448/08-1448-14.PDF","n":"U.S. Supreme Court — PDF citando el juego"},{"u":"https://web.archive.org/web/20020708140753/http://www.wired.com/news/politics/0,1283,54011,00.html","n":"Wired (archived)"}]},{"t":"Super Columbine Massacre RPG!","y":"2005","d":"Danny Ledonne","r":"US","c":"ATROCITY","x":"Reenactment of 1999 shooting. Documentary framing.","l":[{"u":"http://www.columbinegame.com/","n":"Sitio oficial — columbinegame.com"},{"u":"https://archive.org/details/super-columbine-massacre-rpg","n":"Internet Archive — Descarga"},{"u":"https://web.archive.org/web/2020/http://www.columbinegame.com/","n":"Official Site (archived)"}]},{"t":"V-Tech Rampage","y":"2007","d":"Ryan Lambourn","r":"US","c":"ATROCITY","x":"Virginia Tech shooting. Released 26 days post-event.","l":[{"u":"https://www.newgrounds.com/portal/view/378086","n":"Newgrounds — Página del juego"},{"u":"https://web.archive.org/web/20070526051313/http://www.newgrounds.com/portal/view/376345","n":"Newgrounds (archived)"}]},{"t":"Hong Kong 97","y":"1995","d":"HappySoft","r":"OTHER","c":"SNUFF","x":"Bootleg SF. Game over uses real corpse photo.","l":[{"u":"https://archive.org/details/hongkong97_snes","n":"Internet Archive — Jugable en navegador / descarga ROM"},{"u":"https://pdroms.de/files/supernintendoentertainmentsystem/hong-kong-97-28-02-1995","n":"PDROMs — Descarga ROM SNES"},{"u":"https://tvtropes.org/pmwiki/pmwiki.php/VideoGame/HongKong97","n":"TV Tropes"}]},{"t":"Sad Satan","y":"2015","d":"ZK / Obscure Horror","r":"OTHER","c":"SNUFF","x":"Deep web walker. Alleged real CSAM/shock imagery.","l":[{"u":"https://store.steampowered.com/app/2686080/Sad_Satan","n":"Steam — Clon/remake (no es el original)"},{"u":"https://alexander-wiseman.itch.io/sad-satan","n":"itch.io — Clon por Alexander Wiseman"},{"u":"https://tvtropes.org/pmwiki/pmwiki.php/VideoGame/SadSatan","n":"TV Tropes"}]},{"t":"The Torture Game 2","y":"2006","d":"Ben Spurgin","r":"US","c":"TORTURE","x":"Ragdoll physics. Pure torture simulator.","l":[{"u":"https://www.newgrounds.com/portal/view/439144","n":"Newgrounds — Página del juego"},{"u":"https://newgrounds.wiki.gg/wiki/List_of_Popular_Games","n":"Newgrounds Wiki"},{"u":"https://flashmuseum.org/","n":"Flash Museum"}]},{"t":"Demonophobia","y":"2008","d":"237","r":"JP","c":"TORTURE","x":"Ryona. Collecting death animations of Sakuri.","l":[{"u":"https://gamejolt.com/games/gamejoltcomdemonophobia/595423","n":"Game Jolt — Descarga (193 MB)"},{"u":"https://553-553.itch.io/demonophobia-remake","n":"itch.io — Remake por fans"},{"u":"https://forums.lostmediawiki.com/thread/4065/nsfl-developer-237-demonophobia","n":"Lost Media Wiki"},{"u":"https://tropedia.fandom.com/wiki/Demonophobia","n":"Tropedia"}]},{"t":"Jack o' Nine Tails","y":"2012","d":"Old Huntsman","r":"RU","c":"HATE","x":"Slave trainer. Economic degradation system.","l":[{"u":"https://wiki.anime-sharing.com/hgames/index.php?title=Jack-o-nine","n":"HGAMES Wiki — Info, versiones, referencias de descarga"},{"u":"https://f95zone.to/threads/jack-o-nine-tails-developer-versions-and-mods.57968/","n":"F95zone — Hilo con versiones y mods"},{"u":"https://tvtropes.org/pmwiki/pmwiki.php/VideoGame/JackONineTails","n":"TV Tropes"},{"u":"https://f95zone.to/threads/jack-o-nine-tails-v2-2-old-huntsman.226/","n":"F95zone Thread"}]},{"t":"Mad Father","y":"2012","d":"Sen","r":"JP","c":"RPG","x":"Vivisection, family inheritance of abuse.","l":[{"u":"https://store.steampowered.com/app/540670/Mad_Father","n":"Steam — Página de tienda"},{"u":"http://vgperson.com/games/madfather.htm","n":"vgperson — Traducción y descarga gratuita"},{"u":"https://store.steampowered.com/app/526560/Mad_Father/","n":"Steam"}]},{"t":"Misao","y":"2011","d":"Sen","r":"JP","c":"RPG","x":"School assault, bullying, vengeful spirit.","l":[{"u":"https://store.steampowered.com/app/610300/Misao/","n":"Steam — Página de tienda"},{"u":"http://vgperson.com/games/misao.htm","n":"vgperson — Traducción y descarga gratuita"},{"u":"https://store.steampowered.com/app/526570/Misao/","n":"Steam"}]},{"t":"Blank Dream","y":"2015","d":"Kanawo","r":"JP","c":"PSYCH","x":"Suicide as central mechanic. Mirror world.","l":[{"u":"http://vgperson.com/games/blankdream.htm","n":"vgperson — Traducción y descarga por Kanawo"},{"u":"https://rpgmaker.fandom.com/wiki/Blank_Dream","n":"RPG Maker Wiki"}]},{"t":"Corpse Party","y":"1996","d":"Team GrisGris","r":"JP","c":"RPG","x":"Original PC-98. Child murders in cursed school.","l":[{"u":"https://store.steampowered.com/app/303610/CORPSE_PARTY","n":"Steam — Remake PC (2015)"},{"u":"https://tvtropes.org/pmwiki/pmwiki.php/VideoGame/CorpseParty","n":"TV Tropes"}]},{"t":"Custer's Revenge","y":"1982","d":"Mystique","r":"US","c":"RETAIL","x":"Atari 2600. Retail rape sim of Native American.","l":[{"u":"https://archive.org/details/atari_2600_custers_revenge_1982_mystique_-_american_multiple_industries_joel_h._m","n":"Internet Archive — ROM Atari 2600 jugable en navegador"},{"u":"https://www.giantbomb.com/custers-revenge/3030-10579/","n":"Giant Bomb"}]},{"t":"Yume Nikki","y":"2004","d":"Kikiyama","r":"JP","c":"PSYCH","x":"Dream exploration, confinement, suicide ending.","l":[{"u":"https://store.steampowered.com/app/521790/Yume_Nikki","n":"Steam — Página de tienda"},{"u":"https://yume.wiki/yumenikki/downloads","n":"Yume Wiki — Descargas (versión original gratuita)"},{"u":"https://tvtropes.org/pmwiki/pmwiki.php/VideoGame/YumeNikki","n":"TV Tropes"}]},{"t":"Beautiful Escape: Dungeoneer","y":"2010","d":"Unknown","r":"JP","c":"RPG","x":"Sociopath kidnapping/torture tower defense.","l":[{"u":"https://gamejolt.com/games/beautiful-escape-dungeoneer/22396","n":"Game Jolt — Página del juego"},{"u":"https://rpgmaker.net/games/4263/","n":"RPGMaker.net"}]},{"t":"Presentable Liberty","y":"2014","d":"Robert Brock","r":"US","c":"PSYCH","x":"Locked in cell. Psychological abuse, nihilism.","l":[{"u":"https://archive.org/details/presentable-liberty","n":"Internet Archive — Descarga directa"},{"u":"https://web.archive.org/web/2020/https://wertpol.itch.io/presentable-liberty","n":"Internet Archive — Página original del desarrollador"},{"u":"https://presentable-liberty.fandom.com/wiki/Robert_Brock_(Wertpol)","n":"Fandom Wiki"}]},{"t":"the static speaks my name","y":"2015","d":"Jesse Barksdale","r":"US","c":"PSYCH","x":"Severe depression, psychosis, suicide.","l":[{"u":"https://jesselabs.itch.io/the-static-speaks-my-name","n":"itch.io — Página oficial de Jesse Barksdale"},{"u":"https://thewhalehusband.itch.io/thestatic","n":"itch.io"}]},{"t":"9 Childs Street","y":"2023","d":"N4bA","r":"RU","c":"PSYCH","x":"Anatoly Moskvin doll-mummy serial killer sim.","l":[{"u":"https://store.steampowered.com/app/1895890/9_Childs_Street","n":"Steam — Página de tienda"},{"u":"https://n4ba.itch.io/9-childs-st","n":"itch.io — Demo del desarrollador N4bA"},{"u":"https://store.steampowered.com/app/2551860/9_Childs_Street/","n":"Steam"},{"u":"https://steamdb.info/app/2551860/","n":"SteamDB"}]},{"t":"Hatred","y":"2015","d":"Destructive Creations","r":"EU","c":"HATE","x":"Mass shooting sim. Genocidal crusade.","l":[{"u":"https://store.steampowered.com/app/341940/Hatred/","n":"Steam — Página de tienda (verificación de edad)"},{"u":"https://destructivecreations.com","n":"Destructive Creations — Sitio oficial del estudio"}]},{"t":"The Gray Man","y":"2024","d":"Richard Haraším","r":"EU","c":"PSYCH","x":"Conscience of a serial killer. Schizophrenia.","l":[{"u":"https://store.steampowered.com/app/2574110/The_Gray_Man","n":"Steam — Página de tienda"},{"u":"https://store.steampowered.com/app/2216860/The_Gray_Man/","n":"Steam"},{"u":"https://omnipoet.itch.io/the-gray-man","n":"itch.io"}]},{"t":"Active Shooter","y":"2018","d":"Revived Games","r":"RU","c":"ATROCITY","x":"School shooting sim. Monetizing grief.","l":[{"u":"https://web.archive.org/web/20180529142628/https://store.steampowered.com/app/739630/Active_Shooter/","n":"Internet Archive — Captura de la página de Steam antes de retirada"},{"u":"https://steamdb.info/app/737590/","n":"SteamDB"}]},{"t":"Paranoiac","y":"2011","d":"Uri","r":"JP","c":"RPG","x":"Schizophrenia, body horror.","l":[{"u":"http://vgperson.com/games/paranoiac.htm","n":"vgperson — Traducción y descarga"},{"u":"https://store.steampowered.com/app/1066230/The_Strange_Men_Series/","n":"Steam"}]},{"t":"The Crooked Man","y":"2012","d":"Uri","r":"JP","c":"RPG","x":"Depression, neck-twisting entity.","l":[{"u":"http://vgperson.com/games/crookedman.htm","n":"vgperson — Traducción y descarga"},{"u":"https://the-crooked-man.fandom.com/wiki/Uri","n":"Fandom Wiki"},{"u":"http://vgperson.com/games/thecrookedman.htm","n":"vgperson"}]},{"t":"The Sandman","y":"2014","d":"Uri","r":"JP","c":"RPG","x":"Hoffmann Sandman, bad endings.","l":[{"u":"http://vgperson.com/games/sandman.htm","n":"vgperson — Traducción y descarga"},{"u":"http://vgperson.com/games/thesandman.htm","n":"vgperson"},{"u":"https://the-crooked-man.fandom.com/wiki/Uri","n":"Fandom Wiki"}]},{"t":"The Boogie Man","y":"?","d":"Uri","r":"JP","c":"RPG","x":"Sanity slippage, Strange Men myth.","l":[{"u":"http://vgperson.com/games/boogieman.htm","n":"vgperson — Traducción y descarga"},{"u":"https://rpgmaker.fandom.com/wiki/The_Boogie_Man","n":"RPG Maker Wiki — Información adicional"},{"u":"http://vgperson.com/games/theboogieman.htm","n":"vgperson"},{"u":"https://tvtropes.org/pmwiki/pmwiki.php/Creator/Uri","n":"TV Tropes"}]},{"t":"The Hanged Man","y":"?","d":"Uri","r":"JP","c":"RPG","x":"Psychological horror, destroyed hands.","l":[{"u":"http://vgperson.com/games/hangedman.htm","n":"vgperson — Traducción y descarga"},{"u":"https://store.steampowered.com/app/749890/The_Hanged_Man","n":"Steam — Página de tienda"},{"u":"https://playism.com/en/game/the-hanged-man","n":"PLAYISM — Página oficial"},{"u":"http://vgperson.com/games/thehangedman.htm","n":"vgperson"},{"u":"https://the-crooked-man.fandom.com/wiki/Uri","n":"Fandom Wiki"}]},{"t":"Mermaid Swamp","y":"?","d":"Uri","r":"JP","c":"RPG","x":"Body horror, deformed sirens.","l":[{"u":"http://vgperson.com/games/mermaidswamp.htm","n":"vgperson — Traducción y descarga"},{"u":"https://tvtropes.org/pmwiki/pmwiki.php/Creator/Uri","n":"TV Tropes"}]},{"t":"Pedestal","y":"?","d":"Uri","r":"JP","c":"RPG","x":"Strange Men mythology.","l":[{"u":"http://vgperson.com/games/pedestal.htm","n":"vgperson — Traducción y descarga"},{"u":"https://tvtropes.org/pmwiki/pmwiki.php/Creator/Uri","n":"TV Tropes"}]},{"t":"Insanity","y":"?","d":"Uri","r":"JP","c":"RPG","x":"Psychological breakdown.","l":[{"u":"http://vgperson.com/games/insanity.htm","n":"vgperson — Traducción y descarga"},{"u":"https://tvtropes.org/pmwiki/pmwiki.php/Creator/Uri","n":"TV Tropes"}]},{"t":"Fleshchild","y":"2017","d":"Pinkuboa","r":"JP","c":"BODY","x":"Inter-dimensional child harvesting body parts.","l":[{"u":"https://pinkuboa.itch.io/fleshchild","n":"itch.io — Página de Pinkuboa"},{"u":"https://ynfg.yume.wiki/Fleshchild","n":"Yume Nikki Fangames Wiki"},{"u":"https://rpgmaker.fandom.com/wiki/Fleshchild","n":"RPG Maker Wiki"}]},{"t":"Parasite in City","y":"?","d":"Pixel Factory","r":"JP","c":"NSFW","x":"Survival horror, explicit sexual encounters.","l":[{"u":"https://archive.org/details/parasite_in_city","n":"Internet Archive — Descarga v1.03"},{"u":"https://www.dlsite.com/maniax-touch/work/=/product_id/RJ304183","n":"DLsite"}]},{"t":"Desert Nightmare","y":"2005","d":"Kelven","r":"EU","c":"RPG","x":"Abandoned teen, dark town secrets.","l":[{"u":"https://web.archive.org/web/2020/https://rpgmaker.net/games/917/","n":"Internet Archive — Captura de rpgmaker.net (ID 917)"},{"u":"https://rpgmaker.fandom.com/wiki/Desert_Nightmare","n":"RPG Maker Wiki — Información"},{"u":"https://rpgmaker.net/games/917/","n":"RPGMaker.net"}]},{"t":"Schuld","y":"?","d":"Kelven","r":"EU","c":"RPG","x":"Seven deadly sins, rotting disease.","l":[{"u":"https://web.archive.org/web/2019/https://rpgmaker.net/games/686/","n":"Internet Archive — Captura de rpgmaker.net (ID 686)"},{"u":"https://rpgmaker.fandom.com/wiki/Schuld","n":"RPG Maker Wiki — Información"},{"u":"https://www.makerpendium.de/index.php/Schuld","n":"Makerpendium"}]},{"t":"Das Heim","y":"?","d":"Kelven","r":"EU","c":"RPG","x":"Fan favorite, dark themes.","l":[{"u":"https://rpgmaker.fandom.com/wiki/Kelven","n":"RPG Maker Wiki — Página de Kelven (lista de obras)"},{"u":"https://rpgmaker.net/games/3991/","n":"RPGMaker.net"},{"u":"https://www.makerpendium.de/index.php/Kelven","n":"Makerpendium"}]},{"t":"Urban Nightmare","y":"2013","d":"Kelven","r":"EU","c":"RPG","x":"Surreal modern horror trilogy.","l":[{"u":"https://rpgmaker.fandom.com/wiki/Kelven","n":"RPG Maker Wiki — Página de Kelven (lista de obras)"},{"u":"https://rpgmaker.fandom.com/wiki/Urban_Nightmare","n":"RPG Maker Wiki"},{"u":"https://www.makerpendium.de/index.php/Kelven","n":"Makerpendium"}]},{"t":"Strange Nightmare","y":"?","d":"Kelven","r":"EU","c":"RPG","x":"Zombies, ghosts, modern weapons.","l":[{"u":"https://rpgmaker.fandom.com/wiki/Kelven","n":"RPG Maker Wiki — Página de Kelven (lista de obras)"},{"u":"https://www.makerpendium.de/index.php/Kelven","n":"Makerpendium"},{"u":"https://forums.rpgmakerweb.com/threads/rpg-maker-horror-games-thread.70742","n":"RPG Maker Forums"}]},{"t":"Die Bücher Luzifers","y":"?","d":"Kelven","r":"EU","c":"RPG","x":"Fallen Christian mythology.","l":[{"u":"https://rpgmaker.fandom.com/wiki/Kelven","n":"RPG Maker Wiki — Página de Kelven (lista de obras)"},{"u":"https://www.makerpendium.de/index.php/Kelven","n":"Makerpendium"}]},{"t":"Calm Falls","y":"?","d":"Kelven","r":"EU","c":"RPG","x":"Horror series with remaster.","l":[{"u":"https://rpgmaker.fandom.com/wiki/Kelven","n":"RPG Maker Wiki — Página de Kelven (lista de obras)"},{"u":"https://www.makerpendium.de/index.php/Kelven","n":"Makerpendium"},{"u":"https://rpgmaker.fandom.com/wiki/Calm_Falls","n":"RPG Maker Wiki"}]},{"t":"Im Herzen der Finsternis","y":"?","d":"Kelven","r":"EU","c":"RPG","x":"Colonial darkness, Conrad reference.","l":[{"u":"https://rpgmaker.fandom.com/wiki/Kelven","n":"RPG Maker Wiki — Página de Kelven (lista de obras)"},{"u":"https://www.makerpendium.de/index.php/Kelven","n":"Makerpendium"}]},{"t":"Schatten über Dämmertal","y":"?","d":"Kelven","r":"EU","c":"RPG","x":"Town-darkness horror.","l":[{"u":"https://rpgmaker.fandom.com/wiki/Kelven","n":"RPG Maker Wiki — Página de Kelven (lista de obras)"},{"u":"https://www.makerpendium.de/index.php/Kelven","n":"Makerpendium"}]},{"t":"Deep im Dunklen","y":"?","d":"Kelven","r":"EU","c":"RPG","x":"Darkness trilogy.","l":[{"u":"https://rpgmaker.fandom.com/wiki/Kelven","n":"RPG Maker Wiki — Página de Kelven (lista de obras)"},{"u":"https://www.makerpendium.de/index.php/Kelven","n":"Makerpendium"}]},{"t":"Verlorene Seelen","y":"?","d":"Kelven","r":"EU","c":"RPG","x":"Explicit spiritual themes.","l":[{"u":"https://rpgmaker.fandom.com/wiki/Kelven","n":"RPG Maker Wiki — Página de Kelven (lista de obras)"},{"u":"https://www.makerpendium.de/index.php/Kelven","n":"Makerpendium"}]},{"t":"Zerbrochene Träume","y":"?","d":"Kelven","r":"EU","c":"RPG","x":"Oneiric-disturbing.","l":[{"u":"https://rpgmaker.fandom.com/wiki/Kelven","n":"RPG Maker Wiki — Página de Kelven (lista de obras)"},{"u":"https://www.makerpendium.de/index.php/Kelven","n":"Makerpendium"}]},{"t":"Alice","y":"?","d":"Kelven","r":"EU","c":"RPG","x":"Dark Alice reinterpretation.","l":[{"u":"https://rpgmaker.fandom.com/wiki/Kelven","n":"RPG Maker Wiki — Página de Kelven (lista de obras)"},{"u":"https://www.makerpendium.de/index.php/Kelven","n":"Makerpendium"}]},{"t":"Jenseits des Tores","y":"?","d":"Kelven","r":"EU","c":"RPG","x":"Dimensional crossing.","l":[{"u":"https://rpgmaker.fandom.com/wiki/Kelven","n":"RPG Maker Wiki — Página de Kelven (lista de obras)"},{"u":"https://www.makerpendium.de/index.php/Kelven","n":"Makerpendium"}]},{"t":"Auf schmalem Grat","y":"?","d":"Kelven","r":"EU","c":"RPG","x":"Existential tension.","l":[{"u":"https://rpgmaker.fandom.com/wiki/Kelven","n":"RPG Maker Wiki — Página de Kelven (lista de obras)"},{"u":"https://www.makerpendium.de/index.php/Kelven","n":"Makerpendium"}]},{"t":"Eterna","y":"?","d":"Kelven","r":"EU","c":"RPG","x":"Temporal duality series.","l":[{"u":"https://rpgmaker.fandom.com/wiki/Kelven","n":"RPG Maker Wiki — Página de Kelven (lista de obras)"},{"u":"https://www.makerpendium.de/index.php/Kelven","n":"Makerpendium"}]},{"t":"Don's Adventures 2","y":"?","d":"Kelven","r":"EU","c":"RPG","x":"Dark sequel.","l":[{"u":"https://rpgmaker.fandom.com/wiki/Kelven","n":"RPG Maker Wiki — Página de Kelven (lista de obras)"},{"u":"https://www.makerpendium.de/index.php/Kelven","n":"Makerpendium"}]},{"t":"Nr. 5172","y":"?","d":"Kelven","r":"EU","c":"RPG","x":"Dystopian/asylum.","l":[{"u":"https://rpgmaker.fandom.com/wiki/Kelven","n":"RPG Maker Wiki — Página de Kelven (lista de obras)"},{"u":"https://www.makerpendium.de/index.php/Kelven","n":"Makerpendium"}]},{"t":"Das Opfer","y":"?","d":"Kelven","r":"EU","c":"RPG","x":"The sacrifice.","l":[{"u":"https://rpgmaker.fandom.com/wiki/Kelven","n":"RPG Maker Wiki — Página de Kelven (lista de obras)"},{"u":"https://www.makerpendium.de/index.php/Kelven","n":"Makerpendium"}]},{"t":"Ultimatium","y":"2021","d":"PurgeAutomaZero","r":"OTHER","c":"RPG","x":"Sadistic mother/son, anti-affirmation.","l":[{"u":"https://purgeautomazero.itch.io/ultimatium","n":"itch.io — Página probable del desarrollador"},{"u":"https://yuumsarte.itch.io/ultimatum","n":"itch.io (demo)"}]},{"t":"Cartoon Violets","y":"2021","d":"PurgeAutomaZero","r":"OTHER","c":"RPG","x":"Sadistic/ritualistic series.","l":[{"u":"https://purgeautomazero.itch.io/cartoon-violets","n":"itch.io — Página probable del desarrollador"},{"u":"https://forums.rpgmakerweb.com/forums/resource-requests.31/page-353","n":"RPG Maker Forums"}]},{"t":"Sewerside: Vault of the 15 Monkeys","y":"2020","d":"RadQuil","r":"OTHER","c":"RPG","x":"Pre-Cartoon Violets.","l":[{"u":"https://radquil.itch.io/sewerside-vault-of-the-15-monkeys","n":"itch.io — Página probable de RadQuil"},{"u":"https://maxonclakson.itch.io/sewerside-vault-of-the-15-monkeys","n":"itch.io"}]},{"t":"Niki 0-2","y":"2021","d":"RadQuil","r":"OTHER","c":"RPG","x":"Minor projects.","l":[{"u":"https://radquil.itch.io/niki","n":"itch.io — Página probable de RadQuil"},{"u":"https://maxonclakson.itch.io/","n":"itch.io (creator)"}]},{"t":"Unrepredation","y":"2022","d":"RadQuil","r":"OTHER","c":"RPG","x":"Minor projects.","l":[{"u":"https://radquil.itch.io/unrepredation","n":"itch.io — Página probable de RadQuil"},{"u":"https://maxonclakson.itch.io/","n":"itch.io (creator)"}]},{"t":"Träumfänger","y":"?","d":"Unknown","r":"RU","c":"RPG","x":"Mother's death, psychological family trauma.","l":[{"u":"https://rpgmaker.fandom.com/wiki/Traumf%C3%A4nger","n":"RPG Maker Wiki — Búsqueda de información"},{"u":"https://rpg-horror.fandom.com/wiki/Tr%C3%A4umf%C3%A4nger","n":"RPG Maker Horror Wiki"}]},{"t":"Agoraphobia","y":"?","d":"Unknown","r":"RU","c":"RPG","x":"Isolation, trauma, déjà vu.","l":[{"u":"https://rpgmaker.fandom.com/wiki/Agoraphobia","n":"RPG Maker Wiki — Búsqueda de información"},{"u":"https://rpg-horror.fandom.com/wiki/Agoraphobia","n":"RPG Maker Horror Wiki"}]},{"t":"Hello? Hell...O?","y":"?","d":"Unknown","r":"RU","c":"RPG","x":"Perturbing universe.","l":[{"u":"http://vgperson.com/games/hellohello.htm","n":"vgperson — Traducción (nota: catálogo como JP, dev tachi)"},{"u":"https://rpgmaker.fandom.com/wiki/Hello%3F_Hell...o%3F","n":"RPG Maker Wiki"}]},{"t":"Ekzorcist","y":"?","d":"Unknown","r":"RU","c":"RPG","x":"Possession and ritual.","l":[{"u":"https://rpgmaker.fandom.com/wiki/Ekzorcist","n":"RPG Maker Wiki — Búsqueda de información"},{"u":"https://rpg-horror.fandom.com/wiki/Ekzorcist","n":"RPG Maker Horror Wiki"}]},{"t":"Baron Saturday","y":"?","d":"Horror Forge","r":"RU","c":"RPG","x":"Forbidden door, basement amnesia.","l":[{"u":"https://rpgmaker.fandom.com/wiki/Baron_Saturday","n":"RPG Maker Wiki — Búsqueda de información"},{"u":"https://rpgmaker.net/games/11275/","n":"RPGMaker.net"},{"u":"https://rpg-horror.fandom.com/wiki/Baron_Saturday","n":"RPG Maker Horror Wiki"}]},{"t":"Terror Of Cyber Ryckert","y":"2016","d":"Yames","r":"OTHER","c":"BODY","x":"Technological fear.","l":[{"u":"https://yames.itch.io/terror-of-cyber-ryckert","n":"itch.io — Página de Yames"},{"u":"https://pantagruel.itch.io","n":"itch.io (Yames)"}]},{"t":"Matt Rorie Simulator","y":"2017","d":"Yames","r":"OTHER","c":"BODY","x":"Experimentation.","l":[{"u":"https://yames.itch.io/matt-rorie-simulator","n":"itch.io — Página de Yames"},{"u":"https://pantagruel.itch.io","n":"itch.io (Yames)"}]},{"t":"A Dungeon","y":"2018","d":"Yames","r":"OTHER","c":"BODY","x":"Body horror.","l":[{"u":"https://yames.itch.io/a-dungeon","n":"itch.io — Página de Yames"},{"u":"https://pantagruel.itch.io","n":"itch.io (Yames)"}]},{"t":"Via Negativa","y":"2018","d":"Yames","r":"OTHER","c":"BODY","x":"Mystical negative theology.","l":[{"u":"https://yames.itch.io/via-negativa","n":"itch.io — Página de Yames"},{"u":"https://pantagruel.itch.io","n":"itch.io (Yames)"}]},{"t":"Lips Like Velum","y":"2018","d":"Yames","r":"OTHER","c":"BODY","x":"Anatomical horror.","l":[{"u":"https://yames.itch.io/lips-like-velum","n":"itch.io — Página de Yames"},{"u":"https://pantagruel.itch.io","n":"itch.io (Yames)"}]},{"t":"|\\/|\\|0|\\/\\|5+3|2.exe","y":"2019","d":"Yames","r":"OTHER","c":"BODY","x":"Obfuscated name, anatomical.","l":[{"u":"https://yames.itch.io/mouses","n":"itch.io — Conocido como mouses.exe (nombre real del archivo)"},{"u":"https://pantagruel.itch.io","n":"itch.io (Yames)"}]},{"t":"Velum Children","y":"TBA","d":"Yames","r":"OTHER","c":"BODY","x":"Sequel to Lips Like Velum.","l":[{"u":"https://yames.itch.io/velum-children","n":"itch.io — Página de Yames (TBA)"},{"u":"https://pantagruel.itch.io","n":"itch.io (Yames)"}]},{"t":"Discover My Body","y":"2020","d":"Yames","r":"OTHER","c":"BODY","x":"Body horror centered.","l":[{"u":"https://yames.itch.io/discover-my-body","n":"itch.io — Página de Yames"},{"u":"https://pantagruel.itch.io/discover-my-body","n":"itch.io"},{"u":"https://store.steampowered.com/app/1990210/Discover_My_Body/","n":"Steam"}]},{"t":"Water Womb World","y":"2020","d":"Yames","r":"OTHER","c":"BODY","x":"Liquid/uterine themes.","l":[{"u":"https://yames.itch.io/water-womb-world","n":"itch.io — Página de Yames"},{"u":"https://pantagruel.itch.io/water-womb-world","n":"itch.io"}]},{"t":"Father Turned Me Into Trees","y":"TBA","d":"Yames","r":"OTHER","c":"BODY","x":"Transformation/parental.","l":[{"u":"https://yames.itch.io/father-turned-me-into-trees","n":"itch.io — Página de Yames (TBA)"},{"u":"https://pantagruel.itch.io","n":"itch.io (Yames)"}]},{"t":"Discover Our Bodies","y":"TBA","d":"Yames","r":"OTHER","c":"BODY","x":"Continuation.","l":[{"u":"https://yames.itch.io/discover-our-bodies","n":"itch.io — Página de Yames (TBA)"},{"u":"https://pantagruel.itch.io","n":"itch.io (Yames)"}]},{"t":"The Well","y":"2021","d":"Yames","r":"OTHER","c":"BODY","x":"Lovecraftian body horror.","l":[{"u":"https://yames.itch.io/the-well","n":"itch.io — Página de Yames"},{"u":"https://pantagruel.itch.io/the-well","n":"itch.io"},{"u":"https://store.steampowered.com/app/1990200/The_Well/","n":"Steam"}]},{"t":"Growing My Grandpa!","y":"2022","d":"Yames","r":"OTHER","c":"BODY","x":"Perturbing virtual pet mutation.","l":[{"u":"https://yames.itch.io/growing-my-grandpa","n":"itch.io — Página de Yames"},{"u":"https://pantagruel.itch.io/growing-my-grandpa","n":"itch.io"}]},{"t":"CHYRZA","y":"?","d":"Kitty Horrorshow","r":"OTHER","c":"BODY","x":"Monochromatic alien empty world.","l":[{"u":"https://kittyhorrorshow.itch.io/chyrza","n":"itch.io — Página de Kitty Horrorshow"}]},{"t":"ANATOMY","y":"2016","d":"Kitty Horrorshow","r":"OTHER","c":"BODY","x":"House physiology, skin walls, teeth.","l":[{"u":"https://kittyhorrorshow.itch.io/anatomy","n":"itch.io — Página de Kitty Horrorshow"}]},{"t":"Dust City","y":"?","d":"Kitty Horrorshow","r":"OTHER","c":"BODY","x":"Dystopia.","l":[{"u":"https://kittyhorrorshow.itch.io/dust-city","n":"itch.io — Página de Kitty Horrorshow"}]},{"t":"CHONDRIATIC","y":"2021","d":"Yames","r":"OTHER","c":"BODY","x":"Hypochondriac, bioluminescent fungi.","l":[{"u":"https://yames.itch.io/chondriatic","n":"itch.io — Página de Yames"},{"u":"https://pantagruel.itch.io/chondriatic","n":"itch.io"}]},{"t":"Dreamland","y":"?","d":"Ason","r":"JP","c":"NSFW","x":"Complete adult themes.","l":[{"u":"https://web.archive.org/web/2020/https://rpgmaker.net/games/dreamland/","n":"Internet Archive — Captura de rpgmaker.net"},{"u":"https://www.dlsite.com/maniax/work/=/product_id/RJ274236.html","n":"DLsite"}]},{"t":"Akemi Tan","y":"?","d":"Kona5","r":"JP","c":"NSFW","x":"Genuine psychological horror.","l":[{"u":"https://web.archive.org/web/20160421154029/http://vi1222.tumblr.com/post/115626661877/new-download-link-for-kona5s-games-o","n":"Internet Archive — Post de vi1222 con enlaces de descarga"},{"u":"https://rpg-horror.fandom.com/wiki/Akemi_Tan","n":"RPG Horror Wiki"},{"u":"https://asphodelgaming.com/akemi-tan","n":"Asphodel Gaming"}]},{"t":"Body Elements","y":"?","d":"Kona5","r":"JP","c":"NSFW","x":"Body horror.","l":[{"u":"https://rpgmaker.net/games/5979/","n":"rpgmaker.net — Página del juego (ID 5979)"},{"u":"https://web.archive.org/web/20160421154029/http://vi1222.tumblr.com/post/115626661877/new-download-link-for-kona5s-games-o","n":"Internet Archive — Post de vi1222 con enlaces"},{"u":"https://rpg-horror.fandom.com/wiki/Body_Elements","n":"RPG Maker Horror Wiki"}]},{"t":"Oyadori no Ko","y":"?","d":"Kona5","r":"JP","c":"NSFW","x":"Japanese folklore.","l":[{"u":"https://web.archive.org/web/20151001200328/http://vi1222.tumblr.com/post/72579275411/oyadori-no-ko-english-version-yay-yay-w","n":"Internet Archive — Anuncio de la traducción (archivos perdidos)"},{"u":"https://web.archive.org/web/20160421154029/http://vi1222.tumblr.com/post/115626661877/new-download-link-for-kona5s-games-o","n":"Internet Archive — Post de vi1222 (archivos perdidos)"},{"u":"https://rpg-horror.fandom.com/wiki/Oyadori_no_Ko","n":"RPG Maker Horror Wiki"}]},{"t":"Pilgrim","y":"?","d":"Kona5","r":"JP","c":"NSFW","x":"Dark themes.","l":[{"u":"https://web.archive.org/web/20160421154029/http://vi1222.tumblr.com/post/115626661877/new-download-link-for-kona5s-games-o","n":"Internet Archive — Post de vi1222 (traducción perdida/incompleta)"},{"u":"https://rpg-horror.fandom.com/wiki/Pilgrim","n":"RPG Maker Horror Wiki"}]},{"t":"Sukutte","y":"?","d":"Kona5","r":"JP","c":"NSFW","x":"Adult horror.","l":[{"u":"https://rpgmaker.net/games/6469/","n":"rpgmaker.net — Página del juego (ID 6469)"},{"u":"https://web.archive.org/web/20160421154029/http://vi1222.tumblr.com/post/115626661877/new-download-link-for-kona5s-games-o","n":"Internet Archive — Post de vi1222 con enlaces"},{"u":"https://rpg-horror.fandom.com/wiki/Sukutte","n":"RPG Maker Horror Wiki"}]},{"t":"It Moves","y":"?","d":"SnowOwl","r":"OTHER","c":"RPG","x":"Highly rated horror.","l":[{"u":"http://vgperson.com/games/itmoves.htm","n":"vgperson — Traducción y descarga (SnowOwl)"},{"u":"https://rpgmaker.fandom.com/wiki/SnowOwl","n":"RPG Maker Wiki"},{"u":"https://rpgmaker.net/games/1205/","n":"RPGMaker.net"}]},{"t":"Skinwalker","y":"?","d":"SnowOwl","r":"OTHER","c":"RPG","x":"Navajo folklore.","l":[{"u":"https://web.archive.org/web/2020/https://rpgmaker.net/games/skinwalker/","n":"Internet Archive — Captura de rpgmaker.net"},{"u":"https://rpgmaker.net/games/4906/","n":"RPGMaker.net"},{"u":"https://rpgmaker.fandom.com/wiki/SnowOwl","n":"RPG Maker Wiki"}]},{"t":"Rust and Blood","y":"?","d":"SnowOwl","r":"OTHER","c":"RPG","x":"Industrial horror.","l":[{"u":"https://web.archive.org/web/2020/https://rpgmaker.net/games/rust-and-blood/","n":"Internet Archive — Captura de rpgmaker.net"},{"u":"https://rpgmaker.fandom.com/wiki/SnowOwl","n":"RPG Maker Wiki"},{"u":"https://rpgmaker.net/games/11575/","n":"RPGMaker.net"}]},{"t":"The Visitor","y":"?","d":"SnowOwl","r":"OTHER","c":"RPG","x":"Horror.","l":[{"u":"https://web.archive.org/web/2020/https://rpgmaker.net/games/visitor/","n":"Internet Archive — Captura de rpgmaker.net"},{"u":"https://rpgmaker.fandom.com/wiki/SnowOwl","n":"RPG Maker Wiki"}]},{"t":"After Man","y":"?","d":"SnowOwl","r":"OTHER","c":"RPG","x":"Horror.","l":[{"u":"https://web.archive.org/web/2020/https://rpgmaker.net/games/after-man/","n":"Internet Archive — Captura de rpgmaker.net"},{"u":"https://rpgmaker.fandom.com/wiki/SnowOwl","n":"RPG Maker Wiki"}]},{"t":"House of Horror","y":"?","d":"SnowOwl","r":"OTHER","c":"RPG","x":"Horror.","l":[{"u":"https://web.archive.org/web/2020/https://rpgmaker.net/games/house-of-horror/","n":"Internet Archive — Captura de rpgmaker.net"},{"u":"https://rpgmaker.fandom.com/wiki/SnowOwl","n":"RPG Maker Wiki"}]},{"t":"Miserere","y":"?","d":"SnowOwl","r":"OTHER","c":"RPG","x":"Ecclesiastical-liturgical.","l":[{"u":"https://web.archive.org/web/2020/https://rpgmaker.net/games/miserere/","n":"Internet Archive — Captura de rpgmaker.net"},{"u":"https://rpgmaker.fandom.com/wiki/SnowOwl","n":"RPG Maker Wiki"}]},{"t":"A Night at Hotel Deuce","y":"?","d":"SnowOwl","r":"OTHER","c":"RPG","x":"Horror.","l":[{"u":"https://web.archive.org/web/2020/https://rpgmaker.net/games/hotel-deuce/","n":"Internet Archive — Captura de rpgmaker.net"},{"u":"https://rpgmaker.fandom.com/wiki/SnowOwl","n":"RPG Maker Wiki"}]},{"t":"No Manatees Promised","y":"?","d":"SnowOwl","r":"OTHER","c":"RPG","x":"Perturbing.","l":[{"u":"https://web.archive.org/web/2020/https://rpgmaker.net/games/no-manatees-promised/","n":"Internet Archive — Captura de rpgmaker.net"},{"u":"https://rpgmaker.fandom.com/wiki/SnowOwl","n":"RPG Maker Wiki"}]},{"t":"Cat in the Box","y":"?","d":"Gustav","r":"OTHER","c":"RPG","x":"Disturbing.","l":[{"u":"http://vgperson.com/games/catinthebox.htm","n":"vgperson — Traducción y descarga (Gustav)"},{"u":"https://cat-in-the-box.fandom.com/wiki/STYGIAN","n":"Fandom Wiki"},{"u":"https://rpgmaker.net/games/11574/","n":"RPGMaker.net"}]},{"t":"Stygian","y":"?","d":"Gustav","r":"OTHER","c":"RPG","x":"Dark mythology.","l":[{"u":"https://web.archive.org/web/2020/https://rpgmaker.net/games/stygian/","n":"Internet Archive — Captura de rpgmaker.net"},{"u":"https://marhite.itch.io/stygian","n":"itch.io"},{"u":"https://cat-in-the-box.fandom.com/wiki/STYGIAN","n":"Fandom Wiki"}]},{"t":"Leave","y":"?","d":"Gustav","r":"OTHER","c":"RPG","x":"Horror.","l":[{"u":"https://web.archive.org/web/2020/https://rpgmaker.net/games/leave/","n":"Internet Archive — Captura de rpgmaker.net"},{"u":"https://cat-in-the-box.fandom.com/wiki/STYGIAN","n":"Fandom Wiki"}]},{"t":"Tide Up","y":"?","d":"Gustav","r":"OTHER","c":"RPG","x":"Horror.","l":[{"u":"https://web.archive.org/web/2020/https://rpgmaker.net/games/tide-up/","n":"Internet Archive — Captura de rpgmaker.net"},{"u":"https://en.namu.wiki/w/Tide%20Up","n":"NamuWiki"}]},{"t":"Charon","y":"?","d":"Charon","r":"OTHER","c":"RPG","x":"Prolific short dark games.","l":[{"u":"http://vgperson.com/games/charon.htm","n":"vgperson — Lista de juegos cortos de horror de Charon"},{"u":"https://charon.wiki.gg","n":"Charon Wiki"},{"u":"https://tvtropes.org/pmwiki/pmwiki.php/Creator/Charon","n":"TV Tropes"}]},{"t":"Stray Cat Crossing","y":"2015","d":"Unknown","r":"OTHER","c":"RPG","x":"Disturbing RPG Maker.","l":[{"u":"https://store.steampowered.com/app/385330/Stray_Cat_Crossing","n":"Steam — Página de tienda"},{"u":"https://store.steampowered.com/app/384190/Stray_Cat_Crossing/","n":"Steam"}]},{"t":"Peret em Heru","y":"?","d":"Unknown","r":"OTHER","c":"RPG","x":"Egyptian-themed.","l":[{"u":"http://vgperson.com/games/peretemheru.htm","n":"vgperson — Traducción y descarga"},{"u":"https://rpg-horror.fandom.com/wiki/Peret_em_Heru","n":"RPG Maker Horror Wiki"}]},{"t":"Camp Sunshine","y":"2016","d":"Unknown","r":"OTHER","c":"RPG","x":"Atmospheric camp horror.","l":[{"u":"https://store.steampowered.com/app/457570/Camp_Sunshine","n":"Steam — Página de tienda"},{"u":"https://store.steampowered.com/app/494790/Camp_Sunshine/","n":"Steam"}]},{"t":"From Next Door","y":"?","d":"Unknown","r":"OTHER","c":"RPG","x":"Perturbing neighborhood.","l":[{"u":"https://store.steampowered.com/app/831610/From_Next_Door","n":"Steam — Página de tienda"},{"u":"https://rpg-horror.fandom.com/wiki/From_Next_Door","n":"RPG Maker Horror Wiki"}]},{"t":"Alice Mare","y":"2016","d":"Unknown","r":"OTHER","c":"RPG","x":"Oneiric-disturbing.","l":[{"u":"https://store.steampowered.com/app/524850/Alicemare","n":"Steam — Página de tienda"},{"u":"https://store.steampowered.com/app/526590/Alice_Mare/","n":"Steam"},{"u":"http://vgperson.com/games/alicemare.htm","n":"vgperson"}]},{"t":"Blight Dream","y":"?","d":"Unknown","r":"OTHER","c":"RPG","x":"Yume-Nikki-like.","l":[{"u":"https://yume.wiki/other-fangames/blight-dream","n":"Yume Wiki — Página del fangame"},{"u":"https://rpg-horror.fandom.com/wiki/Blight_Dream","n":"RPG Maker Horror Wiki"}]},{"t":"Aria's Story","y":"?","d":"Unknown","r":"OTHER","c":"RPG","x":"Disturbing.","l":[{"u":"https://store.steampowered.com/app/1016930/Arias_Story","n":"Steam — Página de tienda"},{"u":"https://rpg-horror.fandom.com/wiki/Aria%27s_Story","n":"RPG Maker Horror Wiki"}]},{"t":"Midnight Train","y":"?","d":"Unknown","r":"OTHER","c":"RPG","x":"Surreal-dark train.","l":[{"u":"https://vgperson.itch.io/midnight-train","n":"itch.io — Página de vgperson"},{"u":"https://rpg-horror.fandom.com/wiki/Midnight_Train","n":"RPG Maker Horror Wiki"}]},{"t":"Hello Charlotte","y":"?","d":"Unknown","r":"OTHER","c":"RPG","x":"Disturbing series.","l":[{"u":"https://etherane.itch.io/hello-charlotte-ep1","n":"itch.io — Episodio 1 (por etherane)"},{"u":"https://store.steampowered.com/app/557630/Hello_Charlotte_EP2_Requiem_Aeternam_Deo","n":"Steam — Episodio 2"},{"u":"https://store.steampowered.com/app/782490/Hello_Charlotte_EP1/","n":"Steam"}]},{"t":"Black Home","y":"?","d":"Unknown","r":"OTHER","c":"RPG","x":"Traditional RPG + disturbing.","l":[{"u":"https://store.steampowered.com/app/848690/Black_Home","n":"Steam — Página de tienda"},{"u":"https://store.steampowered.com/app/879340/Black_Home/","n":"Steam"},{"u":"http://vgperson.com/games/blackhome.htm","n":"vgperson"}]},{"t":"The Longing Ribbon","y":"?","d":"Unknown","r":"OTHER","c":"RPG","x":"Deliberately terrible battles.","l":[{"u":"https://web.archive.org/web/2020/https://rpgmaker.net/games/longing-ribbon/","n":"Internet Archive — Captura de rpgmaker.net"},{"u":"https://rpg-horror.fandom.com/wiki/The_Longing_Ribbon","n":"RPG Maker Horror Wiki"}]},{"t":"Faust's Alptraum","y":"?","d":"Unknown","r":"EU","c":"RPG","x":"Faust-disturbing.","l":[{"u":"https://store.steampowered.com/app/724300/Fausts_Alptraum","n":"Steam — Página de tienda"},{"u":"https://store.steampowered.com/app/927730/Fausts_Alptraum/","n":"Steam"},{"u":"https://rpg-horror.fandom.com/wiki/Faust%27s_Alptraum","n":"Random RPG Maker Wiki"}]},{"t":"Just Ignore Them","y":"?","d":"Unknown","r":"OTHER","c":"RPG","x":"Family-perturbing.","l":[{"u":"https://store.steampowered.com/app/557660/Just_Ignore_Them","n":"Steam — Página de tienda"},{"u":"https://store.steampowered.com/app/682820/Just_Ignore_Them/","n":"Steam"}]},{"t":"My Big Sister","y":"?","d":"Unknown","r":"OTHER","c":"RPG","x":"Family-perturbing.","l":[{"u":"https://store.steampowered.com/app/680890/My_Big_Sister","n":"Steam — Página de tienda"},{"u":"https://store.steampowered.com/app/619110/My_Big_Sister/","n":"Steam"}]},{"t":"Libretta","y":"?","d":"Unknown","r":"OTHER","c":"RPG","x":"Dark fantasy.","l":[{"u":"https://store.steampowered.com/app/842850/Libretta","n":"Steam — Página de tienda"},{"u":"https://store.steampowered.com/app/1250090/Libretta/","n":"Steam"}]},{"t":"BioFury","y":"?","d":"Unknown","r":"US","c":"RETAIL","x":"3DO homebrew.","l":[{"u":"https://archive.org/details/3do_homebrew","n":"Internet Archive — Colección homebrew 3DO"},{"u":"https://zyzixgames.itch.io/biofury","n":"itch.io"},{"u":"https://www.reddit.com/r/3DO/comments/19bfxh2/are_there_any_3do_homebrew_games","n":"Reddit"}]},{"t":"Frost","y":"?","d":"Unknown","r":"RU","c":"NSFW","x":"NSFW and disturbing.","l":[{"u":"https://rpgmaker.fandom.com/wiki/Frost","n":"RPG Maker Wiki — Búsqueda de información"},{"u":"https://rpg-horror.fandom.com/wiki/Frost","n":"RPG Maker Horror Wiki"}]},{"t":"Somnus","y":"?","d":"Unknown","r":"RU","c":"NSFW","x":"Dream + adult content.","l":[{"u":"https://rpgmaker.fandom.com/wiki/Somnus","n":"RPG Maker Wiki — Búsqueda de información"},{"u":"https://rpg-horror.fandom.com/wiki/Somnus","n":"RPG Maker Horror Wiki"}]},{"t":"Snowball's Chance in Hell","y":"?","d":"Unknown","r":"RU","c":"NSFW","x":"Perturbing.","l":[{"u":"https://rpgmaker.fandom.com/wiki/Snowball%27s_Chance_in_Hell","n":"RPG Maker Wiki — Búsqueda de información"},{"u":"https://rpg-horror.fandom.com/wiki/Snowball%27s_Chance_in_Hell","n":"RPG Maker Horror Wiki"}]},{"t":"Cruel","y":"?","d":"Various","r":"RU","c":"NSFW","x":"Multiple cruel titles.","l":[{"u":"https://rpgmaker.fandom.com/wiki/Cruel","n":"RPG Maker Wiki — Búsqueda de información"},{"u":"https://rpg-horror.fandom.com/wiki/Cruel","n":"RPG Maker Horror Wiki"}]},{"t":"Imscared","y":"2012","d":"Ivan Zanotti","r":"EU","c":"META","x":"Meta-horror, modifies desktop files.","l":[{"u":"https://store.steampowered.com/app/429720/IMSCARED","n":"Steam — Página de tienda"},{"u":"https://ivanzanotti.itch.io/imscared-a-knock-off-horror-game","n":"itch.io — Versión original por Ivan Zanotti"},{"u":"https://gamejolt.com/games/imscared-a-ghost-nestled-within-reports/147444","n":"GameJolt"}]},{"t":".flow","y":"?","d":"Yume2kki Team","r":"JP","c":"PSYCH","x":"Dream exploration, heavy psychological dread.","l":[{"u":"https://yume.wiki/flow/Downloads","n":"Yume Nikki Fangames Wiki — Página de descargas"},{"u":"https://yumenikki.wiki/wiki/.flow","n":"Yume Nikki Wiki"}]},{"t":"Mogeko Castle","y":"2012","d":"Deep-Sea Prisoner","r":"JP","c":"RPG","x":"Dark fantasy RPG, grotesque themes.","l":[{"u":"https://funamusea.itch.io/mogeko-castle","n":"itch.io — Página de Deep-Sea Prisoner (Funamusea)"},{"u":"https://deep-sea-prisoner.tumblr.com/","n":"Deep-Sea Prisoner"}]},{"t":"Saya no Uta","y":"2009","d":"Nitroplus","r":"JP","c":"NSFW","x":"Lovecraftian body horror, explicit content.","l":[{"u":"https://store.steampowered.com/app/702050/The_Song_of_Saya","n":"Steam — Publicado como The Song of Saya"},{"u":"https://tvtropes.org/pmwiki/pmwiki.php/VisualNovel/SayaNoUta","n":"TV Tropes"}]},{"t":"Pocket Mirror","y":"2016","d":"AstralShift","r":"OTHER","c":"PSYCH","x":"Gothic horror, oppressive atmosphere.","l":[{"u":"https://astralshiftpro.itch.io/pocket-mirror-classic","n":"itch.io — Versión Classic"},{"u":"https://store.steampowered.com/app/1899060/Pocket_Mirror__GoldenerTraum","n":"Steam — GoldenerTraum (remake)"},{"u":"https://store.steampowered.com/app/600530/Pocket_Mirror/","n":"Steam"}]},{"t":"Close Your Eyes","y":"2015","d":"Nifflas","r":"JP","c":"PSYCH","x":"Blind protagonist, psychological tension.","l":[{"u":"https://store.steampowered.com/app/452740/Close_Your_Eyes","n":"Steam — Página de tienda"},{"u":"https://aestheticgamer.itch.io/close-your-eyes","n":"itch.io"},{"u":"https://forums.rpgmakerweb.com/threads/close-your-eyes.56510","n":"RPG Maker Forums"}]},{"t":"2ki / Noyemi Kudaku","y":"?","d":"Various","r":"JP","c":"PSYCH","x":"Fragmented psychological horror projects.","l":[{"u":"https://yume.wiki/other-fangames/2ki","n":"Yume Wiki — Posible referencia en fangames"},{"u":"https://yumenikki.wiki/wiki/2ki","n":"Yume Nikki Wiki"}]},{"t":"Waco Resurrection","y":"2004","d":"Eddo Stern","r":"US","c":"ATROCITY","x":"David Koresh FPS, historical reenactment.","l":[{"u":"https://eddostern.com/works/waco-resurrection","n":"Eddo Stern — Sitio oficial del artista"},{"u":"https://www.giantbomb.com/waco-resurrection/3030-47876/","n":"Giant Bomb"}]},{"t":"JFK Reloaded","y":"2004","d":"Trauma Games","r":"US","c":"ATROCITY","x":"Assassination simulation, commercial controversy.","l":[{"u":"https://www.giantbomb.com/jfk-reloaded/3030-17525/","n":"Giant Bomb"}]},{"t":"OFF","y":"2008","d":"Mortis Ghost","r":"EU","c":"PSYCH","x":"Surreal RPG, unsettling atmosphere, cult classic.","l":[{"u":"https://archive.org/details/OFF_RPG_201707","n":"Internet Archive — Descarga gratuita"},{"u":"https://unproductivetime.itch.io/off","n":"itch.io — Mirror del juego"},{"u":"https://tvtropes.org/pmwiki/pmwiki.php/VideoGame/OFF","n":"TV Tropes"}]},{"t":"Space Funeral","y":"2012","d":"PHOENIX","r":"US","c":"PSYCH","x":"Grotesque humor, existential dread.","l":[{"u":"https://thecatamites.itch.io/space-funeral","n":"itch.io — Página de thecatamites"},{"u":"https://tvtropes.org/pmwiki/pmwiki.php/VideoGame/SpaceFuneral","n":"TV Tropes"}]},{"t":"The Cat Lady","y":"2012","d":"Harvester Games","r":"US","c":"PSYCH","x":"Depression, suicide, serial killer themes.","l":[{"u":"https://store.steampowered.com/app/253110/The_Cat_Lady","n":"Steam — Página de tienda"},{"u":"https://store.steampowered.com/app/252510/The_Cat_Lady/","n":"Steam"}]},{"t":"Downfall","y":"2009","d":"Harvester Games","r":"US","c":"PSYCH","x":"Psychological horror, addiction, decay.","l":[{"u":"https://store.steampowered.com/app/364390/Downfall","n":"Steam — Página de tienda"},{"u":"https://store.steampowered.com/app/205910/Downfall/","n":"Steam"}]},{"t":"The White Chamber","y":"2005","d":"Storyday Studios","r":"US","c":"PSYCH","x":"Amnesia, survival horror, puzzle-heavy.","l":[{"u":"https://store.steampowered.com/app/299080/the_white_chamber","n":"Steam — Página de tienda"},{"u":"https://lockeddoorpuzzle.itch.io/the-white-chamber","n":"itch.io — Versión gratuita"},{"u":"https://store.steampowered.com/app/252570/The_White_Chamber/","n":"Steam"}]},{"t":"Barkley, Shut Up and Jam: Gaiden","y":"2008","d":"Tangrines","r":"US","c":"RPG","x":"Absurdist dystopian RPG, dark humor.","l":[{"u":"https://gamejolt.com/games/barkley-shut-up-and-jam-gaiden/18143","n":"Game Jolt — Página del juego"},{"u":"https://store.steampowered.com/app/247120/Barkley_Shut_Up_and_Jam_Gaiden/","n":"Steam"}]},{"t":"Exmortis 1-3","y":"2003","d":"Sean Cooper","r":"US","c":"TORTURE","x":"Flash horror, ritualistic violence.","l":[{"u":"https://flasharch.com/en/archive/play/04a013ae61d10ad88b3658d2f76866cd","n":"FlashArch — Jugable en navegador (Flash emulator)"},{"u":"https://flashmuseum.org/","n":"Flash Museum"}]},{"t":"The House","y":"2008","d":"Jirard Khalil","r":"OTHER","c":"PSYCH","x":"Atmospheric horror, narrative-driven.","l":[{"u":"https://www.newgrounds.com/portal/view/463140","n":"Newgrounds — Página del juego (2008)"},{"u":"https://web.archive.org/web/20081217024005/http://www.newgrounds.com/portal/view/455036","n":"Newgrounds (archived)"}]},{"t":"Gretel and Hansel","y":"?","d":"Unknown","r":"US","c":"PSYCH","x":"Dark fairy tale adaptation.","l":[{"u":"https://www.newgrounds.com/portal/view/542009","n":"Newgrounds — Página del juego"},{"u":"https://web.archive.org/web/20100729021524/http://www.newgrounds.com/portal/view/502703","n":"Newgrounds (archived)"}]},{"t":"Pico's School","y":"1999","d":"Tom Fulp","r":"US","c":"RPG","x":"School violence simulation, cult classic.","l":[{"u":"https://www.newgrounds.com/portal/view/310349","n":"Newgrounds — Página del juego"},{"u":"https://www.newgrounds.com/portal/view/15457","n":"Newgrounds"}]},{"t":"The Ugly / Self-Harm series","y":"?","d":"Unknown","r":"US","c":"PSYCH","x":"Exploration of mental illness, mostly lost.","l":[{"u":"https://flasharch.com/en/archive/search/the%20ugly","n":"FlashArch — Búsqueda en archivo Flash"},{"u":"https://www.youtube.com/watch?v=MNChbeev2m8","n":"YouTube (playthrough)"},{"u":"https://lostmediawiki.com/","n":"Lost Media Wiki"}]},{"t":"Madness Combat","y":"2002","d":"Krinkels","r":"US","c":"ATROCITY","x":"Gore-heavy flash animation series.","l":[{"u":"https://www.newgrounds.com/series/madness","n":"Newgrounds — Colección completa de la serie"},{"u":"https://www.newgrounds.com/collection/madnesscombat","n":"Newgrounds"}]},{"t":"Mondo Medicals","y":"2004","d":"Unknown","r":"US","c":"PSYCH","x":"Surreal horror, agency themes.","l":[{"u":"https://www.myabandonware.com/game/mondo-medicals-hvw","n":"My Abandonware — Descarga"},{"u":"https://www.giantbomb.com/mondo-medicals/3030-32751/","n":"Giant Bomb"}]},{"t":"LSD: Dream Emulator","y":"1998","d":"Osamu Sato","r":"JP","c":"PSYCH","x":"PS1 surreal dream exploration, iconic.","l":[{"u":"https://figglewatts.itch.io/lsd-revamped","n":"itch.io — LSD: Revamped (recreación fan)"},{"u":"https://www.giantbomb.com/lsd-dream-emulator/3030-13394/","n":"Giant Bomb"}]},{"t":"Howling Dogs","y":"2012","d":"Porpentine","r":"US","c":"PSYCH","x":"Twine narrative, confinement, surrealism.","l":[{"u":"https://xrafstar.monster/games/twine/howlingdogs","n":"Versión Twine jugable en línea"},{"u":"https://ifdb.org/viewgame?id=tqlte48fgxxlbxem","n":"Interactive Fiction Database — Ficha del juego"},{"u":"https://ifdb.org/viewgame?id=dsue30nkugcymmsx","n":"IFDB"}]},{"t":"Ultra Business Tycoon III","y":"2014","d":"Porpentine","r":"US","c":"PSYCH","x":"Absurdist corporate satire, dark themes.","l":[{"u":"https://ifdb.org/viewgame?id=tqlte48fgxxlbxem","n":"Interactive Fiction Database — Ficha del juego"},{"u":"https://ifdb.org/viewgame?id=m3qtq4yqtnpqwsao","n":"IFDB"}]},{"t":"with those we love alive","y":"2014","d":"Porpentine","r":"US","c":"PSYCH","x":"Grief, transformation, emotional horror.","l":[{"u":"https://ifdb.org/viewgame?id=445d989vuwlh4cvz","n":"Interactive Fiction Database — Ficha del juego"},{"u":"https://xrafstar.monster/games/twine/wtwla","n":"Versión Twine jugable en línea"},{"u":"https://ifdb.org/viewgame?id=b5i5pswmgd2s1rvi","n":"IFDB"}]},{"t":"Murder Simulator","y":"?","d":"Unknown","r":"US","c":"ATROCITY","x":"Flash-based, total loss, dark legacy.","l":[{"u":"https://www.newgrounds.com/portal/view/477625","n":"Newgrounds — Página del juego"},{"u":"https://flashmuseum.org/","n":"Flash Museum"},{"u":"https://lostmediawiki.com/","n":"Lost Media Wiki"}]}];
+const R = ["ALL","US","EU","JP","RU","OTHER"];
+const C = ["ALL","HATE","ATROCITY","SNUFF","TORTURE","RPG","BODY","NSFW","PSYCH","RETAIL","META"];
+let aR="ALL", aC="ALL", q="";
+
+const g=document.getElementById("grid"), rf=document.getElementById("rf"), cf=document.getElementById("cf"), s=document.getElementById("search");
+
+function mkB(arr,cont,cb){
+  arr.forEach(v=>{
+    const b=document.createElement("button");
+    b.className="btn"+(v==="ALL"?" on":"");
+    b.textContent=v;
+    b.onclick=()=>{
+      cont.querySelectorAll(".btn").forEach(x=>x.classList.remove("on"));
+      b.classList.add("on");
+      cb(v);
+    };
+    cont.appendChild(b);
+  });
+}
+mkB(R,rf,v=>{aR=v;render();});
+mkB(C,cf,v=>{aC=v;render();});
+s.oninput=e=>{q=e.target.value.toLowerCase();render();};
+
+function renderStats(){
+  const cats = C.filter(c=>c!=="ALL");
+  const counts = cats.map(c=>({key:c, num: D.filter(d=>d.c===c).length}));
+  const row = document.getElementById('statsRow');
+  const allCount = D.length;
+  const items = [{key:'ALL', label:'TOTAL', num:allCount}].concat(
+    counts.map(c=>({key:c.key, label:c.key, num:c.num}))
+  );
+  row.innerHTML = items.map(it => `
+    <div class="stat" data-key="${it.key}">
+      <span class="stat-num">${it.num}</span>
+      <span class="stat-label">${it.label}</span>
+    </div>`).join('');
+  row.querySelectorAll('.stat').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const k = el.getAttribute('data-key');
+      aC = k;
+      cf.querySelectorAll('.btn').forEach(b=>b.classList.toggle('on', b.textContent===k));
+      render();
+    });
+  });
+}
+
+function render(){
+  g.innerHTML="";
+  document.querySelectorAll('.stat').forEach(el=>{
+    el.classList.toggle('active', el.getAttribute('data-key')===aC);
+  });
+  const filtered = D.filter(i=>
+    (aR==="ALL"||i.r===aR) &&
+    (aC==="ALL"||i.c===aC) &&
+    (!q || i.t.toLowerCase().includes(q) || i.d.toLowerCase().includes(q) || i.x.toLowerCase().includes(q))
+  );
+  if(filtered.length===0){
+    g.innerHTML = '<div class="empty-state">Ningún caso coincide con este filtro</div>';
+    return;
+  }
+  filtered.forEach(i=>{
+    const c=document.createElement("div");
+    c.className="card";
+    let lh='<div class="links"><span class="links-label">ENLACES</span>';
+    if(i.l && i.l.length>0){
+      i.l.forEach(lk=>{
+        lh += `<a href="${lk.u}" target="_blank" rel="noopener noreferrer">${lk.n}</a>`;
+      });
+    } else {
+      lh += '<span class="no-link">No se encontró enlace público verificable</span>';
+    }
+    lh += '</div>';
+    const slug = i.t.replace(/[^a-zA-Z0-9 ]/g,'').replace(/\s+/g,'_').toLowerCase().slice(0,60);
+    const imgHtml = `<img class="card-img" src="image/${slug}.jpg" alt="${i.t}" loading="lazy" onerror="this.style.display='none'">`;
+    c.innerHTML = `${imgHtml}<div class="ch"><h2 class="ct">${i.t}</h2><span class="tag">${i.c}</span></div><div class="meta">${i.y||'?'} · ${i.d} · <span class="rg">${i.r}</span></div><p class="desc">${i.x}</p>${lh}`;
+    g.appendChild(c);
+  });
+}
+
+renderStats();
+render();
+</script>
+</body>
+</html>
