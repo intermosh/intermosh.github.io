@@ -1,175 +1,94 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>YouTube ScriptLab</title>
-<link rel="icon" type="image/x-icon" href="favicon.ico">
-<link rel="stylesheet" href="css/styles.css">
-</head>
-<body>
-<header class="header">
-  <div class="header-inner">
-    <div class="brand">
-      <div class="logo">▶</div>
-      <div><h1>YouTube ScriptLab</h1><p>Editor de guiones para Youtube.</p></div>
-    </div>
-    <div class="actions">
-      <button class="btn good" id="btnToggleMetrics" aria-pressed="true">Métricas: ON</button>
-      <button class="btn" id="btnPromptIa" title="Convierte un texto fuente en guion estructurado (offline, sin LLM)">✨ Convertir texto</button>
-      <button class="btn" id="btnImportJson">Importar JSON</button>
-      <input id="jsonImportInput" type="file" accept=".json,application/json" style="display:none">
-      <button class="btn" id="btnExample">Cargar ejemplo</button>
-      <button class="btn" id="btnPreview" title="Abrir el guion actual en el visor.html con estilos y dark/light">👁 Vista previa</button>
-
-      <!-- Dropdown Exportar agrupado: TXT / JSON / HTML -->
-      <div class="dropdown" id="exportDropdown" style="position:relative;display:inline-block">
-        <button class="btn" id="btnExportMenu" title="Exportar el guion">⤓ Exportar ▾</button>
-        <div id="exportMenu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#10192c;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);z-index:100;min-width:180px;padding:4px">
-          <button class="btn ghost" id="btnExportTxt" style="width:100%;justify-content:flex-start;border:0;text-align:left;padding:9px 12px">📝  Exportar TXT</button>
-          <button class="btn ghost" id="btnExportJson" style="width:100%;justify-content:flex-start;border:0;text-align:left;padding:9px 12px">{ }  Exportar JSON</button>
-          <button class="btn ghost" id="btnExportHtml" style="width:100%;justify-content:flex-start;border:0;text-align:left;padding:9px 12px">📄  Exportar HTML</button>
-        </div>
-      </div>
-
-      <button class="btn primary" id="btnSave">Guardar local</button>
-    </div>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101522"><title>ScriptLab AI</title><link rel="stylesheet" href="styles.css"><script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script></head><body>
+<header>
+  <span id="ai-activity" class="ai-activity heuristic" title="Estado del diagnóstico local">◌ IA</span>
+  <button id="toggle-left" title="Mostrar u ocultar panel" aria-label="Mostrar u ocultar panel">◧</button>
+  <button id="toggle-right" title="Mostrar u ocultar inspector" aria-label="Mostrar u ocultar inspector">◨</button>
+  <button id="theme" title="Alternar tema">◐</button>
+  <div class="header-actions">
+    <div class="export-wrap"><button id="import-btn" class="header-icon" aria-label="Importar" title="Importar proyecto">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </button><input id="import-input" type="file" accept=".json,.md,.scriptlab.json" hidden>
+    <button id="export" class="header-icon" aria-label="Exportar" title="Exportar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    </button><div id="export-menu" class="export-menu" hidden><button data-export="json">JSON</button><button data-export="html">HTML</button><button data-export="md">Markdown</button></div></div>
+    <button id="new" title="Nuevo proyecto">Nuevo</button>
   </div>
 </header>
-<main class="app">
-  <section>
-    <div class="panel panel-pad">
-      <div class="panel-title">
-        <div><h2>Proyecto</h2><p>Define la promesa que el título/thumbnail le hacen al espectador. Los primeros 30 segundos del guion deben pagar esa promesa.</p></div>
-        <span class="pill" id="autosavePill">Auto-guardado activo</span>
+<main>
+  <!-- PANEL IZQUIERDO — Estilo Apple minimalista -->
+  <aside id="left-sidebar">
+    <div class="sidebar-tools">
+      <section class="project-fields">
+        <label>Título<input id="title" placeholder="Título del guion"></label>
+        <label>Promesa<input id="promise" placeholder="Promesa del video"></label>
+      </section>
+      <div class="sidebar-duration">
+        <label>Duración objetivo <b id="target-duration-value">—</b></label>
+        <input id="target-duration" type="range" min="0" max="3600" step="15" value="0" title="0 = sin objetivo">
       </div>
-      <div class="project-grid">
-        <div class="field"><label for="projectTitle">Título tentativo</label><input id="projectTitle" class="input" placeholder="Ej: La mentira que cambió la historia de..." /></div>
-        <div class="field"><label for="projectFormat">Formato</label><select id="projectFormat" class="select"><option value="long">Video largo / horizontal</option><option value="short">Short / vertical</option><option value="live">Live editado</option></select></div>
-        <div class="field"><label for="projectGenre">Género</label><select id="projectGenre" class="select"><option value="documental">Documental / historia</option><option value="tutorial">Tutorial / how-to</option><option value="ensayo">Ensayo / opinión</option><option value="review">Review / análisis</option><option value="entretenimiento">Entretenimiento</option></select></div>
-        <div class="field"><label for="projectPromise">Promesa central</label><textarea id="projectPromise" class="textarea" placeholder="Qué curiosidad, problema o transformación prometés resolver..."></textarea></div>
-        <div class="field"><label for="projectAudience">Audiencia</label><textarea id="projectAudience" class="textarea" placeholder="Para quién es, qué sabe, qué le importa, qué objeción tiene..."></textarea></div>
-        <div class="field"><label>Objetivo</label><div class="range-row"><input id="targetMinutes" type="range" min="0.25" max="45" step="0.25"><span class="pill mono" id="targetMinutesLabel">12:00</span></div><div class="range-row"><input id="wpm" type="range" min="115" max="185" step="5"><span class="pill mono" id="wpmLabel">150 WPM</span></div><span class="dim small">WPM recomendado para voz conversacional en español: ajustable según locución.</span></div>
-        <div class="field"><label for="realRetention">Retención real de tus últimos videos (Studio) — opcional, %</label><input id="realRetention" class="input" type="number" min="1" max="100" step="1" placeholder="Ej: 42" /><span class="pill warn" id="benchmarkBadge">Benchmark genérico — sin calibrar con tu canal</span><span class="dim small">Usá el APV/retención media de videos comparables de tu canal para calibrar el benchmark.</span></div>
+      <div class="sidebar-nav">
+        <button data-view="canvas" class="view on" title="Canvas">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          <span>Canvas</span>
+        </button>
+        <button data-view="timeline" class="view" title="Timeline">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <span>Timeline</span>
+        </button>
+        <button data-view="tele" class="view" title="Teleprompter">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 15l3-3-3-3"/><path d="M13 15h4"/></svg>
+          <span>Tele</span>
+        </button>
       </div>
+      <div class="sidebar-divider"></div>
+      <small id="ai-state" class="ai-state-label">Heurísticas locales</small>
+      <button id="ai" class="ai-config-btn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 1 4 4v1a1 1 0 0 0 1 1h1a4 4 0 0 1 0 8h-1a1 1 0 0 0-1 1v1a4 4 0 0 1-8 0v-1a1 1 0 0 0-1-1H6a4 4 0 0 1 0-8h1a1 1 0 0 0 1-1V6a4 4 0 0 1 4-4z"/></svg>
+        Configurar IA
+      </button>
+      <button id="open-refs" class="ai-config-btn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Biblioteca de referencia
+      </button>
     </div>
+    <div class="sidebar-wpm"><label>Voz <b id="wpm-value">150</b> WPM</label><input id="wpm" type="range" min="115" max="185" value="150"></div>
+  </aside>
 
-    <div class="addbar" aria-label="Agregar bloques">
-      <button class="btn" data-add="voice"><span class="legend-dot" style="--c:var(--voice)"></span>Voz</button>
-      <button class="btn" data-add="visual"><span class="legend-dot" style="--c:var(--visual)"></span>Visual/B-roll</button>
-      <button class="btn" data-add="screen"><span class="legend-dot" style="--c:var(--screen)"></span>Texto pantalla</button>
-      <button class="btn" data-add="sfx"><span class="legend-dot" style="--c:var(--sfx)"></span>SFX/Música</button>
-      <button class="btn" data-add="pause"><span class="legend-dot" style="--c:var(--pause)"></span>Pausa/beat</button>
-      <button class="btn" data-add="cta"><span class="legend-dot" style="--c:var(--cta)"></span>CTA</button>
-      <button class="btn" data-add="source"><span class="legend-dot" style="--c:var(--source)"></span>Fuente/dato</button>
-    </div>
-
-    <div class="panel panel-pad">
-      <div class="panel-title">
-        <div><h2>Guion por bloques</h2><p>Escribí la voz como texto final y las instrucciones visuales como eventos. Los visuales no suman duración salvo que marques “suma tiempo”.</p></div>
-        <span class="pill mono" id="blockCount">0 bloques</span>
-      </div>
-      <div id="blocks" class="blocks"></div>
-    </div>
+  <!-- ÁREA DE TRABAJO -->
+  <section class="work">
+    <!-- PALETA DE BLOQUES — Barra superior horizontal -->
+    <nav class="palette-bar" id="palette-bar">
+      <span class="palette-label">Bloques</span>
+      <div id="palette" class="palette"></div>
+    </nav>
+    <!-- Canvas -->
+    <section id="canvas" class="panel on"><div id="viewport"><div id="stage"><div id="flow"></div></div><div id="empty"><h2>Diseñá el flujo de tu guion</h2><p>Arrastrá bloques desde la barra superior. Su orden vertical define la narrativa.</p></div></div></section>
+    <section id="timeline" class="panel"><h2>Timeline</h2><div id="timeline-list"></div></section>
+    <section id="tele" class="panel"><div class="telebar"><button id="speak">▶ Leer</button><button id="pause-speak">Ⅱ</button><button id="prev-speak">◀</button><button id="next-speak">▶</button><label>Velocidad <input id="rate" type="range" min=".8" max="1.3" step=".1" value="1"></label><button id="full">Pantalla completa</button></div><article id="teletext"></article></section>
   </section>
 
-  <aside class="sidebar">
-    <section class="score-card" title="Simulación heurística basada en reglas de escritura, no en datos de tu canal. Compará contra Studio después de publicar.">
-      <div class="score-row">
-        <div class="gauge" id="scoreGauge" style="--p:0"><span id="scoreValue">0–10 · Bajo</span></div>
-        <div>
-          <h3 id="scoreLabel">Preflight</h3>
-          <p id="scoreText">Escribí o cargá un ejemplo para analizar el guion.</p>
-          <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px" id="scorePills"></div>
-          <!-- Indicador de calibración — siempre visible junto al preflight -->
-          <div id="calibrationIndicator" style="margin-top:8px"></div>
-        </div>
-      </div>
-      <!-- DISCLAIMER VISIBLE PERMANENTE — no es tooltip, siempre se ve -->
-      <div style="margin-top:12px;padding:9px 11px;border:1px solid rgba(255,190,85,.32);background:rgba(255,190,85,.10);border-radius:12px;font-size:.78rem;color:#ffe0a8;line-height:1.4">
-        <b>⚠ Simulación heurística</b> basada en reglas de escritura y, donde fue posible, en datos publicados — <b>no en datos de tu canal</b>. Comparalo con tus métricas reales de YouTube Studio. Detalle y fuentes en el tab <b>Research</b>.
-      </div>
-    </section>
-
-    <section class="panel panel-pad">
-      <div class="quick-stats" id="quickStats"></div>
-    </section>
-
-    <section class="panel">
-      <div class="tabs">
-        <button class="tab active" data-tab="curve">Curva</button>
-        <button class="tab" data-tab="timing">Tiempos</button>
-        <button class="tab" data-tab="risks">Riesgos</button>
-        <button class="tab" data-tab="check">Checklist</button>
-        <button class="tab" data-tab="research">Research</button>
-        <button class="tab" data-tab="realdatos">Datos Reales</button>
-      </div>
-      <div class="tab-body active" id="tab-curve">
-        <div class="canvas-wrap"><canvas id="retentionCanvas"></canvas></div>
-        <div class="source-note">Curva direccional. Contrastá el resultado con YouTube Studio.</div>
-      </div>
-      <div class="tab-body" id="tab-timing">
-        <div id="timeBreakdown"></div>
-      </div>
-      <div class="tab-body" id="tab-risks"><div class="risk-list" id="riskList"></div></div>
-      <div class="tab-body" id="tab-check"><div class="checklist" id="checkList"></div></div>
-      <div class="tab-body" id="tab-research">
-        <div class="formula"><b>Fórmulas clave</b><br>Lista completa abajo — separa lo validado de la heurística sin validar.</div>
-        <div id="sourceList"></div>
-      </div>
-      <div class="tab-body" id="tab-realdatos">
-        <div id="realDataRoot"><p class="muted small" style="padding:14px">Cargando…</p></div>
+  <!-- PANEL DERECHO -->
+  <aside id="right-sidebar" class="right">
+    <nav><button data-tab="edit" class="tab on">Inspector</button><button data-tab="metrics" class="tab">Métricas</button><button data-tab="analysis" class="tab">Análisis IA</button><button data-tab="cal" class="tab">Calibración</button></nav>
+    <section id="edit" class="tabpage on"><div id="no-selection">Seleccioná un bloque para editarlo.</div><form id="editor" hidden><label>Tipo<select id="type"></select></label><label>Etiqueta<input id="label"></label><label>Contenido<textarea id="content" rows="9"></textarea></label><label>Notas<textarea id="notes" rows="4"></textarea></label><div id="info"></div><button id="up" type="button">↑ Subir</button><button id="down" type="button">↓ Bajar</button><button id="del" type="button" class="danger">Eliminar</button></form></section>
+    <section id="metrics" class="tabpage"><p class="eyebrow">Índice de Calidad Narrativa</p><h2><span id="score">0</span>/100</h2><div class="bar"><i id="bar"></i></div><div id="metric-grid"></div><canvas id="chart" width="480" height="190"></canvas><ul id="risks"></ul><details class="heuristics"><summary>Cómo se calculan estas métricas</summary><div id="heuristics-catalog"></div></details></section>
+    <!-- PESTAÑA ANÁLISIS IA -->
+    <section id="analysis" class="tabpage">
+      <p class="eyebrow">Análisis semántico local (embeddings)</p>
+      <div class="analysis-notice" id="analysis-notice">Activá el <b>modo AI</b> para usar estas herramientas.</div>
+      <div id="analysis-content" hidden>
+        <details class="analysis-section" open><summary>Resumen Extractivo</summary><p class="analysis-desc">Extrae las oraciones más representativas del guion según su similitud con el significado global.</p><div class="analysis-controls"><label>Frases <input id="extract-topN" type="number" min="3" max="10" value="5" style="width:50px"></label><button id="run-extractive" class="analysis-btn">Analizar</button></div><div id="extractive-results" class="analysis-results"></div></details>
+        <details class="analysis-section"><summary>Redundancia Global</summary><p class="analysis-desc">Detecta bloques u oraciones que transmiten la misma idea.</p><div class="analysis-controls"><label>Umbral <input id="redundancy-threshold" type="number" min="0.5" max="0.99" step="0.05" value="0.85" style="width:60px"></label><button id="run-redundancy" class="analysis-btn">Analizar</button></div><div id="redundancy-results" class="analysis-results"></div></details>
+        <details class="analysis-section"><summary>Densidad Temática por Minuto</summary><p class="analysis-desc">Estima cuántos temas distintos se tratan por minuto.</p><div class="analysis-controls"><button id="run-density" class="analysis-btn">Analizar</button></div><div id="density-results" class="analysis-results"><div class="density-chart-wrap"><canvas id="density-chart" height="200"></canvas></div></div></details>
+        <details class="analysis-section"><summary>Comparación A/B Semántica</summary><p class="analysis-desc">Compara el guion actual con otro guion o versión guardada.</p><div class="analysis-controls"><select id="compare-source"><option value="snapshot">Versiones guardadas</option><option value="reference">Referentes de YouTube</option></select><select id="compare-target"><option value="">— Seleccioná —</option></select><button id="run-compare" class="analysis-btn">Comparar</button></div><div id="compare-results" class="analysis-results"></div></details>
+        <details class="analysis-section"><summary>Huecos Detectados</summary><p class="analysis-desc">Identifica si el guion carece de conceptos narrativos esperados.</p><div class="analysis-controls"><label>Con referente <input id="gap-use-ref" type="checkbox"><select id="gap-ref-target" disabled><option value="">— Ninguno —</option></select></label><button id="run-gaps" class="analysis-btn">Analizar</button></div><div id="gap-results" class="analysis-results"></div></details>
+        <details class="analysis-section" id="ref-gap-section" hidden><summary>Huecos vs. Referente</summary><p class="analysis-desc">Compara el guion con un referente para encontrar temas faltantes.</p><div class="analysis-controls"><select id="refgap-target"><option value="">— Seleccioná —</option></select><label>Umbral <input id="refgap-threshold" type="number" min="0.2" max="0.9" step="0.05" value="0.5" style="width:60px"></label><button id="run-refgaps" class="analysis-btn">Analizar</button></div><div id="refgap-results" class="analysis-results"></div></details>
       </div>
     </section>
+    <section id="cal" class="tabpage"><p>Ingresá datos reales de YouTube Studio. Se guardan solo en este dispositivo.</p><form id="calform"><label>Formato<select id="format"><option value="long">Video largo</option><option value="short">Short</option></select></label><label>Género<select id="genre"><option>educativo</option><option>ensayo</option><option>tutorial</option><option>entretenimiento</option></select></label><label>APV real (%)<input id="apv" type="number" min="1" max="100" required></label><label>R30 (%)<input id="r30" type="number" min="1" max="100"></label><button>Guardar</button></form><div id="caldata"></div></section>
   </aside>
 </main>
-
-<!-- MODAL: Convertir texto → guion (offline)                    -->
-<div class="modal-backdrop" id="promptIaModal">
-  <div class="modal">
-    <div class="modal-head">
-      <h2>✨ Convertir texto a guion</h2>
-      <button class="btn icon ghost" id="promptIaClose" title="Cerrar">✕</button>
-    </div>
-    <div class="modal-content">
-      <p class="muted small" style="margin:0 0 12px">Pegá un texto fuente (artículo, transcripción, notas, guion en prosa) y se convierte <b>automáticamente</b> a guion estructurado. Funciona 100% offline — sin LLM, sin API. Las heurísticas detectan tipo de bloque por marcadores explícitos (<code>[VISUAL]</code>), keywords ("mostrar", "golpe musical", "suscribite"), patrones estructurales (ALL CAPS, URLs, listas) y generan metadata del proyecto.</p>
-      <div class="columns">
-        <div>
-          <h4 style="margin:0 0 6px">1. Texto fuente</h4>
-          <textarea id="promptIaSource" class="textarea" style="min-height:300px;font-size:.9rem" placeholder="Pegá acá el artículo, transcripción o notas que querés convertir en guion...
-
-Tips:
-- Usá marcadores explícitos para forzar tipos: [VOZ], [VISUAL], [SFX], [PAUSA 2], [CTA], [FUENTE]
-- O etiquetas con dos puntos: 'VOZ:', 'VISUAL:', 'PANTALLA:', 'SFX:'
-- Texto ALL CAPS corto (≤8 palabras) → se detecta como texto en pantalla
-- Líneas con URL o 'fuente:' → bloque de fuente
-- Listas (3+ líneas cortas) → cada línea se convierte en su propio bloque"></textarea>
-          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-            <button class="btn primary" id="promptIaCopy">🔄 Convertir</button>
-            <button class="btn ghost" id="promptIaClear">Limpiar</button>
-          </div>
-        </div>
-        <div>
-          <h4 style="margin:0 0 6px">2. Resultado (JSON)</h4>
-          <textarea id="promptIaPreview" readonly class="textarea mono" style="min-height:300px;font-size:.78rem;background:rgba(0,0,0,.25)" placeholder='El JSON convertido aparecerá acá...'></textarea>
-          <div id="converterStats" class="muted small" style="margin-top:6px;min-height:1.2em"></div>
-          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-            <button class="btn" id="promptIaCopyJson">📋 Copiar JSON</button>
-            <button class="btn good" id="promptIaPasteJson">Importar al editor</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Orden de carga obligatorio: config → model → render → visor-assets → converter → app -->
-<script src="js/config.js"></script>
-<script src="js/model.js"></script>
-<script src="js/render.js"></script>
-<script src="js/visor-assets.js"></script>
-<script src="js/converter.js"></script>
-<script src="js/app.js"></script>
-</body>
-</html>
-<!-- version 1.1 -->
+<dialog id="aidialog" class="ai-sheet"><div class="ai-sheet-body"><div class="sheet-head"><p>DIAGNÓSTICO LOCAL</p><h2>Motor de análisis</h2><button id="close-ai" type="button" class="sheet-close" aria-label="Cerrar">×</button></div><p class="sheet-copy">Elegí un modo. Tu guion permanece en este navegador.</p><div class="mode-switch"><button id="mode-basic" type="button">Modo heurístico</button><button id="mode-ai" type="button">Modo AI</button></div><section id="ai-download-area" hidden><p class="browser-store">El modelo se descargará y guardará localmente en el almacenamiento seguro de este navegador para funcionar sin conexión.</p><button id="download-model" type="button" class="primary-sheet">Descargar modelo</button><progress id="model-download-progress" max="100" value="0" hidden></progress><small id="model-download-status" class="download-status"></small><div id="model-complete" class="model-complete" hidden>✓ Modelo listo. Ya podés cerrar esta ventana.</div></section><div id="basic-state" class="basic-state">Análisis de estructura, duración, claridad y ritmo. No requiere descarga.</div></div></dialog>
+<dialog id="refdialog" class="ai-sheet"><div class="ai-sheet-body"><div class="sheet-head"><p>BIBLIOTECA</p><h2>Referentes</h2><button id="close-refs" type="button" class="sheet-close" aria-label="Cerrar">×</button></div><p class="sheet-copy">Agregá videos de YouTube como referencia para comparar con tu guion.</p><div class="ref-sheet-input"><input id="youtube-url" type="url" placeholder="youtube.com/watch?v=..." aria-label="URL de YouTube"><button id="add-reference" class="primary-sheet" style="flex-shrink:0;padding:8px 16px;font-size:12px">Extraer</button></div><p class="ref-hint"><small>Pegá una URL y se extraerán los subtítulos automáticamente. Si falla, usá la opción de abajo.</small></p><progress id="ref-progress" max="100" value="0" hidden></progress><small id="ref-status" class="ref-status"></small><details class="ref-paste-details"><summary>+ Pegar transcripción manualmente</summary><div class="ref-paste-body"><input id="paste-ref-title" type="text" placeholder="Título del referente"><textarea id="paste-ref-text" rows="4" placeholder="Pegá aquí la transcripción del video..."></textarea><button id="add-paste-reference" class="primary-sheet" style="width:100%;padding:8px;font-size:12px">Guardar</button></div></details><div id="ref-list" class="ref-list-sheet"></div></div></dialog>
+<script src="diagnostics.js?v=1" defer></script><script src="app.js?v=15" defer></script>
+</body></html>
