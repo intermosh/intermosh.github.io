@@ -1,0 +1,118 @@
+{
+  "app": "ScriptLab AI",
+  "exportedAt": "2026-07-19T06:30:00.000Z",
+  "project": {
+    "title": "Videojuegos de Mentes Perturbadas — El art brut moderno",
+    "promise": "Cuatro desarrolladores de videojuegos diagnosticados con enfermedades mentales crearon obras que el mercado del arte convencional no sabe cómo clasificar. Este video explora qué revelan sus juegos sobre ellos, y sobre nosotros.",
+    "targetDuration": 1200,
+    "aiMode": "basic",
+    "wpm": 145
+  },
+  "blocks": [
+    {
+      "id": "hook-1",
+      "type": "HOOK",
+      "label": "Hook — Manicomio de Berna",
+      "content": "Esto es un video sobre videojuegos. Pero empieza mucho antes de que existiera una pantalla. Empieza en un manicomio de Berna, en 1899. En las épocas en que algunos médicos se preguntaron si un criminal peligroso y un enfermo mental podía ser, también, un artista.",
+      "notes": "Hook narrativo con ubicación histórica + pregunta implícita. Establece tono documental."
+    },
+    {
+      "id": "ctx-prinzhorn",
+      "type": "CONTEXTO",
+      "label": "Prinzhorn — Wölfli",
+      "content": "Adolf Wölfli fue abandonado por su padre a los seis años. A los diez era huérfano. A los veintitantos fue condenado por abuso de menores. En 1895 lo encerraron para siempre en el manicomio de Waldau, cerca de Berna. Le diagnosticaron lo que entonces llamaban demencia paranoide. Hoy lo llamaríamos esquizofrenia. Terminó aislado en una celda porque solía agredir al personal.\n\nDurante su aislamiento, un psiquiatra suizo llamado Walter Morgenthaler le dio un lápiz. Durante los siguientes treinta y un años, Wölfli produjo más de veinticinco mil páginas de dibujos, textos, partituras musicales y cálculos numéricos. No era incoherencia. Era un universo. Lo llamó la Ciudad Gigante de San Adolfo II.",
+      "notes": "Biografía de Wölfli como caso fundacional. Datos concretos: 25.000 páginas, 31 años."
+    },
+    {
+      "id": "ctx-prinzhorn2",
+      "type": "CONTEXTO",
+      "label": "Prinzhorn — La creación artística",
+      "content": "El psiquiatra Hans Prinzhorn, en su obra fundacional Bildnerei der Geisteskranken — La creación artística de los enfermos mentales, publicada en 1922 —, recopiló y analizó miles de obras creadas por pacientes de hospitales psiquiátricos alemanes, estableciendo por primera vez que el arte de la mente enferma no era simple garabato, sino expresión de una lógica interna radicalmente diferente a la racional.\n\nAgnes Richter, costurera de profesión, internada en el hospital psiquiátrico de Dresden a finales del siglo XIX. Durante su reclusión, Richter tomó la única cosa que tenía —el uniforme del hospital— y lo convirtió en su lienzo. Bordó sobre la tela, hilada sobre hilada, frases enteras que cuentan su historia, sus quejas, sus miedos. «Ich bin nicht ganz» —«No estoy entera»— se repite una y otra vez entre las costuras. La chaqueta es un diario que no puede leerse de forma lineal porque las frases se superponen, se enroscan, se devoran unas a otras. Cada puntada es una voluntad de decir que no encontró otro canal.",
+      "notes": "Agnes Richter como segundo caso. Transición de Wölfli (dibujo) a Richter (textil)."
+    },
+    {
+      "id": "giro-bugfix",
+      "type": "GIRO",
+      "label": "Bug fix — Crítica a Prinzhorn",
+      "content": "Entiendo la esencia que Prinzhorn encontró en la marginalidad. Pero no es arte el grito de quien está quemándose.\n\nEl criterio de selección de los trabajos de Prinzhorn no diferencia entre las personas que activamente concienten participar de un acto social compartido: videojuego, pintura, música, etc. De una expresión privada como una carta obsesiva o el bordado de una mujer encerrada, sin más superficie que su propio uniforme, tratando de decir que se estaba desintegrando.\n\nDescribir estas expresiones como obras de arte contribuye a normalizar una mirada. Su valor en todo caso está en lo que realmente testimonian: el fracaso de las instituciones para contener el dolor humano.",
+      "notes": "Giro crítico. Reframe: no todo es arte, hay dolor institucional. Prepara la distinción art brut."
+    },
+    {
+      "id": "ctx-vanguardias",
+      "type": "CONTEXTO",
+      "label": "Vanguardias y Wesensschau",
+      "content": "Prinzhorn buscaba lo que él llamaba Wesensschau —una captación del ser interno expresado de forma cruda, no contaminada por instituciones y producida enteramente fuera del sistema artístico.\n\nLas vanguardias europeas lo entendieron. El expresionismo alemán lo absorbió como Biblia. André Breton propagó sus ideas en el círculo surrealista, Max Ernst llevó el libro a París, y su influencia caló en artistas como Paul Klee, Wassily Kandinsky y Alfred Kubin.",
+      "notes": "Conexión con vanguardias. Wesensschau como concepto clave."
+    },
+    {
+      "id": "ctx-artbrut",
+      "type": "CONTEXTO",
+      "label": "Art brut — Dubuffet",
+      "content": "Cien años después, Jean Dubuffet acuñó un término nuevo para esa tradición: art brut, arte crudo. Lo definió como obras producidas por personas que no estaban contaminadas por la cultura del museo. Pacientes psiquiátricos, presos, ermitaños, médiums, marginados de la sociedad. En 1972 un historiador inglés, Roger Cardinal, lo tradujo como outsider art, arte de outsiders.\n\nAhí está la paradoja: la categoría outsider art terminó integrada al mercado del arte convencional —galerías, ferias, subastas—, lo que contradice la premisa fundacional de Dubuffet: la no contaminación.",
+      "notes": "Definición de art brut + paradoja del mercado. Transición al bloque principal."
+    },
+    {
+      "id": "evid-terry",
+      "type": "EVIDENCIA",
+      "label": "Caso 1 — Terry Davis",
+      "content": "Un día Dios le habló a Terry Davis. Le ordenó construir el Tercer Templo de Salomón. Un sistema operativo puro donde Dios pudiera hablar directamente con el programador. Lo llamó TempleOS. Durante más de diez años, solo, escribió más de cien mil líneas de código: el kernel, el compilador, los drivers, los juegos. Un universo digital donde Dios podía hablar directamente con el programador. Todo escrito en un lenguaje de programación que inventó y llamó HolyC.\n\nDavis era un genio. Con los años la documentación en video de su desarrollo se convirtió también en el registro de su descenso. Davis documentó todo en cientos de horas de videos de YouTube. En algunos demostraba conocimiento técnico brillante. En otros desvariaba sobre aliens y se perseguía de lo que perseguía la CIA. Murió el 11 de agosto de 2018, atropellado por un tren. Tenía cuarenta y ocho años. Su legado aún está disponible para descarga en internet.\n\nTempleOS no es un software convencional. Lo que Davis construyó es un entorno donde las acciones del usuario son actos de participación en un sistema teológico. El usuario no usa TempleOS: lo habita. Y al habitarlo, ejecuta las mismas reglas que Dios, a través de Davis, dictó.",
+      "notes": "Caso más fuerte. Genio autodidacta + enfermedad mental + muerte trágica. TempleOS como obra total."
+    },
+    {
+      "id": "evid-panks",
+      "type": "EVIDENCIA",
+      "label": "Caso 2 — Paul Allen Panks",
+      "content": "Paul Allen Panks fue un outsider, una figura controvertida en la comunidad de la ficción interactiva de los 2000. En foros públicos y en sus propias notas de juego, Panks afirmó explícitamente que sus obras surgían de experiencias alucinatorias vinculadas a su diagnóstico de esquizofrenia paranoide.\n\nPanks escribió decenas de aventuras conversacionales en Adventure Game Toolkit, un sistema de autoría de los años 80 que ya estaba obsoleto cuando él empezó. Cada juego era una variación mínima sobre la misma estructura. Todos giraban alrededor de una misma aventura ideal que Panks recreaba una y otra vez sin nunca alcanzarla.\n\nPanks tuvo su Magnum Opus: Westfront PC. Fue desarrollada originalmente para Commodore 128 y posteriormente portada a Windows. Representa el pico de ambición creativa de Panks, anterior a su colapso en el loop iterativo de reescrituras menores.\n\nFetter's Grim, Green Falls, Simple Adventure, Adventure XT, Ghost of the Fireflies, Vampyre Cross. Todos esencialmente el mismo juego. Misma taberna de dos pisos. Mismo pueblo. Misma iglesia con forma de cruz. Mismo sabueso infernal.\n\nEscribía repetidamente artículos de Wikipedia sobre sí mismo, borrados por falta de relevancia. El 14 de marzo de 2006 escribió su despedida de internet. Una carta larga, religiosa, en cinco idiomas. Citaba al Señor moldeando una paloma de arcilla. Decía: Yo soy la cosa real. No me contengo. Andy Kaufman podría nunca ser yo.\n\nPaul Allen Panks falleció el 5 de julio de 2009. Su obituario decía: Growing up Paul spent hours drawing, writing and creating computer adventure games, hobbies he enjoyed all of his life. Nadie firmó su Tribute Wall.",
+      "notes": "Loop iterativo como manifestación de esquizofrenia. Magnum Opus vs repetición. Tribute Wall vacío."
+    },
+    {
+      "id": "evid-kubus",
+      "type": "EVIDENCIA",
+      "label": "Caso 3 — Kimberly Kubus",
+      "content": "En su sitio web personal, kubusforever.com, escribió: Mi nombre es Kim. Soy un humano masculino de 27 años. He sufrido de trastorno esquizotípico y TOC durante muchos años. Soy pésimo en la mayoría de las relaciones. La comunidad de lost media lo llamó el Wesley Willis de los videojuegos. Un artista outsider.\n\nEntre 2002 y 2013, Kubus produjo más de ciento setenta y ocho juegos en GameMaker. Ciento setenta y ocho. Títulos como Vacuum Cleaner Bang Bang, Try To Make This Game Run To The Space Tractor, Under The Deep Bat Wings Of Eternity. Nombres largos, idiosincráticos, que resisten toda categorización. Distribuidos exclusivamente en foros de la comunidad GameMaker y en su página personal. Cero distribución comercial. Muchos están parcial o completamente perdidos.\n\nSu suicidio en 2014 añade una capa de mayor complejidad a su legado artístico.",
+      "notes": "178 juegos. Nombres que resisten categorización. Lost media. Suicidio."
+    },
+    {
+      "id": "evid-nick",
+      "type": "EVIDENCIA",
+      "label": "Caso 4 — Nick Smith (Ulillillia)",
+      "content": "Nick Smith vivió una vida de aislamiento extremo en la Maine rural, gobernada por un TOC profundo, afantasía —la incapacidad de generar imágenes mentales— y compulsiones sistemáticas estrictas.\n\nNick tenía un nivel de sensibilidad tan alto que cualquier estímulo podía marcarlo fuertemente. En el documental indie sobre su vida, su madre cuenta que un día un doctor le dijo en broma que con las pastillas nuevas solo iba a necesitar pizza. Desde entonces no se alimenta de otra cosa que de pizza. Comió pizza durante 10 años. Le aterrorizaba el agua cuando se veía azul porque ahí era donde morían siempre nuestros héroes de 8 y 16 bit.\n\nCuantificaba la altura exacta de cada escalón que subía. Le aterrorizaban los parches de luz que se filtran entre los árboles en un día soleado, porque en los videojuegos esas manchas queman como fuego.\n\nSus juegos, construidos durante años con herramientas tempranas de creación y compartidos exclusivamente a través de su sitio web personal, son la transposición directa de sus compulsiones y fobias diarias. La pantalla se llena de métricas de debug y números flotantes: un horror vacui mecánico. Las mecánicas priorizan la perfección matemática y la inflación numérica por sobre cualquier noción convencional de diversión. Es la manifestación digital de la lógica numérica y espacial hipersistematizada de Wölfli.",
+      "notes": "Pizza como ritual. Miedo al agua azul. Horror vacui digital. Conexión directa con Wölfli."
+    },
+    {
+      "id": "giro-ramirez",
+      "type": "GIRO",
+      "label": "Pregunta de transición — Asesinos",
+      "content": "Richard Ramirez dibujaba. El Night Stalker — condenado por trece asesinatos y múltiples agresiones sexuales — producía, en su celda del corredor de la muerte, dibujos de calaveras y pentagramas que vendía a coleccionistas.\n\nJohn Wayne Gacy pintaba payasos —su propio personaje de fiestas infantiles— obras bien recibidas por galeristas de arte outsider.\n\nPero esas obras son dibujos y pinturas estáticas. Pasivas. Los videojuegos de Davis, Panks, Kubus y Smith no son pasivos. Son sistemas. Te ponen adentro de su lógica.",
+      "notes": "Contraste crucial: arte estático vs sistemas interactivos. Prepara la tesis de Bogost."
+    },
+    {
+      "id": "evid-bogost",
+      "type": "EVIDENCIA",
+      "label": "Bogost — Retórica procedural",
+      "content": "En 2007, un diseñador y académico llamado Ian Bogost publicó Persuasive Games, un libro que cambió el estudio serio del videojuego. Su tesis central era incómoda: los videojuegos no persuaden con palabras ni con imágenes, como el cine o la literatura. Persuaden con reglas. Construyen sistemas. Te ponen adentro de su lógica.\n\nBogost lo llamó retórica procedural. Lo importante no es lo que el juego te muestra. Es lo que el juego te hace hacer. Cuando controlas al protagonista de un juego, no estás observándolo: estás habitando las reglas del creador.\n\nLa interactividad no es el medio. Es el mensaje en sí mismo.",
+      "notes": "Tesis central del video. Retórica procedural como marco teórico."
+    },
+    {
+      "id": "giro-rape",
+      "type": "GIRO",
+      "label": "Caso límite — Rape Day",
+      "content": "Rape Day fue un juego donde el jugador podía asesinar y agredir sexualmente a mujeres en un escenario apocalíptico. Su descripción en Steam incluía la frase: Este juego fue creado para el cuatro por ciento que son psicópatas. Fue retirado de la plataforma después de una polémica masiva.\n\nDesde una perspectiva conductual, el juego no busca la narrativa lúdica tradicional: busca el ejercicio del dominio absoluto y la supresión sistemática de la empatía.",
+      "notes": "Caso límite ético. Extremo del espectro. Prepara Žižek."
+    },
+    {
+      "id": "evid-zizek",
+      "type": "EVIDENCIA",
+      "label": "Žižek — La verdad del juego",
+      "content": "Piensas que es sólo un juego. Es realidad. Es más real de lo que te parece.\n\nLa idea es: en realidad soy una persona débil, así que para suplementar mi debilidad en la vida real, adopto la falsa imagen de una persona fuerte, sexualmente promiscua. Pero esta sería la lectura ingenua. ¿Y si lo leemos al revés? ¿Y si esta identidad fuerte, brutal, violadora, lo que sea, es mi verdadero yo, en el sentido de que ésta es la verdad psíquica de mí mismo, y que en la vida real, debido a las restricciones sociales y demás, no soy capaz de enactarla? Así que, precisamente porque pienso que es sólo un juego, sólo una persona, una auto-imagen que adopto en el espacio virtual, puedo ser allí mucho más veraz. Puedo enactar allí una identidad que está mucho más cerca de mi verdadero yo.\n\n— Slavoj Žižek",
+      "notes": "Cierre teórico. Invierte la relación ficción/realidad. Aplica a los4 casos."
+    },
+    {
+      "id": "cta-epilogo",
+      "type": "CTA",
+      "label": "Epílogo — Regreso a Prinzhorn",
+      "content": "La pregunta ya no es solo qué revelan estos juegos sobre quienes los hicieron. Sino qué revelan de nosotros.\n\nCuando alguien codifica un universo diferente, no te estás alejando de ti mismo. Te estás acercando.\n\nLa máscara que adoptas en una pantalla no te protege de tu verdad. Te la revela.",
+      "notes": "Cierre circular con Prinzhorn. Tesis final: el juego como espejo."
+    }
+  ]
+}

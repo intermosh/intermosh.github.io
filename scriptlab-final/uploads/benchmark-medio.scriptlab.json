@@ -1,0 +1,49 @@
+{
+  "app": "ScriptLab AI",
+  "version": 4,
+  "exportedAt": "2026-07-20T12:00:00.000Z",
+  "project": {
+    "title": "Por qué el cielo es azul (y no es por lo que te dijeron)",
+    "promise": "la verdadera razón del color del cielo, que casi nadie entiende",
+    "targetDuration": 0,
+    "aiMode": "basic",
+    "wpm": 150
+  },
+  "blocks": [
+    {
+      "id": "h1",
+      "type": "HOOK",
+      "label": "Hook",
+      "content": "¿Alguna vez te preguntaste por qué el cielo es azul? Te apuesto lo que quieras a que la respuesta que te dieron en la escuela está incompleta.",
+      "notes": "BENCHMARK MEDIO: Hook con pregunta y curiosidad, pero corto y sin número ni urgencia. Promesa presente pero floja."
+    },
+    {
+      "id": "c1",
+      "type": "CONTEXTO",
+      "label": "Contexto — La respuesta común",
+      "content": "La explicación típica dice que la luz del sol es blanca, pero en realidad contiene todos los colores del arcoíris. Cuando esa luz entra en la atmósfera, choca con las moléculas de aire. El azul se dispersa más que el rojo, y por eso vemos el cielo azul. Eso es lo que te cuentan.",
+      "notes": "BENCHMARK MEDIO: contexto correcto, oraciones de longitud variada, pero sin evidencia con datos concretos."
+    },
+    {
+      "id": "c2",
+      "type": "EVIDENCIA",
+      "label": "Evidencia — El detalle que falta",
+      "content": "Pero hay un problema con esa explicación. Si el violeta se dispersa aún más que el azul, ¿por qué el cielo no se ve violeta? La respuesta tiene que ver con cómo tus ojos procesan el color: somos mucho más sensibles al azul que al violeta.",
+      "notes": "BENCHMARK MEDIO: evidencia que presenta un dato interesante, pero lo deja medio cocinado. Sin citar fuente ni profundizar."
+    },
+    {
+      "id": "c3",
+      "type": "SEGMENTO",
+      "label": "Segmento — Algo más",
+      "content": "También por eso el atardecer se ve rojo. Cuando el sol está bajo, la luz atraviesa mucha más atmósfera y casi todo el azul se dispersa antes de llegar a tus ojos. Lo que queda es rojo y naranja.",
+      "notes": "BENCHMARK MEDIO: segmento correcto pero cortito, sin mucho desarrollo."
+    },
+    {
+      "id": "cta1",
+      "type": "CTA",
+      "label": "CTA",
+      "content": "Si te pareció interesante, dejá un like.",
+      "notes": "BENCHMARK MEDIO: CTA presente pero flojo (sin verbo fuerte, sin posicionarse al 75-95%)."
+    }
+  ]
+}

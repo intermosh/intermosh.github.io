@@ -1,0 +1,35 @@
+{
+  "app": "ScriptLab AI",
+  "version": 4,
+  "exportedAt": "2026-07-20T12:00:00.000Z",
+  "project": {
+    "title": "Cómo ser más productivo",
+    "promise": "trabajar mejor sin estresarse tanto",
+    "targetDuration": 0,
+    "aiMode": "basic",
+    "wpm": 150
+  },
+  "blocks": [
+    {
+      "id": "b1",
+      "type": "SEGMENTO",
+      "label": "Segmento",
+      "content": "Hoy les quiero hablar sobre la productividad porque es un tema que a todo el mundo le interesa mucho y que personalmente considero que es una de las cosas más importantes que podemos aprender a manejar en nuestra vida diaria ya que si somos más productivos podemos hacer más cosas en menos tiempo y eso nos permite tener más tiempo libre para dedicarlo a las cosas que realmente nos gustan y nos importan como por ejemplo pasar tiempo con la familia o hacer deporte o aprender algo nuevo o simplemente descansar que también es importante.",
+      "notes": "BENCHMARK MALO: Sin hook (primer bloque SEGMENTO largo y aburrido, sin pregunta, sin dato, sin urgencia). Sin alineación con la promesa (promesa vacilona, no aparece). Oración de 90 palabras (FH muy difícil)."
+    },
+    {
+      "id": "b2",
+      "type": "SEGMENTO",
+      "label": "Segmento",
+      "content": "Para ser productivo lo primero que hay que hacer es organizarse bien porque si no estás organizado entonces no sabes qué tienes que hacer y al final del día terminas sin haber hecho nada importante y eso es frustrante así que mi recomendación es que te compres una agenda o uses alguna aplicación para anotar las cosas que tienes que hacer durante el día y las vayas tachando a medida que las vas completando porque eso te da una sensación de logro muy grande que te motiva a seguir adelante con las tareas pendientes.",
+      "notes": "BENCHMARK MALO: otro SEGMENTO, otra oración interminable. Sin evidencia, sin datos, sin contraste. Ritmo totalmente monótono (mismo tipo de bloque, misma longitud). Sin interruptores visuales."
+    },
+    {
+      "id": "b3",
+      "type": "SEGMENTO",
+      "label": "Segmento",
+      "content": "Otra cosa que es muy importante para ser productivo es dormir bien porque si no duermes bien entonces al día siguiente estás cansado y no puedes concentrarte y cuando no te puedes concentrar tardas el doble en hacer las cosas y cometes más errores y eso al final te hace sentir peor y te estresa más así que procura dormir al menos ocho horas todas las noches para que tu cerebro descanse y puedas rendir al máximo al día siguiente cuando tengas que enfrentarte a todas las tareas que tienes pendientes en tu lista de cosas por hacer.",
+      "notes": "BENCHMARK MALO: mismo patrón. Oración de 80 palabras. Sin GIRO, sin VISUAL, sin CTA al final. El guion simplemente se corta."
+    }
+  ]
+}

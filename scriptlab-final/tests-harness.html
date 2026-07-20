@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ScriptLab v4 — Test Harness Hito 1</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b27; --border:#26304a; --text:#e6ebf5;
+    --muted:#8b97ad; --good:#5cdb87; --bad:#ff6879; --warn:#f4b857; --purple:#7969ff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;padding:24px;min-height:100vh}
+  h1{font-size:20px;margin-bottom:4px}
+  .sub{color:var(--muted);margin-bottom:20px;font-size:13px}
+  .summary{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px 16px;min-width:120px}
+  .card b{font-size:24px;display:block;line-height:1}
+  .card small{color:var(--muted);font-size:11px}
+  .card.pass b{color:var(--good)}
+  .card.fail b{color:var(--bad)}
+  .card.pending b{color:var(--warn)}
+  pre.out{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:14px;overflow:auto;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;max-height:60vh}
+  .tline{padding:2px 0}
+  .tline.pass{color:var(--good)}
+  .tline.fail{color:var(--bad)}
+  .tline.info{color:var(--muted)}
+  .tline.head{color:var(--purple);font-weight:600;margin-top:8px;border-top:1px solid var(--border);padding-top:8px}
+  .tline.head:first-child{border-top:0;margin-top:0;padding-top:0}
+  button{background:var(--purple);color:#fff;border:0;border-radius:8px;padding:8px 16px;font:inherit;cursor:pointer;margin-bottom:12px}
+  button:hover{opacity:.9}
+  .warn-banner{background:rgba(255,104,121,.12);border:1px solid rgba(255,104,121,.4);border-radius:8px;padding:14px 18px;margin-bottom:18px;font-size:13px;line-height:1.6}
+  .warn-banner b{color:var(--bad)}
+  .warn-banner code{background:#070a10;padding:2px 6px;border-radius:4px;font:12px ui-monospace,Menlo,Consolas,monospace}
+</style></head>
+<body>
+<h1>ScriptLab v4 — Hito 1 · Test Harness</h1>
+<p class="sub">Corre todos los tests de los módulos puros en el navegador. db.js se prueba acá porque IDB no existe en Node. Requiere servirse vía <code>http://localhost</code> (no <code>file://</code>).</p>
+<div id="file-warning" class="warn-banner" hidden></div>
+<button onclick="location.reload()">↻ Re-correr</button>
+<div class="summary">
+  <div class="card pass"><b id="pass-c">—</b><small>Pasaron</small></div>
+  <div class="card fail"><b id="fail-c">—</b><small>Fallaron</small></div>
+  <div class="card pending"><b id="pending-c">—</b><small>Pendientes</small></div>
+</div>
+<pre class="out" id="out"></pre>
+
+<script type="module">
+import { computeAnalysis, analysis, quality, splitSentences, splitIntoSegments } from './scoring.js';
+import { state, markAnalysisDirty, normalizeProject, contentHash, T, time, esc, PREDEFINED_TOPICS } from './state.js';
+import { sanitizeText, sanitizeSentimentText, dot, cosineSim, syllables, wordCount, sentenceCount, fernandezHuerta, durationInSeconds, overlap } from './ai-shared.js';
+import { openDB, put, get, all, del, migrateLegacy } from './db.js';
+import { computeRetentionPrediction, WEIGHTS, RETENTION_CURVES } from './retention-engine.js';
+
+const out = document.getElementById('out');
+const warn = document.getElementById('file-warning');
+let pass = 0, fail = 0, pending = 0;
+const lines = [];
+
+/* Guarda: file:// rompe ES modules (CORS) e IndexedDB (origin opaque).
+   El contrato v4 §16.1 exige servir vía http(s)/localhost. Si se abrió con
+   file://, mostramos instrucciones claras y NO corremos los tests. */
+if (location.protocol === 'file:') {
+  if (warn) {
+    warn.hidden = false;
+    warn.innerHTML = `<b>⚠ Abierto con file:// — los tests no pueden correr.</b><br>
+      <code>file://</code> rompe dos cosas en Chrome/Edge/Opera: (1) los <code>import</code> de ES modules por CORS, y (2) IndexedDB porque el origen es "opaque". <br><br>
+      <b>Serví esta carpeta vía localhost</b> con cualquiera de estas opciones (desde la carpeta del proyecto):
+      <ul style="margin:8px 0 8px 20px">
+        <li>Python: <code>python -m http.server 8000</code></li>
+        <li>Node: <code>npx http-server -p 8000</code></li>
+        <li>VS Code: extensión <i>Live Server</i> → click derecho "Open with Live Server"</li>
+      </ul>
+      Después abrí <code>http://localhost:8000/tests-harness.html</code>.`;
+  }
+} else {
+
+function head(t) { lines.push({cls:'head', t:'\n=== ' + t + ' ==='}); }
+function info(t) { lines.push({cls:'info', t:'  ' + t}); }
+function ok(cond, label) {
+  if (cond) { pass++; lines.push({cls:'pass', t:'  ✓ ' + label}); }
+  else { fail++; lines.push({cls:'fail', t:'  ✗ ' + label}); }
+}
+function pendingLabel(label) { pending++; lines.push({cls:'info', t:'  ◐ ' + label + ' (pendiente de inspección visual)'}); }
+function render() {
+  out.innerHTML = lines.map(l => '<div class="tline ' + l.cls + '">' + l.t.replace(/</g,'&lt;') + '</div>').join('\n');
+  document.getElementById('pass-c').textContent = pass;
+  document.getElementById('fail-c').textContent = fail;
+  document.getElementById('pending-c').textContent = pending;
+}
+
+try {
+  /* ============ state.js ============ */
+  head('state.js (T-01)');
+  ok(Object.keys(T).length === 7, 'T tiene 7 tipos de bloque');
+  ok(['HOOK','CONTEXTO','EVIDENCIA','SEGMENTO','GIRO','VISUAL','CTA'].every(k => T[k].length === 2), 'Cada tipo tiene [nombre, color]');
+  ok(PREDEFINED_TOPICS.filter(t => t.kind === 'structural').length === 5, '5 temas estructurales');
+  const semantic = PREDEFINED_TOPICS.filter(t => t.kind === 'semantic');
+  ok(semantic.length === 3, '3 temas semánticos');
+  ok(semantic.every(t => Array.isArray(t.examples) && t.examples.length === 3), 'Cada tema semántico tiene 3 ejemplos');
+  ok(semantic.every(t => t.examples.every(ex => ex.split(/\s+/).length >= 8)), 'Ejemplos con longitud adecuada (≥8 palabras)');
+
+  const np1 = normalizeProject({});
+  ok(np1.id === 'active' && np1.title === 'Nuevo guion' && np1.blocks.length === 0, 'normalizeProject({}) → defaults');
+  ok(np1.aiMode === 'basic' && np1.wpm === 150 && np1.targetDuration === 0, 'Defaults: aiMode basic, wpm 150, duración 0');
+  const np2 = normalizeProject({ aiMode: 'x', wpm: 999, targetDuration: 99999 });
+  ok(np2.aiMode === 'basic' && np2.wpm === 185 && np2.targetDuration === 3600, 'Clamps: aiMode, wpm[115,185], dur[0,3600]');
+  const np3 = normalizeProject({ project: { title: 'legado' }, blocks: [{ type: 'INVENTADO', content: 'x' }] });
+  ok(np3.title === 'legado' && np3.blocks[0].type === 'SEGMENTO', 'Formato legacy {project,blocks} + tipo inválido → SEGMENTO');
+
+  ok(contentHash('') !== contentHash('x'), 'contentHash no colisiona entre "" y "x"');
+  ok(contentHash('abc') === contentHash('abc'), 'contentHash determinista');
+  ok(time(75) === '1:15', 'time(75) = "1:15"');
+  ok(esc('<b>&') === '&lt;b&gt;&amp;', 'esc() escapa <>&');
+
+  /* ============ ai-shared.js ============ */
+  head('ai-shared.js (T-02)');
+  ok(sanitizeText('') === ' ', 'sanitizeText("") = " " (default)');
+  ok(sanitizeText(null) === ' ', 'sanitizeText(null) no rompe');
+  ok(sanitizeText('abc\u0000def') === 'abc def' || sanitizeText('abc\u0000def') === 'abcdef', 'sanitizeText quita control chars');
+  ok(sanitizeSentimentText('') === 'texto' && sanitizeSentimentText('ab') === 'texto', 'sanitizeSentimentText default "texto" si <3 chars');
+  ok(sanitizeSentimentText('Hola, ¿cómo estás?') === 'Hola, ¿cómo estás?', 'sanitizeSentimentText preserva español');
+
+  ok(dot([1,2,3],[4,5,6]) === 32, 'dot([1,2,3],[4,5,6]) = 32');
+  ok(Math.abs(cosineSim([1,0],[1,0]) - 1) < 1e-9, 'cosineSim paralelo = 1');
+  ok(Math.abs(cosineSim([1,0],[0,1]) - 0) < 1e-9, 'cosineSim ortogonal = 0');
+  ok(cosineSim(null,[1]) === 0, 'cosineSim con null = 0 (guard div/0)');
+
+  ok(syllables('gato') === 2, 'syllables("gato") = 2');
+  ok(syllables('pan') === 1, 'syllables("pan") = 1 (mínimo 1)');
+  ok(syllables('automóvil') >= 3, 'syllables("automóvil") ≥ 3');
+  ok(wordCount('Hola mundo 123') === 3, 'wordCount = 3 tokens');
+  ok(wordCount('') === 0, 'wordCount("") = 0');
+  ok(sentenceCount('Uno. Dos! ¿Tres?') === 3, 'sentenceCount = 3');
+  ok(sentenceCount('') === 1, 'sentenceCount("") = 1 (mínimo)');
+
+  const fh1 = fernandezHuerta('El gato come pescado en la cocina.');
+  ok(fh1 >= 0 && fh1 <= 100, 'Fernández-Huerta en [0,100]: ' + fh1.toFixed(1));
+  ok(fernandezHuerta('') === 0, 'FH("") = 0');
+  ok(durationInSeconds('diez palabras aquí contando todo esto bien', 150) > 0, 'durationInSeconds > 0');
+  ok(overlap('error común de siempre', 'el error común'), 'overlap detecta palabras ≥4 letras');
+  ok(!overlap('hola mundo', 'chau gente'), 'overlap false sin palabras compartidas');
+
+  /* ============ scoring.js ============ */
+  head('scoring.js (T-04) — §14.1');
+  // Caso 1: guion vacío
+  const a1 = computeAnalysis({ id:'active', title:'x', promise:'', targetDuration:0, aiMode:'basic', wpm:150, blocks:[] }, []);
+  ok(a1.score >= 0 && a1.score <= 100 && !Number.isNaN(a1.score), '1. Guion vacío → score válido en [0,100]: ' + a1.score);
+  // Caso 2: hook explícito con pregunta + overlap
+  const a2 = computeAnalysis({ id:'active', title:'t', promise:'por qué se van y cómo evitarlo', targetDuration:0, aiMode:'basic', wpm:150, blocks:[
+    {id:'b1',type:'HOOK',label:'Hook',content:'¿Sabías que el 90% pierde audiencia? Te muestro cómo evitarlo.',notes:''},
+    {id:'b2',type:'CTA',label:'CTA',content:'Suscribite.',notes:''}
+  ]}, []);
+  ok(a2.hs >= 60, '2. Hook explícito con pregunta + overlap → hs alto: ' + a2.hs);
+  // Caso 3: hook implícito penalizado ×0.7
+  const a3impl = computeAnalysis({ id:'active', title:'t', promise:'secreto de productividad increíble', targetDuration:0, aiMode:'basic', wpm:150, blocks:[
+    {id:'b1',type:'CONTEXTO',label:'ctx',content:'¿Cuál es el secreto de productividad increíble que nadie te cuenta?',notes:''}
+  ]}, []);
+  const a3expl = computeAnalysis({ id:'active', title:'t', promise:'secreto de productividad increíble', targetDuration:0, aiMode:'basic', wpm:150, blocks:[
+    {id:'b1',type:'HOOK',label:'h',content:'¿Cuál es el secreto de productividad increíble que nadie te cuenta?',notes:''}
+  ]}, []);
+  ok(a3impl.hs < a3expl.hs || (a3impl.hs === Math.round(a3expl.hs * 0.7)) || a3impl.hs <= a3expl.hs, '3. Hook implícito hs (' + a3impl.hs + ') ≤ explícito (' + a3expl.hs + ')');
+  // Caso 4: sin hook (primer bloque LARGO ≥30 palabras, sin pregunta, sin urgencia → no hooky)
+  const a4 = computeAnalysis({ id:'active', title:'t', promise:'', targetDuration:0, aiMode:'basic', wpm:150, blocks:[
+    {id:'b1',type:'SEGMENTO',label:'s',content:'Este es un bloque de contexto relativamente extenso que explica los antecedentes históricos del tema con varios detalles y matices, sin funcionar como apertura porque no abre con pregunta ni con una promesa clara al espectador.',notes:''}
+  ]}, []);
+  ok(a4.r.some(x => x[1] === 'Sin Hook definido'), '4. Primer bloque largo y no-hooky → riesgo "Sin Hook definido"');
+  // Caso 5: calibración <5
+  const a5 = computeAnalysis({ id:'active', title:'t', promise:'', targetDuration:0, aiMode:'basic', wpm:150, blocks:[{id:'b1',type:'HOOK',label:'h',content:'gancho',notes:''}] }, [{apv:60},{apv:60}]);
+  ok(!a5.calibrated && a5.score === a5.rawIcn, '5. <5 calibraciones → calibrated=false, score=rawIcn');
+  // Caso 6: calibración ≥5
+  const a6 = computeAnalysis({ id:'active', title:'t', promise:'', targetDuration:0, aiMode:'basic', wpm:150, blocks:[{id:'b1',type:'HOOK',label:'h',content:'gancho',notes:''}] }, [{apv:60},{apv:60},{apv:60},{apv:60},{apv:60}]);
+  ok(a6.calibrated && a6.reference === 60, '6. ≥5 calibraciones → calibrated=true, reference=60');
+  const esperado6 = Math.round(a6.rawIcn * 0.7 + 60 * 0.3);
+  ok(a6.score === esperado6, '6b. score = rawIcn·0.7 + ref·0.3 = ' + esperado6 + ' (got ' + a6.score + ')');
+  // Caso 7: FH>90 penalizado
+  const a7 = computeAnalysis({ id:'active', title:'t', promise:'', targetDuration:0, aiMode:'basic', wpm:150, blocks:[
+    {id:'b1',type:'HOOK',label:'h',content:'El gato come.',notes:''},
+    {id:'b2',type:'CTA',label:'c',content:'Chau.',notes:''}
+  ]}, []);
+  ok(a7.cl < 60, '7. FH alto (infantil) → cl penalizado (<60): ' + a7.cl);
+  // Caso 8: memo
+  state.p = { id:'active', title:'t', promise:'', targetDuration:0, aiMode:'basic', wpm:150, blocks:[] };
+  markAnalysisDirty();
+  const m1 = analysis(); const m2 = analysis();
+  ok(m1 === m2, '8. analysis() memoiza (misma ref sin dirty)');
+  markAnalysisDirty(); const m3 = analysis();
+  ok(m3 !== m1, '8b. markAnalysisDirty() → recalcula (nueva ref)');
+  // Caso 9: computeAnalysis no referencia document/window
+  info('9. (verificado por Auditor via grep sobre el fuente — no se puede probar en runtime)');
+
+  // Quality + splitters
+  const q1 = quality({ content:'', type:'SEGMENTO' }, { r: [] });
+  ok(q1[0] === 'Vacío' && q1[1] === 'bad', 'quality vacío → ["Vacío","bad"]');
+  const q2 = quality({ content:'texto largo suficiente para no ser vacío ni crítico', type:'SEGMENTO' }, { r: [] });
+  ok(q2[0] === 'Óptimo' && q2[1] === 'good', 'quality sin riesgos → ["Óptimo","good"]');
+  ok(splitSentences('Primera oración larga. Segunda oración también. Tercera oración aquí.').length === 3, 'splitSentences = 3');
+  ok(splitSentences('').length === 0, 'splitSentences("") = []');
+  ok(splitIntoSegments('a b c d e', 2).length >= 1, 'splitIntoSegments devuelve ≥1 segmento');
+
+  /* ============ retention-engine.js ============ */
+  head('retention-engine.js (T-05) — §14.3');
+  // Suma de pesos
+  const sum = Object.values(WEIGHTS).reduce((a,b) => a+b, 0);
+  ok(Math.abs(sum - 1) < 1e-9, 'Suma de los 9 pesos = 1.00: ' + sum.toFixed(10));
+  // Valores exactos
+  const esp = { hookStrength:0.25, pacingScore:0.17, patternInterrupts:0.14, emotionalArc:0.11, contentDensity:0.11, promiseDelivery:0.09, readability:0.07, ctaPlacement:0.03, narrativeCompleteness:0.03 };
+  let pesosOk = Object.keys(esp).every(k => WEIGHTS[k] === esp[k]);
+  ok(pesosOk, 'Valores exactos de los 9 pesos vs §7.3');
+  // 9 pesos presentes
+  ok(Object.keys(WEIGHTS).length === 9, 'Exactamente 9 pesos');
+
+  // Caso borde: guion vacío
+  const r1 = computeRetentionPrediction({ blocks: [], wpm:150, promise:'', title:'' });
+  ok(r1.overallRetention >= 15 && r1.overallRetention <= 95, 'Vacío → APV en [15,95]: ' + r1.overallRetention);
+  ok(r1.curve.length === 0, 'Vacío → curve vacía');
+  ok(r1.confidence === 0, 'Vacío → confidence = 0');
+
+  // 1 bloque
+  const r2 = computeRetentionPrediction({ blocks: [{id:'b1',type:'HOOK',label:'h',content:'¿Sabías que hoy descubriste el secreto sorprendente para evitar el error común? Te muestro cómo en 3 pasos.',notes:''}], wpm:150, promise:'secreto para evitar el error' });
+  ok(r2.overallRetention >= 15 && r2.overallRetention <= 95, '1 bloque → APV en [15,95]: ' + r2.overallRetention);
+  ok(r2.curve.length === 1, '1 bloque → curve con 1 punto');
+  ok(r2.confidence > 0 && r2.confidence <= 0.85, 'Confianza en (0, 0.85]');
+
+  // Confidence cap
+  const muchos = Array.from({length:20}, (_,i) => ({id:'b'+i,type:'SEGMENTO',label:'s',content:'Bloque con contenido sustancial de prueba para verificar el confidence cap del modelo documentado en el contrato v4.',notes:''}));
+  const r3 = computeRetentionPrediction({ blocks: muchos, wpm:150, promise:'' });
+  ok(r3.confidence === 0.85, 'Confidence cap 0.85 con muchos bloques: ' + r3.confidence);
+
+  // isDropRisk ↔ retention < 0.35
+  const dropCheck = r3.curve.every(p => p.isDropRisk === (p.retention < 0.35));
+  ok(dropCheck, 'isDropRisk true iff retention < 0.35');
+
+  // Bloque vacío penalizado
+  const r4 = computeRetentionPrediction({ blocks: [
+    {id:'b1',type:'HOOK',label:'h',content:'¿Sabías que hoy descubriste el secreto sorprendente? Te lo muestro.',notes:''},
+    {id:'b2',type:'SEGMENTO',label:'s',content:'',notes:''}
+  ]}, []);
+  ok(r4.curve[1].retention < 0.35, 'Bloque vacío → retention < 0.35 (penalización -0.15): ' + r4.curve[1].retention);
+
+  // Schema §6.3 completo
+  const r5 = computeRetentionPrediction({ blocks: [
+    {id:'b1',type:'HOOK',label:'h',content:'¿Sabías que hoy descubriste el secreto? 3 pasos.',notes:''},
+    {id:'b2',type:'CTA',label:'c',content:'Suscribite ahora.',notes:''}
+  ]}, { wpm:150, promise:'' });
+  const schemaOk = typeof r5.overallRetention === 'number' &&
+                   typeof r5.confidence === 'number' &&
+                   Array.isArray(r5.curve) &&
+                   typeof r5.scores === 'object' &&
+                   ['hook','pacing','patternInterrupts','contentDensity','promiseDelivery','readability','cta','narrative'].every(k => r5.scores[k]) &&
+                   r5.weights === WEIGHTS &&
+                   Array.isArray(r5.insights) && Array.isArray(r5.risks) && Array.isArray(r5.recommendations) &&
+                   typeof r5.formula === 'string' &&
+                   r5.meta && typeof r5.meta.totalBlocks === 'number';
+  ok(schemaOk, 'Salida cumple schema §6.3 (overallRetention, confidence, curve, scores[8], weights, insights/risks/recs, formula, meta)');
+
+  // APV clamp: ni <15 ni >95
+  const rMin = computeRetentionPrediction({ blocks: [{id:'b1',type:'SEGMENTO',label:'s',content:'x',notes:''}], wpm:150, promise:'' });
+  ok(rMin.overallRetention >= 15, 'APV nunca <15 (incluso con input pobre): ' + rMin.overallRetention);
+
+  pendingLabel('Cada peso con cita inline — verificar inspeccionando retention-engine.js (Auditor lo hará por grep)');
+
+  /* ============ db.js ============ */
+  head('db.js (T-03) — solo en navegador');
+  try {
+    const dbConn = await openDB();
+    ok(true, 'openDB() abrió sin error');
+    // put/get
+    const testId = 'test-' + Date.now();
+    await put('settings', { id: testId, valor: 42 });
+    const got = await get('settings', testId);
+    ok(got && got.valor === 42, 'put/get round-trip');
+    // all
+    const allSettings = await all('settings');
+    ok(Array.isArray(allSettings) && allSettings.some(s => s.id === testId), 'all() devuelve array con el item');
+    // del
+    await del('settings', testId);
+    const after = await get('settings', testId);
+    ok(after === undefined, 'del() elimina');
+    // 6 stores existen — pedimos objectStoreNames desde la conexión devuelta por openDB()
+    const stores = dbConn && dbConn.objectStoreNames ? [...dbConn.objectStoreNames] : [];
+    ok(stores.length >= 6, 'DB tiene ≥6 object stores: ' + stores.join(', '));
+    // migrateLegacy idempotente
+    await migrateLegacy();
+    await migrateLegacy();
+    ok(localStorage.getItem('scriptlab-idb-migrated') === '1', 'migrateLegacy idempotente (flag seteado)');
+  } catch (e) {
+    ok(false, 'db.js falló: ' + e.message);
+  }
+
+  /* ============ retention-worker.js ============ */
+  head('retention-worker.js (T-05 wrapper) — smoke en Worker real');
+  try {
+    const w = new Worker('./retention-worker.js', { type: 'module' });
+    const wResult = await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('timeout')), 3000);
+      w.onmessage = e => { clearTimeout(timer); resolve(e.data); };
+      w.onerror = e => { clearTimeout(timer); reject(new Error(e.message)); };
+      w.postMessage({ type:'PREDICT_RETENTION', requestId:1, blocks:[{id:'b1',type:'HOOK',label:'h',content:'¿Sabías que hoy descubriste el secreto? Te muestro cómo.',notes:''}], wpm:150, promise:'', title:'' });
+    });
+    ok(wResult.type === 'RETENTION_RESULT' && typeof wResult.overallRetention === 'number', 'Worker responde RETENTION_RESULT con overallRetention');
+    w.terminate();
+  } catch (e) {
+    ok(false, 'Worker smoke falló: ' + e.message);
+  }
+
+  head('Resumen');
+  info('Pasaron: ' + pass + ' · Fallaron: ' + fail + ' · Pendientes: ' + pending);
+
+} catch (e) {
+  fail++;
+  lines.push({cls:'fail', t:'\nEXCEPCIÓN FATAL: ' + e.message + '\n' + e.stack});
+} finally {
+  render();
+}
+
+} // fin del else (no file://)
+</script>
+</body></html>

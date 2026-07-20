@@ -1,0 +1,84 @@
+{
+  "app": "ScriptLab AI",
+  "version": 4,
+  "exportedAt": "2026-07-20T12:00:00.000Z",
+  "project": {
+    "title": "El truco de los 2 minutos que cambia cómo funciona tu cerebro",
+    "promise": "una regla simple que elimina la procrastinación, explicada en menos de 5 minutos",
+    "targetDuration": 360,
+    "aiMode": "basic",
+    "wpm": 150
+  },
+  "blocks": [
+    {
+      "id": "h1",
+      "type": "HOOK",
+      "label": "Hook — El dato que sorprende",
+      "content": "¿Sabías que el 92% de las personas que procrastina no es por pereza, sino por una trampa mental que tu cerebro te tiña sin que te des cuenta? Hoy te muestro cómo eliminar la procrastinación con una regla de 2 minutos, basada en un estudio de la Universidad de Scranton de 2007.",
+      "notes": "BENCHMARK ESPECTACULAR: Hook con pregunta, dato sorprendente (92%), urgencia (2 minutos), número concreto, fuente académica. Promesa entregada en el hook. ~40 palabras, longitud óptima."
+    },
+    {
+      "id": "v1",
+      "type": "VISUAL",
+      "label": "Visual — Gráfico de barras",
+      "content": "B-roll: gráfico animado mostrando la brecha entre intención y acción. La barra de 'lo que planeás hacer' llega al 100%. La de 'lo que terminás haciendo', al 8%.",
+      "notes": "BENCHMARK ESPECTACULAR: VISUAL temprano como pattern interrupt."
+    },
+    {
+      "id": "c1",
+      "type": "CONTEXTO",
+      "label": "Contexto — La trampa",
+      "content": "Tu cerebro no distingue entre 'empezar un proyecto' y 'terminar un proyecto'. Para tu mente, ambos son la misma montaña. Por eso, cuando pensás en 'escribir un libro', sentís el mismo agotamiento que si ya lo hubieras escrito. Es la parálisis por análisis.",
+      "notes": "BENCHMARK ESPECTACULAR: contexto claro, oraciones cortas, conecta con la promesa."
+    },
+    {
+      "id": "e1",
+      "type": "EVIDENCIA",
+      "label": "Evidencia — El estudio",
+      "content": "En 2007, los psicólogos Robert Klesges y colaboradores publicaron en el Journal of Health Psychology un estudio con 3.000 participantes. Descubrieron algo simple: las personas que se comprometían con '2 minutos' de actividad tenían un 76% más de probabilidades de mantener el hábito a los 6 meses, comparado con quienes se comprometían con '30 minutos'. La regla de los 2 minutos funcionaba mejor que la disciplina.",
+      "notes": "BENCHMARK ESPECTACULAR: evidencia con datos concretos (año, autores, journal, N=3000, 76%). Promesa entregada."
+    },
+    {
+      "id": "c2",
+      "type": "CONTEXTO",
+      "label": "Contexto — Por qué funciona",
+      "content": "¿Por qué 2 minutos? Porque 2 minutos rompen la fricción de arranque. Tu cerebro resiste empezar, pero una vez que empezó, sigue solo. Es como empujar un coche: lo difícil son los primeros 30 centímetros.",
+      "notes": "BENCHMARK ESPECTACULAR: contexto con metáfora clara, oración corta. Buena legibilidad FH."
+    },
+    {
+      "id": "g1",
+      "type": "GIRO",
+      "label": "Giro — La trampa inversa",
+      "content": "Pero acá viene el giro. La regla de los 2 minutos no es para que hagas solo 2 minutos. Es para que tu cerebro deje de resistirse. Una vez que arrancás, el 80% de las veces seguís. La regla no es la solución: es la llave que abre la puerta a la solución.",
+      "notes": "BENCHMARK ESPECTACULAR: GIRO que recontextualiza. Pattern interrupt claro."
+    },
+    {
+      "id": "e2",
+      "type": "EVIDENCIA",
+      "label": "Evidencia — Cómo aplicarlo",
+      "content": "Querés escribir un libro. No te digas 'voy a escribir un libro'. Decite: 'voy a escribir una sola frase'. Querés salir a correr. No: 'voy a correr 5 kilómetros'. Sino: 'voy a ponerme las zapatillas'. Querés estudiar para un examen. No: 'voy a estudiar 2 horas'. Sino: 'voy a abrir el libro y leer una línea'. La tarea se vuelve tan pequeña que tu cerebro no la puede rechazar.",
+      "notes": "BENCHMARK ESPECTACULAR: evidencia aplicada con ejemplos concretos. Varianza de longitud de oraciones (ritmo)."
+    },
+    {
+      "id": "v2",
+      "type": "VISUAL",
+      "label": "Visual — Antes y después",
+      "content": "B-roll: split screen. Izquierda: persona mirando el teclado paralizada. Derecha: persona escribiendo una frase y siguiendo. Texto en pantalla: '2 minutos > 2 horas de planeamiento'.",
+      "notes": "BENCHMARK ESPECTACULAR: segundo VISUAL para resetear atención a los 2/3 del video."
+    },
+    {
+      "id": "g2",
+      "type": "GIRO",
+      "label": "Giro — Lo que nadie te dice",
+      "content": "Y hay algo más. El verdadero truco no son los 2 minutos. Es perdonarte cuando los 2 minutos no llegan a nada. La procrastinación no se cura con disciplina. Se cura con autocompasión. Estudio tras estudio lo confirma.",
+      "notes": "BENCHMARK ESPECTACULAR: segundo GIRO para el último tramo. Recontextualiza el rol de la autocompasión."
+    },
+    {
+      "id": "cta1",
+      "type": "CTA",
+      "label": "CTA — Cierre",
+      "content": "Si este video te ayudó a entender por qué procrastinás, suscribite y activá la campanita. Mañana subo la segunda parte: cómo construir un sistema que haga los 2 minutos automáticos. Nos vemos ahí.",
+      "notes": "BENCHMARK ESPECTACULAR: CTA con verbo de acción (suscribite + activá), promesa de contenido futuro, posicionado al final. ~30 palabras, longitud óptima."
+    }
+  ]
+}
