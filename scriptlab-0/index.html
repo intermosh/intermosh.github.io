@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>YouTube ScriptLab</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="header">
+  <div class="header-inner">
+    <div class="brand">
+      <div class="logo">▶</div>
+      <div><h1>YouTube ScriptLab</h1><p>Editor de guiones para Youtube.</p></div>
+    </div>
+    <div class="actions">
+      <button class="btn good" id="btnToggleMetrics" aria-pressed="true">Métricas: ON</button>
+      <button class="btn" id="btnPromptIa" title="Convierte un texto fuente en guion estructurado (offline, sin LLM)">✨ Convertir texto</button>
+      <button class="btn" id="btnImportJson">Importar JSON</button>
+      <input id="jsonImportInput" type="file" accept=".json,application/json" style="display:none">
+      <button class="btn" id="btnExample">Cargar ejemplo</button>
+      <button class="btn" id="btnPreview" title="Abrir el guion actual en el visor.html con estilos y dark/light">👁 Vista previa</button>
+
+      <!-- Dropdown Exportar agrupado: TXT / JSON / HTML -->
+      <div class="dropdown" id="exportDropdown" style="position:relative;display:inline-block">
+        <button class="btn" id="btnExportMenu" title="Exportar el guion">⤓ Exportar ▾</button>
+        <div id="exportMenu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#10192c;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);z-index:100;min-width:180px;padding:4px">
+          <button class="btn ghost" id="btnExportTxt" style="width:100%;justify-content:flex-start;border:0;text-align:left;padding:9px 12px">📝  Exportar TXT</button>
+          <button class="btn ghost" id="btnExportJson" style="width:100%;justify-content:flex-start;border:0;text-align:left;padding:9px 12px">{ }  Exportar JSON</button>
+          <button class="btn ghost" id="btnExportHtml" style="width:100%;justify-content:flex-start;border:0;text-align:left;padding:9px 12px">📄  Exportar HTML</button>
+        </div>
+      </div>
+
+      <button class="btn primary" id="btnSave">Guardar local</button>
+    </div>
+  </div>
+</header>
+<main class="app">
+  <section>
+    <div class="panel panel-pad">
+      <div class="panel-title">
+        <div><h2>Proyecto</h2><p>Define la promesa que el título/thumbnail le hacen al espectador. Los primeros 30 segundos del guion deben pagar esa promesa.</p></div>
+        <span class="pill" id="autosavePill">Auto-guardado activo</span>
+      </div>
+      <div class="project-grid">
+        <div class="field"><label for="projectTitle">Título tentativo</label><input id="projectTitle" class="input" placeholder="Ej: La mentira que cambió la historia de..." /></div>
+        <div class="field"><label for="projectFormat">Formato</label><select id="projectFormat" class="select"><option value="long">Video largo / horizontal</option><option value="short">Short / vertical</option><option value="live">Live editado</option></select></div>
+        <div class="field"><label for="projectGenre">Género</label><select id="projectGenre" class="select"><option value="documental">Documental / historia</option><option value="tutorial">Tutorial / how-to</option><option value="ensayo">Ensayo / opinión</option><option value="review">Review / análisis</option><option value="entretenimiento">Entretenimiento</option></select></div>
+        <div class="field"><label for="projectPromise">Promesa central</label><textarea id="projectPromise" class="textarea" placeholder="Qué curiosidad, problema o transformación prometés resolver..."></textarea></div>
+        <div class="field"><label for="projectAudience">Audiencia</label><textarea id="projectAudience" class="textarea" placeholder="Para quién es, qué sabe, qué le importa, qué objeción tiene..."></textarea></div>
+        <div class="field"><label>Objetivo</label><div class="range-row"><input id="targetMinutes" type="range" min="0.25" max="45" step="0.25"><span class="pill mono" id="targetMinutesLabel">12:00</span></div><div class="range-row"><input id="wpm" type="range" min="115" max="185" step="5"><span class="pill mono" id="wpmLabel">150 WPM</span></div><span class="dim small">WPM recomendado para voz conversacional en español: ajustable según locución.</span></div>
+        <div class="field"><label for="realRetention">Retención real de tus últimos videos (Studio) — opcional, %</label><input id="realRetention" class="input" type="number" min="1" max="100" step="1" placeholder="Ej: 42" /><span class="pill warn" id="benchmarkBadge">Benchmark genérico — sin calibrar con tu canal</span><span class="dim small">Usá el APV/retención media de videos comparables de tu canal para calibrar el benchmark.</span></div>
+      </div>
+    </div>
+
+    <div class="addbar" aria-label="Agregar bloques">
+      <button class="btn" data-add="voice"><span class="legend-dot" style="--c:var(--voice)"></span>Voz</button>
+      <button class="btn" data-add="visual"><span class="legend-dot" style="--c:var(--visual)"></span>Visual/B-roll</button>
+      <button class="btn" data-add="screen"><span class="legend-dot" style="--c:var(--screen)"></span>Texto pantalla</button>
+      <button class="btn" data-add="sfx"><span class="legend-dot" style="--c:var(--sfx)"></span>SFX/Música</button>
+      <button class="btn" data-add="pause"><span class="legend-dot" style="--c:var(--pause)"></span>Pausa/beat</button>
+      <button class="btn" data-add="cta"><span class="legend-dot" style="--c:var(--cta)"></span>CTA</button>
+      <button class="btn" data-add="source"><span class="legend-dot" style="--c:var(--source)"></span>Fuente/dato</button>
+    </div>
+
+    <div class="panel panel-pad">
+      <div class="panel-title">
+        <div><h2>Guion por bloques</h2><p>Escribí la voz como texto final y las instrucciones visuales como eventos. Los visuales no suman duración salvo que marques “suma tiempo”.</p></div>
+        <span class="pill mono" id="blockCount">0 bloques</span>
+      </div>
+      <div id="blocks" class="blocks"></div>
+    </div>
+  </section>
+
+  <aside class="sidebar">
+    <section class="score-card" title="Simulación heurística basada en reglas de escritura, no en datos de tu canal. Compará contra Studio después de publicar.">
+      <div class="score-row">
+        <div class="gauge" id="scoreGauge" style="--p:0"><span id="scoreValue">0–10 · Bajo</span></div>
+        <div>
+          <h3 id="scoreLabel">Preflight</h3>
+          <p id="scoreText">Escribí o cargá un ejemplo para analizar el guion.</p>
+          <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px" id="scorePills"></div>
+          <!-- Indicador de calibración — siempre visible junto al preflight -->
+          <div id="calibrationIndicator" style="margin-top:8px"></div>
+        </div>
+      </div>
+      <!-- DISCLAIMER VISIBLE PERMANENTE — no es tooltip, siempre se ve -->
+      <div style="margin-top:12px;padding:9px 11px;border:1px solid rgba(255,190,85,.32);background:rgba(255,190,85,.10);border-radius:12px;font-size:.78rem;color:#ffe0a8;line-height:1.4">
+        <b>⚠ Simulación heurística</b> basada en reglas de escritura y, donde fue posible, en datos publicados — <b>no en datos de tu canal</b>. Comparalo con tus métricas reales de YouTube Studio. Detalle y fuentes en el tab <b>Research</b>.
+      </div>
+    </section>
+
+    <section class="panel panel-pad">
+      <div class="quick-stats" id="quickStats"></div>
+    </section>
+
+    <section class="panel">
+      <div class="tabs">
+        <button class="tab active" data-tab="curve">Curva</button>
+        <button class="tab" data-tab="timing">Tiempos</button>
+        <button class="tab" data-tab="risks">Riesgos</button>
+        <button class="tab" data-tab="check">Checklist</button>
+        <button class="tab" data-tab="research">Research</button>
+        <button class="tab" data-tab="realdatos">Datos Reales</button>
+      </div>
+      <div class="tab-body active" id="tab-curve">
+        <div class="canvas-wrap"><canvas id="retentionCanvas"></canvas></div>
+        <div class="source-note">Curva direccional. Contrastá el resultado con YouTube Studio.</div>
+      </div>
+      <div class="tab-body" id="tab-timing">
+        <div id="timeBreakdown"></div>
+      </div>
+      <div class="tab-body" id="tab-risks"><div class="risk-list" id="riskList"></div></div>
+      <div class="tab-body" id="tab-check"><div class="checklist" id="checkList"></div></div>
+      <div class="tab-body" id="tab-research">
+        <div class="formula"><b>Fórmulas clave</b><br>Lista completa abajo — separa lo validado de la heurística sin validar.</div>
+        <div id="sourceList"></div>
+      </div>
+      <div class="tab-body" id="tab-realdatos">
+        <div id="realDataRoot"><p class="muted small" style="padding:14px">Cargando…</p></div>
+      </div>
+    </section>
+  </aside>
+</main>
+
+<!-- MODAL: Convertir texto → guion (offline)                    -->
+<div class="modal-backdrop" id="promptIaModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>✨ Convertir texto a guion</h2>
+      <button class="btn icon ghost" id="promptIaClose" title="Cerrar">✕</button>
+    </div>
+    <div class="modal-content">
+      <p class="muted small" style="margin:0 0 12px">Pegá un texto fuente (artículo, transcripción, notas, guion en prosa) y se convierte <b>automáticamente</b> a guion estructurado. Funciona 100% offline — sin LLM, sin API. Las heurísticas detectan tipo de bloque por marcadores explícitos (<code>[VISUAL]</code>), keywords ("mostrar", "golpe musical", "suscribite"), patrones estructurales (ALL CAPS, URLs, listas) y generan metadata del proyecto.</p>
+      <div class="columns">
+        <div>
+          <h4 style="margin:0 0 6px">1. Texto fuente</h4>
+          <textarea id="promptIaSource" class="textarea" style="min-height:300px;font-size:.9rem" placeholder="Pegá acá el artículo, transcripción o notas que querés convertir en guion...
+
+Tips:
+- Usá marcadores explícitos para forzar tipos: [VOZ], [VISUAL], [SFX], [PAUSA 2], [CTA], [FUENTE]
+- O etiquetas con dos puntos: 'VOZ:', 'VISUAL:', 'PANTALLA:', 'SFX:'
+- Texto ALL CAPS corto (≤8 palabras) → se detecta como texto en pantalla
+- Líneas con URL o 'fuente:' → bloque de fuente
+- Listas (3+ líneas cortas) → cada línea se convierte en su propio bloque"></textarea>
+          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+            <button class="btn primary" id="promptIaCopy">🔄 Convertir</button>
+            <button class="btn ghost" id="promptIaClear">Limpiar</button>
+          </div>
+        </div>
+        <div>
+          <h4 style="margin:0 0 6px">2. Resultado (JSON)</h4>
+          <textarea id="promptIaPreview" readonly class="textarea mono" style="min-height:300px;font-size:.78rem;background:rgba(0,0,0,.25)" placeholder='El JSON convertido aparecerá acá...'></textarea>
+          <div id="converterStats" class="muted small" style="margin-top:6px;min-height:1.2em"></div>
+          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+            <button class="btn" id="promptIaCopyJson">📋 Copiar JSON</button>
+            <button class="btn good" id="promptIaPasteJson">Importar al editor</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Orden de carga obligatorio: config → model → render → visor-assets → converter → app -->
+<script src="js/config.js"></script>
+<script src="js/model.js"></script>
+<script src="js/render.js"></script>
+<script src="js/visor-assets.js"></script>
+<script src="js/converter.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
+<!-- version 1.1 -->

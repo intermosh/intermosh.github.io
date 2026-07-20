@@ -1,0 +1,28 @@
+{
+  "project": {
+    "title": "La mentira que cambió el destino de una ciudad",
+    "promise": "El video revela cómo una decisión aparentemente técnica terminó afectando la vida de miles de personas, y qué señal se ignoró antes del desastre.",
+    "audience": "Personas interesadas en historia, misterio y decisiones reales explicadas con ritmo documental.",
+    "format": "long",
+    "genre": "documental",
+    "targetMinutes": 12,
+    "wpm": 150,
+    "realRetention": ""
+  },
+  "blocks": [
+    { "type": "voice",  "text": "En los primeros diez segundos quiero que mires esta imagen. Parece una calle común, pero detrás de esa puerta se tomó una decisión que nadie pudo deshacer. ¿Por qué una ciudad entera confió en un dato que estaba mal?" },
+    { "type": "visual", "text": "Foto de archivo: calle vacía, zoom lento hacia una puerta marcada. Sobreimpresión de fecha." },
+    { "type": "screen", "text": "UN DATO MAL LEÍDO" },
+    { "type": "sfx",    "text": "Golpe grave + silencio breve" },
+    { "type": "voice",  "text": "La historia empieza con una promesa: resolver un problema rápido, barato y sin conflicto. El plan sonaba perfecto. Pero había una variable que no aparecía en los informes públicos." },
+    { "type": "source", "text": "Fuente: informe municipal, entrevista y archivo de prensa. Agregar URL exacta antes de publicar." },
+    { "type": "voice",  "text": "Primero vamos a reconstruir la línea de tiempo. Después vamos a ver la advertencia que se ignoró. Y al final vas a entender por qué este caso todavía se usa como ejemplo de mala toma de decisiones." },
+    { "type": "visual", "text": "Timeline animada: 3 hitos con fechas. Cortes cada 6–8 segundos." },
+    { "type": "voice",  "text": "El primer error no fue técnico. Fue narrativo: todos querían creer que la solución ya estaba encontrada. Cuando un equipo empieza por la conclusión, cada dato se transforma en decoración." },
+    { "type": "screen", "text": "ERROR #1: EMPEZAR POR LA CONCLUSIÓN" },
+    { "type": "pause",  "text": "Pausa para dejar respirar la idea.", "addsTime": true, "seconds": 2 },
+    { "type": "voice",  "text": "En este punto conviene mirar el documento original. La tabla no dice lo que después dijeron que decía. La diferencia parece mínima, pero cambia por completo el riesgo." },
+    { "type": "visual", "text": "Mostrar tabla con resaltado: columna correcta vs interpretación errónea." },
+    { "type": "cta",    "text": "Si querés, dejame en comentarios qué hubieras decidido con esa información. Y en la pantalla final te dejo el análisis del caso anterior, que conecta con este patrón." }
+  ]
+}
