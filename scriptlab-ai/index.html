@@ -1,0 +1,170 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#1a1a1e"><title>ScriptLab AI</title><link rel="stylesheet" href="./styles.css"><script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script></head><body>
+<header>
+  <span id="ai-activity" class="ai-activity heuristic" title="Estado del análisis">◌ Análisis heurístico local</span>
+  <button id="toggle-left" title="Mostrar u ocultar panel" aria-label="Panel izquierdo">◧</button>
+  <button id="toggle-right" title="Mostrar u ocultar inspector" aria-label="Panel derecho">◨</button>
+  <button id="theme" title="Cambiar tema claro/oscuro">◐</button>
+  <div class="header-actions">
+    <div class="export-wrap">
+      <button id="save-btn" aria-label="Guardar guion" title="Guardar guion en tu PC">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Guardar
+      </button>
+      <button id="import-btn" class="header-icon" aria-label="Importar" title="Importar proyecto">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </button><input id="import-input" type="file" accept=".json,.md,.scriptlab.json" hidden>
+      <button id="export" class="header-icon" aria-label="Exportar" title="Exportar proyecto">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      </button><div id="export-menu" class="export-menu" hidden><button data-export="json">JSON</button><button data-export="html">HTML</button><button data-export="md">Markdown</button></div>
+    </div>
+    <button id="new" title="Nuevo proyecto">Nuevo</button>
+  </div>
+</header>
+<main>
+  <!-- PANEL IZQUIERDO -->
+  <aside id="left-sidebar">
+    <div class="sidebar-tools">
+      <section class="project-fields">
+        <label>Título del video<input id="title" placeholder="Ej: Cómo grabar guiones que retienen"></label>
+        <label>Promesa<input id="promise" placeholder="Qué va a aprender el espectador"></label>
+      </section>
+      <div class="sidebar-duration">
+        <label>Duración objetivo <b id="target-duration-value">—</b></label>
+        <input id="target-duration" type="range" min="0" max="3600" step="15" value="0" title="0 = sin objetivo">
+      </div>
+      <div class="sidebar-nav">
+        <button data-view="canvas" class="view on" title="Canvas">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          <span>Guion</span>
+        </button>
+        <button data-view="timeline" class="view" title="Timeline">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <span>Tiempo</span>
+        </button>
+        <button data-view="tele" class="view" title="Teleprompter">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 15l3-3-3-3"/><path d="M13 15h4"/></svg>
+          <span>Tele</span>
+        </button>
+      </div>
+      <div class="sidebar-divider"></div>
+      <small id="ai-state" class="ai-state-label">Análisis local (sin IA)</small>
+      <button id="ai" class="ai-config-btn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 1 4 4v1a1 1 0 0 0 1 1h1a4 4 0 0 1 0 8h-1a1 1 0 0 0-1 1v1a4 4 0 0 1-8 0v-1a1 1 0 0 0-1-1H6a4 4 0 0 1 0-8h1a1 1 0 0 0 1-1V6a4 4 0 0 1 4-4z"/></svg>
+        Configurar IA
+      </button>
+    </div>
+    <div class="sidebar-wpm"><label>Voz <b id="wpm-value">150</b> palabras/min</label><input id="wpm" type="range" min="115" max="185" value="150"></div>
+  </aside>
+
+  <!-- ÁREA DE TRABAJO -->
+  <section class="work">
+    <nav class="palette-bar" id="palette-bar">
+      <span class="palette-label">Bloques narrativos</span>
+      <div id="palette" class="palette"></div>
+    </nav>
+    <section id="canvas" class="panel on"><div id="viewport"><div id="stage"><div id="flow"></div></div><div id="empty"><h2>Armá tu guion</h2><p>Arrastrá bloques desde arriba. El orden define la narrativa.</p></div></div></section>
+    <section id="timeline" class="panel"><h2>Timeline</h2><div id="timeline-list"></div></section>
+    <section id="tele" class="panel"><div class="telebar"><button id="speak">▶ Leer</button><button id="pause-speak">Ⅱ</button><button id="prev-speak">◀</button><button id="next-speak">▶</button><label>Velocidad <input id="rate" type="range" min=".8" max="1.3" step=".1" value="1"></label><button id="full">Pantalla completa</button></div><article id="teletext"></article></section>
+  </section>
+
+  <!-- PANEL DERECHO -->
+  <aside id="right-sidebar" class="right">
+    <nav>
+      <button data-tab="metrics" class="tab on">Calidad</button>
+      <button data-tab="retention" class="tab">Retención</button>
+      <button data-tab="analysis" class="tab">Análisis IA</button>
+      <button data-tab="cal" class="tab">Datos reales</button>
+    </nav>
+
+    <!-- CALIDAD -->
+    <section id="metrics" class="tabpage on">
+      <div class="score-hero">
+        <div class="score-label">Puntuación general del guion</div>
+        <div class="score-number"><span id="score">0</span><span style="font-size:20px;font-weight:400;color:var(--muted)">/100</span></div>
+        <div class="score-bar"><i id="bar"></i></div>
+        <div class="score-sub" id="score-sub">Calculando...</div>
+      </div>
+      <div id="metric-grid"></div>
+      <canvas id="chart" width="480" height="160"></canvas>
+      <ul id="risks"></ul>
+      <button class="methodology-toggle" id="methodology-toggle">¿Cómo se calcula cada métrica?</button>
+      <div class="methodology-panel" id="methodology-panel">
+        <h4>Apertura (Hook)</h4>
+        <div class="meth-formula">Longitud (15-80 palabras), pregunta, número, power words, coincidencia con la promesa</div>
+        <div class="meth-source">Regla heurística basada en patrones de YouTube de alto rendimiento.</div>
+        <h4>Claridad</h4>
+        <div class="meth-formula">206.84 − 60 × (sílabas/palabra) − 1.02 × (palabras/oración)</div>
+        <div class="meth-source">Fernández-Huerta (1959), adaptación española del índice de Flesch. Validado extensamente en textos hispanos.</div>
+        <h4>Ritmo narrativo</h4>
+        <div class="meth-formula">Notas visuales y giros narrativos por duración + varianza de longitud de oraciones</div>
+        <div class="meth-source">Referencia direccional: Cutting, J. E. et al. (2016). "Viewing behavior and the structure of narrative film."</div>
+        <h4>Alineación con la promesa</h4>
+        <div class="meth-formula">Superposición léxica ≥ 4 caracteres entre hook y promesa</div>
+        <div class="meth-source">Criterio de coherencia interna. Mide si lo que prometés aparece en la apertura.</div>
+        <h4>Puntuación general (ICN)</h4>
+        <div class="meth-formula">Hook × 0.31 + Claridad × 0.22 + Ritmo × 0.22 + Promesa × 0.17 + CTA × 0.08</div>
+        <div class="meth-source">Pesos asignados por importancia relativa en retención de YouTube.</div>
+        <h4>Calibración con datos reales</h4>
+        <div class="meth-formula">ICN_final = ICN_heurístico × 0.7 + APV_promedio_real × 0.3</div>
+        <div class="meth-source">Se usan las últimas 5 mediciones de APV desde YouTube Studio para ajustar la predicción.</div>
+      </div>
+    </section>
+
+    <!-- ANÁLISIS IA -->
+    <section id="analysis" class="tabpage">
+      <div class="analysis-invite" id="analysis-invite">
+        <p>Con modelos de IA locales, podés descubrir qué tan redundante es tu guion, qué oraciones son más representativas y si hay temas que faltan.</p>
+        <button class="ai-btn" id="activate-ai-btn">Activar IA local</button>
+      </div>
+      <div class="analysis-notice" id="analysis-notice" hidden>Activá el <b>modo AI</b> para usar estas herramientas.</div>
+      <div id="analysis-content" hidden>
+        <details class="analysis-section" open><summary>Oraciones clave del guion</summary><p class="analysis-desc">Muestra las frases que mejor representan el significado global del guion.</p><div class="analysis-controls"><label>Frases <input id="extract-topN" type="number" min="3" max="10" value="5" style="width:50px"></label><button id="run-extractive" class="analysis-btn">Buscar oraciones clave</button></div><div id="extractive-results" class="analysis-results"></div></details>
+        <details class="analysis-section"><summary>Repetición entre bloques</summary><p class="analysis-desc">Detecta bloques que dicen lo mismo de otra forma.</p><div class="analysis-controls"><label>Sensibilidad <input id="redundancy-threshold" type="number" min="0.5" max="0.99" step="0.05" value="0.85" style="width:60px"></label><button id="run-redundancy" class="analysis-btn">Buscar repetición</button></div><div id="redundancy-results" class="analysis-results"></div></details>
+        <details class="analysis-section"><summary>Cambio de tema por minuto</summary><p class="analysis-desc">Muestra cuántos temas distintos se tratan en cada minuto del video.</p><div class="analysis-controls"><button id="run-density" class="analysis-btn">Analizar temas</button></div><div id="density-results" class="analysis-results"><div class="density-chart-wrap"><canvas id="density-chart" height="200"></canvas></div></div></details>
+        <details class="analysis-section"><summary>¿Qué falta en el guion?</summary><p class="analysis-desc">Busca conceptos narrativos que podrían estar faltando (hook, evidencia, cierre, etc.).</p><div class="analysis-controls"><button id="run-gaps" class="analysis-btn">Revisar guion</button></div><div id="gap-results" class="analysis-results"></div></details>
+      </div>
+    </section>
+
+    <!-- DATOS REALES -->
+    <section id="cal" class="tabpage">
+      <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Ingresá datos reales de YouTube Studio para calibrar la puntuación. Se guardan solo en este navegador.</p>
+      <form id="calform"><label>Formato<select id="format"><option value="long">Video largo</option><option value="short">Short</option></select></label><label>Género<select id="genre"><option>educativo</option><option>ensayo</option><option>tutorial</option><option>entretenimiento</option></select></label><label>APV real (%)<input id="apv" type="number" min="1" max="100" required></label><label>R30 (%)<input id="r30" type="number" min="1" max="100"></label><button>Guardar dato</button></form><div id="caldata"></div>
+    </section>
+
+    <!-- RETENCIÓN -->
+    <section id="retention" class="tabpage">
+      <p class="eyebrow">Predicción de retención estimada</p>
+      <div class="retention-header">
+        <div class="retention-score-wrap">
+          <span id="retention-score" class="retention-score">—</span>
+          <span class="retention-label">APV estimado</span>
+        </div>
+        <div class="retention-meta">
+          <div><small>Confianza</small><b id="retention-confidence">—</b></div>
+          <div><small>Duración</small><b id="retention-duration">—</b></div>
+          <div><small>Bloques</small><b id="retention-blocks">—</b></div>
+        </div>
+      </div>
+      <div id="sentiment-arc"></div>
+      <button id="run-retention" class="analysis-btn" style="margin:10px 0">Predecir retención</button>
+      <div id="retention-chart-wrap" class="density-chart-wrap" hidden><canvas id="retention-chart"></canvas></div>
+      <div id="retention-insights" class="retention-insights"></div>
+      <div id="retention-risks" class="retention-risks"></div>
+      <div id="retention-recommendations" class="retention-recs"></div>
+      <details class="retention-weights"><summary>Pesos del modelo</summary><div id="retention-weights-detail"></div></details>
+    </section>
+  </aside>
+</main>
+<dialog id="aidialog" class="ai-sheet"><div class="ai-sheet-body"><div class="sheet-head"><p>ANÁLISIS LOCAL</p><h2>Elegí el tipo de análisis</h2><button id="close-ai" type="button" class="sheet-close" aria-label="Cerrar">×</button></div><p class="sheet-copy">Tu guion nunca sale de este navegador. Elegí cómo querés que te ayude.</p><div class="mode-switch"><button id="mode-basic" type="button">Rápido (heurísticas)</button><button id="mode-ai" type="button">Completo (con IA local)</button></div><section id="ai-download-area" hidden><p class="browser-store">Se van a descargar 2 modelos (~110 MB) que quedan guardados en tu navegador: uno para entender el significado de tus textos y otro para analizar el tono emocional. Todo corre localmente, sin servidor.</p><button id="download-model" type="button" class="primary-sheet">Descargar modelos (~110 MB)</button><progress id="model-download-progress" max="100" value="0" hidden></progress><small id="model-download-status" class="download-status"></small><div id="model-complete" class="model-complete" hidden>Listo. Ya podés cerrar esta ventana.</div></section><div id="basic-state" class="basic-state">Se usan reglas de estructura, duración, claridad y ritmo. No necesita descarga.</div></div></dialog>
+<script src="./diagnostics.js?v=18" defer></script>
+<script src="./db.js?v=18" defer></script>
+<script src="./version.js?v=18" defer></script>
+<script src="./store.js?v=18" defer></script>
+<script src="./state.js?v=18" defer></script>
+<script src="./scoring.js?v=18" defer></script>
+<script src="./render.js?v=18" defer></script>
+<script src="./workers.js?v=18" defer></script>
+<script src="./analysis-ui.js?v=18" defer></script>
+<script src="./export-import.js?v=18" defer></script>
+<script src="./main.js?v=18" defer></script>
+</body></html>
