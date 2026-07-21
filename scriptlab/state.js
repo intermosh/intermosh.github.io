@@ -109,8 +109,9 @@ export const state = {
   retentionWorker: null,
   sentimentWorker: null,
   sentimentReady: false,
+  modelsReady: false,
+  mode: 'heuristic',       // estado operativo global: heuristic | ia
   rev: 0,                   // contador de revisiones (invalidate worker)
-  modelsReady: false,       // modelos descargados (persistente)
 
   // Resultados de análisis
   aiResult: null,           // { alignment, redundancy, baseline, ... }
@@ -120,7 +121,7 @@ export const state = {
   deepResult: null,         // bundle de resultados del tier 2 (ideas, ritmo, cobertura)
 
   // Calibración
-  calRecords: [],  // deprecated — usar realScores
+  calRecords: [],
   realScores: [],
   activeBenchmarks: {},
   recabHistory: [],

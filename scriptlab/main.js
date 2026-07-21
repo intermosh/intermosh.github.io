@@ -9,7 +9,7 @@ import { analysis, splitSentences, splitIntoSegments } from './scoring.js';
 import {
   initWorker, initRetentionWorker, syncWorkerWithState, scheduleRetention,
   scheduleAI, scheduleSentiment, workerSend, downloadModel, updateAnalysisTabState,
-  setAIActivity, refreshAIActivityPill
+  setAIActivity, refreshAIActivityPill, modelsAreReady, resetAIResults
 } from './workers.js';
 import {
   render, renderMetrics, renderCal, view, addBlock, saveDebounced,
@@ -30,8 +30,8 @@ async function boot() {
   // Cargar proyecto + calibraciones
   const stored = await get('projects', 'active');
   state.p = normalizeProject(stored || {});
-  const savedMR = await get('settings', 'modelsReady');
-  state.modelsReady = savedMR?.value || false;
+  state.modelsReady = await modelsAreReady();
+  state.mode = state.p.aiMode === 'embeddings' && state.modelsReady ? 'ia' : 'heuristic';
   state.realScores = await all('realScores');
   const bm = await get('benchmarks', 'active');
   state.activeBenchmarks = bm?.data || {};
@@ -123,7 +123,7 @@ function bind() {
     state.p.targetDuration = +$('#target-duration').value;
     $('#target-duration-value').textContent = state.p.targetDuration ? time(state.p.targetDuration) : '—';
     saveDebounced();
-    renderMetrics(analysis());
+    render();
   });
 
   /* ===== Reader tabs (M1) ===== */
@@ -139,6 +139,7 @@ function bind() {
      Bug 2 fix: el scrollable es #canvas (.panel con overflow-y:auto), no #viewport. */
   const scrollContainer = $('#canvas');
   const header = document.querySelector('header.h');
+  const paletteBar = $('#palette-bar');
   if (scrollContainer && header) {
     let lastScrollTop = 0;
     let ticking = false;
@@ -150,8 +151,10 @@ function bind() {
         // Solo ocultar si scrolleó más de 40px (evita flicker) y bajando.
         if (st > lastScrollTop && st > 40) {
           header.classList.add('meta-hidden');
+          paletteBar?.classList.add('palette-hidden');
         } else if (st < lastScrollTop) {
           header.classList.remove('meta-hidden');
+          paletteBar?.classList.remove('palette-hidden');
         }
         lastScrollTop = st <= 0 ? 0 : st;
         ticking = false;
@@ -193,13 +196,16 @@ function bind() {
   /* Import */
   $('#import-btn')?.addEventListener('click', () => {
     importProject(async () => {
-      const prevAiMode = state.p?.aiMode || 'basic';
+      const activeMode = state.mode;
       state.p = normalizeProject(await get('projects', 'active'));
-      state.p.aiMode = prevAiMode;  // R-fix: preservar modo IA al importar
+      state.p.aiMode = activeMode === 'ia' ? 'embeddings' : 'basic';
+      resetAIResults();
+      state.mode = activeMode;
       state.flowDirty = true;
-      state.deepResult = null;
       markAnalysisDirty();
-      render();  // render() internamente llama scheduleAI/scheduleSentiment/scheduleRetention
+      render();
+      await syncWorkerWithState();
+      render();
     });
   });
 
@@ -213,27 +219,47 @@ function bind() {
 
   /* AI dialog */
   const paintMode = () => {
-    const ai = state.p.aiMode === 'embeddings';
-    $('#mode-basic')?.classList.toggle('active', !ai);
-    $('#mode-ai')?.classList.toggle('active', ai);
-    const dl = $('#ai-download-area'); if (dl) dl.hidden = !ai;
-    const bs = $('#basic-state'); if (bs) bs.hidden = ai;
+    const aiSelected = state.p?.aiMode === 'embeddings';
+    $('#mode-basic')?.classList.toggle('active', !aiSelected);
+    $('#mode-ai')?.classList.toggle('active', aiSelected);
+    const dl = $('#ai-download-area'); if (dl) dl.hidden = state.modelsReady || !aiSelected;
+    const bs = $('#basic-state'); if (bs) bs.hidden = aiSelected;
+    const ready = $('#model-ready-state'); if (ready) ready.hidden = !state.modelsReady;
+    const iaCopy = $('#ia-state-copy'); if (iaCopy) iaCopy.hidden = !aiSelected;
   };
   $('#mode-basic')?.addEventListener('click', async () => {
+    state.mode = 'heuristic';
     state.p.aiMode = 'basic';
+    resetAIResults();
     await put('projects', state.p);
     await syncWorkerWithState();
     refreshAIActivityPill();
     paintMode();
     render();
   });
-  $('#mode-ai')?.addEventListener('click', () => { state.p.aiMode = 'embeddings'; paintMode(); refreshAIActivityPill(); });
+  $('#mode-ai')?.addEventListener('click', async () => {
+    state.p.aiMode = 'embeddings';
+    state.modelsReady = await modelsAreReady();
+    if (state.modelsReady) {
+      state.mode = 'ia';
+      await put('projects', state.p);
+      await syncWorkerWithState();
+    } else {
+      state.mode = 'heuristic';
+    }
+    paintMode();
+    refreshAIActivityPill();
+    render();
+  });
   $('#download-model')?.addEventListener('click', async e => {
     e.preventDefault();
     const btn = e.currentTarget;
     btn.disabled = true;
     try {
       await downloadModel();
+      state.modelsReady = true;
+      state.mode = 'ia';
+      state.p.aiMode = 'embeddings';
       await put('projects', state.p);
       refreshAIActivityPill();
       render();

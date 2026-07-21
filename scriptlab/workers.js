@@ -29,13 +29,52 @@ export function setAIActivity(kind, text) {
   el.className = 'ai-activity ' + kind;
   el.textContent = text;
   el.title = text;
+  el.dataset.detail = text;
+}
+
+function updateDownloadProgress(value) {
+  const progress = document.querySelector('#model-download-progress');
+  if (!progress || !Number.isFinite(value)) return;
+  // El 100% se reserva para READY: los eventos de transformers pueden
+  // alcanzar 100 antes de que termine la inicialización del pipeline.
+  const next = Math.max(Number(progress.value) || 0, Math.min(99, value));
+  progress.value = next;
 }
 
 /* Helper: estado inicial del pill según modo y disponibilidad de modelos.
    Siempre informa al usuario qué hace la IA (acuerdo UI). */
+export async function modelsAreReady() {
+  const setting = await get('settings', 'modelsReady');
+  const registry = await get('modelRegistry', 'scriptlab-models-v1');
+  if (setting?.value === true && registry?.status === 'ready') return true;
+  // Fallback para instalaciones anteriores: buscar ambos identificadores en
+  // Cache Storage. Si el navegador no expone las entradas, no suponemos que
+  // un flag viejo implique que los modelos estén disponibles.
+  if (!("caches" in window)) return false;
+  try {
+    const keys = await caches.keys();
+    const urls = [];
+    for (const key of keys) {
+      const cache = await caches.open(key);
+      const requests = await cache.keys();
+      urls.push(...requests.map(r => r.url));
+    }
+    const hasEmbeddings = urls.some(u => /multilingual-e5-small/i.test(u));
+    const hasSentiment = urls.some(u => /robertuito-sentiment-analysis/i.test(u));
+    return hasEmbeddings && hasSentiment;
+  } catch (_) { return false; }
+}
+
+export function resetAIResults() {
+  state.aiResult = null;
+  state.sentimentResult = null;
+  state.redundancyResult = null;
+  state.deepResult = null;
+}
+
 export function refreshAIActivityPill() {
   if (!state.p) return;
-  if (state.p.aiMode === 'basic') {
+  if (state.mode !== 'ia') {
     setAIActivity('heuristic', '◌ Heurístico');
     return;
   }
@@ -50,7 +89,7 @@ export function refreshAIActivityPill() {
 }
 
 export function updateAnalysisTabState() {
-  const isAI = state.p?.aiMode === 'embeddings' && state.worker;
+  const isAI = state.mode === 'ia' && state.worker;
   const notice = document.querySelector('#analysis-notice');
   const content = document.querySelector('#analysis-content');
   if (notice) notice.hidden = isAI;
@@ -64,7 +103,7 @@ export function updateAnalysisTabState() {
 export async function syncWorkerWithState() {
   if (!state.p) return;
 
-  if (state.p.aiMode === 'embeddings') {
+  if (state.mode === 'ia') {
     if (!state.worker) {
       await initWorker();
     } else {
@@ -116,7 +155,7 @@ export async function initWorker() {
   updateAnalysisTabState();
   if (renderMetricsRef) renderMetricsRef(analysis());
 
-  if (state.p.aiMode === 'basic') return;
+  if (state.mode !== 'ia') return;
 
   return new Promise((resolve, reject) => {
     try {
@@ -133,8 +172,11 @@ export async function initWorker() {
         if (d.type === 'PROGRESS') {
           setAIActivity('loading', '◌ IA: ' + d.message);
           const pct = Number((d.message.match(/(\d+)%/) || [])[1]);
-          const prog = document.querySelector('#model-download-progress');
-          if (prog && Number.isFinite(pct)) { prog.hidden = false; prog.value = pct; }
+          if (Number.isFinite(pct)) {
+            const prog = document.querySelector('#model-download-progress');
+            if (prog) prog.hidden = false;
+            updateDownloadProgress(pct);
+          }
         }
         if (d.type === 'READY') {
           setAIActivity('loading', '◌ IA: embeddings listos, cargando sentimiento…');
@@ -143,19 +185,18 @@ export async function initWorker() {
               if (stateLabel) stateLabel.textContent = 'Modelo local listo';
               state.modelsReady = true;
               await put('settings', { id: 'modelsReady', value: true });
+              await put('modelRegistry', { id: 'scriptlab-models-v1', status: 'ready', cacheVerified: true, models: ['Xenova/multilingual-e5-small', 'Xenova/robertuito-sentiment-analysis'], updatedAt: Date.now() });
               setAIActivity('semantic', '✦ IA: 2 modelos listos');
               updateAnalysisTabState();
               scheduleAI();
               scheduleSentiment();
               resolve();
             })
-            .catch(() => {
-              // Sentiment opcional: seguimos con embeddings solos.
-              if (stateLabel) stateLabel.textContent = 'Modelo local listo';
-              setAIActivity('semantic', '✦ IA: embeddings listos');
-              updateAnalysisTabState();
-              scheduleAI();
-              resolve();
+            .catch((err) => {
+              state.modelsReady = false;
+              if (stateLabel) stateLabel.textContent = 'Error al cargar sentimiento';
+              setAIActivity('error', '! IA: falta un modelo');
+              reject(err);
             });
         }
         if (d.type === 'EMBED_RESULT') {
@@ -256,7 +297,7 @@ let sentimentTimer = null;
 
 export function scheduleSentiment() {
   clearTimeout(sentimentTimer);
-  if (state.p?.aiMode !== 'embeddings' || !state.sentimentWorker || !state.sentimentReady) return;
+  if (state.mode !== 'ia' || !state.sentimentWorker || !state.sentimentReady) return;
 
   const blocks = (state.p?.blocks || []).filter(b => b.content && b.content.trim().length >= 5);
   if (!blocks.length) return;
@@ -275,7 +316,7 @@ export function scheduleSentiment() {
 
 export function scheduleAI() {
   clearTimeout(state.aiTimer);
-  if (state.p?.aiMode !== 'embeddings' || !state.worker) return;
+  if (state.mode !== 'ia' || !state.worker) return;
   state.aiTimer = setTimeout(async () => {
     const texts = [
       { id: 'title', text: state.p.title, role: 'title' },
@@ -343,7 +384,16 @@ export async function downloadModel() {
   if (progress) { progress.hidden = false; progress.value = 5; }
   if (status) status.textContent = 'Preparando descarga local…';
   try {
-    await initWorker();
+    // El botón representa la transición pendiente: initWorker necesita el modo
+    // operativo IA para cargar, pero el estado queda confirmado solo si termina.
+    const previousMode = state.mode;
+    state.mode = 'ia';
+    try {
+      await initWorker();
+    } catch (err) {
+      state.mode = previousMode;
+      throw err;
+    }
     // Bug 5 fix: solo setear 100% si initWorker tuvo éxito (no antes del try).
     if (progress) progress.value = 100;
     if (status) status.textContent = '✓ 2 modelos listos en este navegador.';
