@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Taller IA · Editor de Carruseles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+:root{
+  --panel:#151517; --panel2:#1c1d20; --border:#2a2b30;
+  --text:#eaeaec; --mute:#9a9ba2; --accent:#22d5ee; --accent2:#f472b6;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;margin:0;overscroll-behavior:none;}
+body{
+  background:#000;color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;
+  display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden;
+}
+button{font-family:inherit;cursor:pointer;}
+input{font-family:inherit;}
+
+/* ===== CANVAS — fills the whole viewport, tools float on top of it ===== */
+#canvas-area{flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#050506;}
+#stage-outer{position:relative;flex:none;box-shadow:0 0 0 1px #1a1a1c;}
+#stage{position:absolute;top:0;left:0;transform-origin:top left;background:#000;overflow:hidden;}
+
+.el{position:absolute;outline:none;cursor:grab;white-space:pre-wrap;word-wrap:break-word;user-select:text;}
+.el.locked{cursor:default;user-select:none;}
+.el.selected{box-shadow:0 0 0 2px var(--accent);}
+.el.dragging-ghost{box-shadow:0 18px 40px rgba(0,0,0,.5);transform:scale(1.04);}
+.grip{
+  position:absolute;width:22px;height:22px;background:var(--accent);border-radius:6px;
+  display:none;align-items:center;justify-content:center;color:#04222a;font-size:12px;z-index:5;cursor:grab;
+}
+.el.selected .grip{display:flex;}
+.grip.move{top:-11px;left:-11px;}
+.grip.resize{bottom:-11px;right:-11px;cursor:nwse-resize;}
+.accent{text-shadow:-1.5px 0 rgba(34,213,238,.85), 1.5px 0 rgba(244,114,182,.75);}
+img.el{cursor:grab;}
+@media (pointer:coarse){ .grip{display:none!important;} } /* touch = gestures, not tiny handles */
+
+/* chart internals */
+.bar-row{position:relative;}
+.bar-val{background:transparent;border:0;color:inherit;font-family:'JetBrains Mono',monospace;font-size:15px;width:100%;padding:0 0 4px 0;}
+.bar-track{display:flex;align-items:center;gap:14px;}
+.bar-label{background:transparent;border:0;color:inherit;font-weight:700;font-size:16px;width:130px;flex:none;}
+.bar-fill-wrap{flex:1;position:relative;height:32px;}
+.bar-fill{position:absolute;left:0;top:0;height:100%;background:#fff;border-radius:2px;}
+.pie-flex{display:flex;align-items:center;gap:36px;height:100%;}
+.pie-circle{border-radius:50%;flex:none;}
+.pie-legend{display:flex;flex-direction:column;gap:10px;}
+.legend-row{display:flex;align-items:center;gap:8px;}
+.legend-row input[type=color]{width:18px;height:18px;border:0;padding:0;border-radius:50%;overflow:hidden;cursor:pointer;}
+.legend-row input[type=text]{background:transparent;border:0;color:inherit;font-family:inherit;}
+.legend-label{font-weight:600;font-size:16px;width:140px;}
+.legend-value{font-family:'JetBrains Mono',monospace;font-size:14px;width:70px;text-align:right;}
+
+/* =====================================================================
+   MINIMAL OVERLAY CHROME — Instagram-Stories style: tools float directly
+   on the canvas surface over a soft gradient, nothing else on screen.
+   ===================================================================== */
+.overlay-fade-top{position:fixed;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top,0px) + 12px) 12px 28px;
+  background:linear-gradient(to bottom, rgba(0,0,0,.6), transparent);z-index:80;pointer-events:none;}
+.overlay-fade-top>*{pointer-events:auto;}
+.overlay-fade-bottom{position:fixed;bottom:0;left:0;right:0;padding:28px 12px calc(env(safe-area-inset-bottom,0px) + 14px);
+  background:linear-gradient(to top, rgba(0,0,0,.6), transparent);z-index:70;pointer-events:none;display:flex;align-items:flex-end;justify-content:space-between;}
+.overlay-fade-bottom>*{pointer-events:auto;}
+
+#story-bar{display:flex;align-items:center;gap:4px;}
+.dot{flex:1;max-width:46px;height:4px;border-radius:2px;background:rgba(255,255,255,.28);}
+.dot.active{background:var(--accent);}
+#dot-add{flex:none;width:20px;height:20px;border-radius:50%;border:1.5px dashed rgba(255,255,255,.55);
+  background:transparent;color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;margin-left:4px;}
+
+#top-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px;}
+.pill-btn{
+  height:34px;padding:0 12px;border-radius:17px;background:rgba(255,255,255,.12);backdrop-filter:blur(6px);
+  border:1px solid rgba(255,255,255,.14);color:#fff;font-size:15px;display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.pill-btn.primary{background:var(--accent);color:#04222a;border-color:var(--accent);font-weight:700;}
+.pill-btn.icon-only{width:34px;padding:0;}
+
+#add-el-btn{
+  width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.12);backdrop-filter:blur(6px);
+  border:1px solid rgba(255,255,255,.16);color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;
+}
+#trash-zone{
+  position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);transform:translateX(-50%);
+  width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.12);backdrop-filter:blur(6px);
+  border:1px solid rgba(255,255,255,.16);display:none;align-items:center;justify-content:center;font-size:24px;
+  z-index:75;transition:background .12s,transform .12s,border-color .12s;
+}
+#trash-zone.show{display:flex;}
+#trash-zone.active{background:#e05c5c;border-color:#e05c5c;transform:translateX(-50%) scale(1.2);}
+
+#el-toolbar{
+  position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);transform:translateX(-50%);
+  display:flex;gap:4px;flex-wrap:wrap;justify-content:center;max-width:94vw;
+  background:rgba(21,21,23,.88);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.1);
+  padding:5px;border-radius:14px;z-index:76;
+}
+#el-toolbar.hidden{display:none;}
+.icon-btn{
+  width:32px;height:32px;flex:none;border-radius:8px;background:transparent;border:0;
+  color:var(--text);font-size:15px;display:flex;align-items:center;justify-content:center;
+}
+.icon-btn:hover{background:rgba(255,255,255,.1);}
+.icon-btn.color-btn{padding:0;overflow:hidden;}
+.icon-btn.color-btn input[type=color]{width:40px;height:40px;border:0;padding:0;margin:-4px;cursor:pointer;background:none;}
+
+/* ===== GLOBAL FLOATING UI (never clipped) ===== */
+#gtooltip{
+  position:fixed;display:none;z-index:1000;background:#000;color:#fff;padding:4px 9px;border-radius:6px;
+  font-size:11px;white-space:nowrap;pointer-events:none;border:1px solid #333;
+}
+.floating-menu{
+  position:fixed;z-index:1000;background:#1c1d20;border:1px solid var(--border);border-radius:10px;
+  padding:6px;display:flex;flex-direction:column;gap:2px;min-width:200px;box-shadow:0 12px 30px rgba(0,0,0,.5);
+}
+.floating-menu button{text-align:left;background:transparent;border:0;color:var(--text);padding:9px 11px;border-radius:6px;font-size:13px;}
+.floating-menu button:hover{background:#26272c;color:var(--accent);}
+
+@media (max-width:640px){
+  .bar-label{width:88px;font-size:12px;}
+  .bar-val{font-size:12px;}
+  .legend-label{width:90px;font-size:13px;}
+}
+</style>
+</head>
+<body>
+
+<main id="canvas-area">
+  <div id="stage-outer"><div id="stage"></div></div>
+</main>
+
+<div class="overlay-fade-top">
+  <div id="story-bar"></div>
+  <div id="top-actions">
+    <button class="pill-btn icon-only" id="more-btn">⋮</button>
+    <button class="pill-btn primary icon-only" id="export-btn">⭳</button>
+  </div>
+</div>
+
+<div class="overlay-fade-bottom">
+  <button id="add-el-btn">＋</button>
+  <div></div>
+</div>
+
+<div id="el-toolbar" class="hidden"></div>
+<div id="trash-zone">🗑</div>
+<input type="file" id="file-input" accept="image/*" style="display:none;">
+<div id="gtooltip"></div>
+
+<script>
+/* =====================================================================
+   GLOBAL FLOATING UI — tooltip + dropdown menu, both appended to <body>
+   so they are never clipped by any ancestor.
+   ===================================================================== */
+const gtip = document.getElementById('gtooltip');
+function attachTooltip(el, text){
+  el.addEventListener('mouseenter', ()=>showTip(el,text));
+  el.addEventListener('mouseleave', hideTip);
+  el.addEventListener('mousedown', hideTip);
+}
+function showTip(el,text){
+  gtip.textContent = text; gtip.style.display='block';
+  const r = el.getBoundingClientRect();
+  gtip.style.left = (r.left + r.width/2) + 'px';
+  gtip.style.top = (r.top - 8) + 'px';
+  gtip.style.transform = 'translate(-50%,-100%)';
+  requestAnimationFrame(()=>{
+    const tr = gtip.getBoundingClientRect();
+    let dx = 0;
+    if(tr.left < 4) dx = 4 - tr.left;
+    if(tr.right > window.innerWidth-4) dx = (window.innerWidth-4) - tr.right;
+    if(dx) gtip.style.left = (r.left + r.width/2 + dx) + 'px';
+  });
+}
+function hideTip(){ gtip.style.display='none'; }
+
+let openMenuEl = null;
+function openMenu(trigger, items, align){
+  closeMenu();
+  const menu = document.createElement('div');
+  menu.className = 'floating-menu';
+  items.forEach(it=>{
+    const b = document.createElement('button');
+    b.textContent = it.label;
+    b.addEventListener('click', (e)=>{ e.stopPropagation(); it.onClick(); closeMenu(); });
+    menu.appendChild(b);
+  });
+  document.body.appendChild(menu);
+  const r = trigger.getBoundingClientRect();
+  const mr0 = menu.getBoundingClientRect();
+  let left = align==='right' ? r.right - mr0.width : r.left;
+  let top = r.bottom + 6;
+  document.body.appendChild(menu);
+  requestAnimationFrame(()=>{
+    const mr = menu.getBoundingClientRect();
+    if(mr.right > window.innerWidth-4) left = window.innerWidth - 4 - mr.width;
+    if(left < 4) left = 4;
+    if(mr.bottom > window.innerHeight-4) top = r.top - mr.height - 6;
+    menu.style.left = left+'px'; menu.style.top = top+'px';
+  });
+  menu.style.left = left+'px'; menu.style.top = top+'px';
+  openMenuEl = menu;
+  setTimeout(()=>document.addEventListener('click', onOutsideMenuClick), 0);
+}
+function closeMenu(){
+  if(openMenuEl){ openMenuEl.remove(); openMenuEl=null; }
+  document.removeEventListener('click', onOutsideMenuClick);
+}
+function onOutsideMenuClick(e){ if(openMenuEl && !openMenuEl.contains(e.target)) closeMenu(); }
+
+/* =====================================================================
+   DATA MODEL
+   ===================================================================== */
+let slides = [];
+let currentSlide = 0;
+let selectedId = null;
+let zoom = 0.4;
+let uid = 1;
+const nid = () => 'el' + (uid++);
+
+const FONT_TITLE = "'Poppins',sans-serif";
+const FONT_MONO = "'JetBrains Mono',monospace";
+const W = 1080, H = 1350;
+
+/* Exact brand isotype, geometry copied from manual_09.html (concentric rings + 8-point diamond) */
+const ICON_SVG = `<svg viewBox="0 0 40 40" width="100%" height="100%" style="display:block;">
+<g transform="translate(20,20)">
+<circle cx="0" cy="0" r="14" fill="none" stroke="currentColor" stroke-width="3"/>
+<circle cx="0" cy="0" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/>
+<polygon points="0,-6 2,-2 6,0 2,2 0,6 -2,2 -6,0 -2,-2" fill="currentColor"/>
+</g>
+</svg>`;
+
+function fmt(n){ return Math.round(n).toLocaleString('es-AR'); }
+function parseNum(s){ return parseFloat(String(s).replace(/[^\d.-]/g,'').replace(/\.(?=.*\.)/g,'')) || 0; }
+
+function baseEl(o){ return Object.assign({id:nid(), x:80, y:80, width:400, z:1}, o); }
+function textEl(o){
+  return baseEl(Object.assign({
+    type:'text', html:'texto', fontFamily:FONT_TITLE, fontSize:32, fontWeight:700,
+    lineHeight:1.25, letterSpacing:0, color:'#f5f5f5', opacity:1, align:'left', box:false
+  }, o));
+}
+
+/* ===== TEMPLATES ===== */
+function tplPortada(){
+  return [
+    baseEl({type:'line', x:80, y:80, width:920, height:1, color:'#3a3a3a'}),
+    textEl({html:'no le pedí<br>un <span class="accent">synth</span>.', x:80, y:290, width:820, fontSize:56, lineHeight:1.18}),
+    textEl({html:'le di instrucciones<br>para que construyera<br>uno.', x:80, y:530, width:700, fontSize:26, fontWeight:400, lineHeight:1.55, color:'#c9c9c9'}),
+    baseEl({type:'icon', x:960, y:1220, width:60, color:'#eaeaea'})
+  ];
+}
+function tplDeconstruccion(){
+  return [
+    textEl({html:'deconstrucción', x:80, y:80, width:400, fontSize:16, fontWeight:600, letterSpacing:1, color:'#8a8a8a'}),
+    textEl({html:'mano.pitch → osc.freq<br>mano.abre → filter.cutoff', x:80, y:150, width:700, fontSize:22, fontFamily:FONT_MONO, fontWeight:500, lineHeight:2, color:'#5aa9ff', box:true}),
+    textEl({html:'mapeo gesto → parámetro,<br>línea por línea.', x:80, y:430, width:800, fontSize:38, lineHeight:1.3}),
+    baseEl({type:'icon', x:960, y:1220, width:60, color:'#eaeaea'})
+  ];
+}
+function tplCta(){
+  return [
+    textEl({html:'<span class="accent">copiá</span> el prompt.<br>probalo.<br>contame qué<br>generaste.', x:80, y:420, width:820, fontSize:44, lineHeight:1.3}),
+    textEl({html:'@tallerdeia', x:80, y:1240, width:300, fontSize:15, fontWeight:400, color:'#8a8a8a'}),
+    baseEl({type:'icon', x:960, y:1220, width:60, color:'#eaeaea'})
+  ];
+}
+function tplBar(){
+  return [
+    textEl({html:'tokens por sesión<br>de servicios gratuitos.', x:80, y:80, width:920, fontSize:44, lineHeight:1.28}),
+    baseEl({type:'barchart', x:80, y:400, width:920, height:900, barColor:'#ffffff', rows:[
+      {id:nid(),label:'DeepSeek',value:1000000},{id:nid(),label:'Qwen',value:1000000},
+      {id:nid(),label:'GLM',value:1000000},{id:nid(),label:'Minimax',value:1000000},
+      {id:nid(),label:'Claude',value:200000},{id:nid(),label:'KIMI',value:128000},
+      {id:nid(),label:'Gemini',value:32000},{id:nid(),label:'ChatGPT',value:16000}
+    ]}),
+    baseEl({type:'icon', x:960, y:1220, width:60, color:'#eaeaea'})
+  ];
+}
+function tplPie(){
+  return [
+    textEl({html:'qué modelo uso<br>más seguido.', x:80, y:80, width:920, fontSize:44, lineHeight:1.28}),
+    baseEl({type:'piechart', x:80, y:420, width:920, height:340, rows:[
+      {id:nid(),label:'DeepSeek',value:35,color:'#22d5ee'},{id:nid(),label:'Claude',value:25,color:'#f472b6'},
+      {id:nid(),label:'GPT',value:20,color:'#ffffff'},{id:nid(),label:'Otros',value:20,color:'#5a5a5a'}
+    ]}),
+    baseEl({type:'icon', x:960, y:1220, width:60, color:'#eaeaea'})
+  ];
+}
+function tplBlank(){ return [baseEl({type:'icon', x:960, y:1220, width:60, color:'#eaeaea'})]; }
+
+const TEMPLATES = {
+  portada:{label:'＋ Portada / Statement', build:tplPortada},
+  deconstruccion:{label:'＋ Deconstrucción / Código', build:tplDeconstruccion},
+  cta:{label:'＋ CTA / Cierre', build:tplCta},
+  bar:{label:'＋ Gráfico de barras', build:tplBar},
+  pie:{label:'＋ Gráfico de torta', build:tplPie},
+  blank:{label:'＋ En blanco', build:tplBlank}
+};
+function newSlide(tplKey){ return {id:nid(), bg:'#080808', elements:(TEMPLATES[tplKey]||TEMPLATES.blank).build()}; }
+
+slides.push(newSlide('portada'));
+slides.push(newSlide('deconstruccion'));
+slides.push(newSlide('cta'));
+slides.push(newSlide('bar'));
+
+/* =====================================================================
+   ZOOM — canvas always auto-fits the viewport, no manual controls
+   (matches the Stories editor: the frame just fills the screen).
+   ===================================================================== */
+function fitZoom(){
+  const area = document.getElementById('canvas-area');
+  const pad = 0;
+  const availW = area.clientWidth - pad*2, availH = area.clientHeight - pad*2;
+  zoom = Math.max(0.12, Math.min(availW/W, availH/H));
+}
+function applyStageSize(){
+  const outer = document.getElementById('stage-outer'), stage = document.getElementById('stage');
+  outer.style.width = (W*zoom)+'px'; outer.style.height = (H*zoom)+'px';
+  stage.style.width = W+'px'; stage.style.height = H+'px';
+  stage.style.transform = 'scale('+zoom+')';
+}
+window.addEventListener('resize', ()=>{ fitZoom(); applyStageSize(); });
+
+/* =====================================================================
+   ELEMENT NODE BUILDER — reused for the live editable stage
+   (interactive=true) and the offscreen export stage (interactive=false).
+   ===================================================================== */
+function buildElNode(el, interactive){
+  let node;
+  if(el.type==='line'){
+    node = document.createElement('div');
+    node.style.height=(el.height||1)+'px'; node.style.background=el.color; node.classList.add('locked');
+  } else if(el.type==='icon'){
+    node = document.createElement('div');
+    node.style.height=(el.width||60)+'px'; node.style.color=el.color;
+    node.innerHTML = ICON_SVG; node.classList.add('locked');
+  } else if(el.type==='image'){
+    node = document.createElement('img');
+    node.src = el.src; node.style.height=(el.height||300)+'px'; node.style.objectFit='contain';
+  } else if(el.type==='barchart'){
+    node = document.createElement('div');
+    node.appendChild(renderBarChart(el, interactive));
+  } else if(el.type==='piechart'){
+    node = document.createElement('div');
+    node.appendChild(renderPieChart(el, interactive));
+  } else {
+    node = document.createElement('div');
+    node.contentEditable = interactive ? 'true' : 'false';
+    node.spellcheck = false;
+    node.style.fontFamily = el.fontFamily; node.style.fontSize = el.fontSize+'px';
+    node.style.fontWeight = el.fontWeight; node.style.lineHeight = el.lineHeight;
+    node.style.letterSpacing = el.letterSpacing+'px'; node.style.color = el.color;
+    node.style.opacity = el.opacity; node.style.textAlign = el.align;
+    if(el.box){ node.style.border='1px solid #333'; node.style.borderRadius='14px'; node.style.padding='26px 28px'; }
+    else node.style.padding='2px';
+    node.innerHTML = el.html;
+    if(interactive) node.addEventListener('input', ()=>{ el.html = node.innerHTML; });
+  }
+  node.className = (node.className?node.className+' ':'') + 'el';
+  if(el.id===selectedId) node.classList.add('selected');
+  node.dataset.id = el.id;
+  node.style.left = el.x+'px'; node.style.top = el.y+'px';
+  if(el.width) node.style.width = el.width+'px';
+  node.style.zIndex = el.z;
+
+  if(interactive){
+    const move = document.createElement('div'); move.className='grip move'; move.textContent='✥';
+    move.addEventListener('mousedown', e=>startDrag(e, el, node));
+    node.appendChild(move);
+    if(el.type!=='line'){
+      const rs = document.createElement('div'); rs.className='grip resize'; rs.textContent='⤡';
+      rs.addEventListener('mousedown', e=>startResize(e, el, node));
+      node.appendChild(rs);
+    }
+    node.addEventListener('mousedown', ()=>selectElement(el.id));
+    attachTouchInteractions(el, node);
+  }
+  return node;
+}
+
+/* ---- bar chart (redraw is synchronous — depends only on stored data, not layout) ---- */
+function renderBarChart(el, interactive){
+  const wrap = document.createElement('div');
+  wrap.style.display='flex'; wrap.style.flexDirection='column'; wrap.style.justifyContent='space-between';
+  wrap.style.height=(el.height||900)+'px'; wrap.style.width='100%'; wrap.style.color='#f5f5f5';
+  const trackW = (el.width||920) - 130 - 14;
+  const fills = [];
+  function maxVal(){ return Math.max(...el.rows.map(r=>r.value), 1); }
+  function redraw(){
+    const mv = maxVal();
+    fills.forEach((f,i)=>{ f.style.width = Math.max(2,(el.rows[i].value/mv*trackW))+'px'; });
+  }
+  el.rows.forEach((row)=>{
+    const r = document.createElement('div'); r.className='bar-row';
+    const val = document.createElement('input');
+    val.className='bar-val'; val.value = fmt(row.value); val.disabled = !interactive;
+    val.addEventListener('input', ()=>{ row.value = parseNum(val.value); redraw(); });
+    const track = document.createElement('div'); track.className='bar-track';
+    const lbl = document.createElement('input');
+    lbl.className='bar-label'; lbl.value = row.label; lbl.disabled = !interactive;
+    lbl.addEventListener('input', ()=>{ row.label = lbl.value; });
+    const fw = document.createElement('div'); fw.className='bar-fill-wrap'; fw.style.width=trackW+'px';
+    const fill = document.createElement('div'); fill.className='bar-fill'; fill.style.background = el.barColor||'#fff';
+    fw.appendChild(fill); fills.push(fill);
+    track.appendChild(lbl); track.appendChild(fw);
+    r.appendChild(val); r.appendChild(track);
+    wrap.appendChild(r);
+  });
+  redraw();
+  return wrap;
+}
+
+/* ---- pie chart ---- */
+function renderPieChart(el, interactive){
+  const wrap = document.createElement('div'); wrap.className='pie-flex'; wrap.style.height=(el.height||340)+'px';
+  const circle = document.createElement('div'); circle.className='pie-circle';
+  const size = Math.min(el.height||340, 340);
+  circle.style.width=size+'px'; circle.style.height=size+'px';
+  const legend = document.createElement('div'); legend.className='pie-legend';
+  function redraw(){
+    const total = el.rows.reduce((a,r)=>a+r.value,0) || 1;
+    let acc=0; const stops=[];
+    el.rows.forEach(r=>{
+      const pct0=acc/total*100; acc+=r.value; const pct1=acc/total*100;
+      stops.push(`${r.color} ${pct0}% ${pct1}%`);
+    });
+    circle.style.background = `conic-gradient(${stops.join(',')})`;
+  }
+  el.rows.forEach(row=>{
+    const lr = document.createElement('div'); lr.className='legend-row';
+    const sw = document.createElement('input'); sw.type='color'; sw.value=row.color; sw.disabled=!interactive;
+    sw.addEventListener('input', ()=>{ row.color=sw.value; redraw(); });
+    const lb = document.createElement('input'); lb.className='legend-label'; lb.value=row.label; lb.disabled=!interactive;
+    lb.addEventListener('input', ()=>{ row.label=lb.value; });
+    const vl = document.createElement('input'); vl.className='legend-value'; vl.value=row.value; vl.disabled=!interactive;
+    vl.addEventListener('input', ()=>{ row.value=parseNum(vl.value); redraw(); });
+    lr.appendChild(sw); lr.appendChild(lb); lr.appendChild(vl);
+    legend.appendChild(lr);
+  });
+  wrap.appendChild(circle); wrap.appendChild(legend);
+  redraw();
+  return wrap;
+}
+
+/* =====================================================================
+   MOUSE DRAG / RESIZE (desktop — precise handles)
+   ===================================================================== */
+function startDrag(e, el, node){
+  e.preventDefault(); e.stopPropagation(); selectElement(el.id);
+  const startX=e.clientX, startY=e.clientY, ox=el.x, oy=el.y;
+  function onMove(ev){
+    el.x = Math.round(ox + (ev.clientX-startX)/zoom); el.y = Math.round(oy + (ev.clientY-startY)/zoom);
+    node.style.left = el.x+'px'; node.style.top = el.y+'px';
+  }
+  function onUp(){ document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp); }
+  document.addEventListener('mousemove',onMove); document.addEventListener('mouseup',onUp);
+}
+function startResize(e, el, node){
+  e.preventDefault(); e.stopPropagation(); selectElement(el.id);
+  const startX=e.clientX, ow=el.width||400, oh=el.height||null, ratio = oh ? oh/ow : null;
+  function onMove(ev){
+    el.width = Math.max(40, Math.round(ow+(ev.clientX-startX)/zoom)); node.style.width = el.width+'px';
+    if(ratio!=null) el.height = Math.round(el.width*ratio);
+  }
+  function onUp(){
+    document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp);
+    renderStage(); renderElToolbar();
+  }
+  document.addEventListener('mousemove',onMove); document.addEventListener('mouseup',onUp);
+}
+
+/* =====================================================================
+   TOUCH GESTURES (Instagram-style): drag the object directly, pinch with
+   two fingers to scale, drag onto the trash to delete. While dragging,
+   the object is reparented to <body> as a fixed element — this is the
+   fix for the bug where drag used to be clamped inside the canvas frame
+   (it was clipped by #stage's overflow:hidden) and could never reach a
+   trash target sitting outside that frame.
+   ===================================================================== */
+function pointOverTrash(x,y){
+  const r = document.getElementById('trash-zone').getBoundingClientRect();
+  return x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom;
+}
+function showTrash(){ document.getElementById('el-toolbar').classList.add('hidden'); document.getElementById('trash-zone').classList.add('show'); }
+function hideTrash(){ document.getElementById('trash-zone').classList.remove('show','active'); }
+
+function attachTouchInteractions(el, node){
+  let mode = null; // 'pending' | 'drag' | 'pinch'
+  let startX, startY, lastX, lastY;
+  let ghostLeft, ghostTop; // node's on-screen fixed position while dragging (real px, post-reparent)
+  let startDist, startWidth, startFontSize, startHeight, aspect;
+
+  node.addEventListener('touchstart', (e)=>{
+    if(e.touches.length===2){
+      mode='pinch'; selectElement(el.id);
+      const [a,b] = e.touches;
+      startDist = Math.hypot(b.clientX-a.clientX, b.clientY-a.clientY);
+      startWidth = el.width || 400;
+      startFontSize = el.fontSize || null;
+      startHeight = el.height || null;
+      aspect = (el.type==='image' && el.height) ? el.height/el.width : null;
+      e.preventDefault();
+    } else if(e.touches.length===1){
+      mode='pending';
+      const t = e.touches[0];
+      startX = t.clientX; startY = t.clientY;
+    }
+  }, {passive:false});
+
+  node.addEventListener('touchmove', (e)=>{
+    if(mode==='pinch' && e.touches.length===2){
+      const [a,b] = e.touches;
+      const scale = Math.hypot(b.clientX-a.clientX, b.clientY-a.clientY)/startDist;
+      node.style.transformOrigin='center center';
+      node.style.transform=`scale(${scale})`;
+      node.dataset.pinchScale = scale;
+      e.preventDefault();
+    } else if(mode==='pending' || mode==='drag'){
+      const t = e.touches[0];
+      lastX = t.clientX; lastY = t.clientY;
+      if(mode==='pending' && Math.hypot(t.clientX-startX, t.clientY-startY)>8){
+        mode='drag';
+        if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+        // Reparent to <body> at its CURRENT on-screen box so it can move freely
+        // across the whole viewport (no longer clipped by the canvas frame).
+        const rect = node.getBoundingClientRect();
+        ghostLeft = rect.left; ghostTop = rect.top;
+        node.style.position='fixed';
+        node.style.left = ghostLeft+'px'; node.style.top = ghostTop+'px';
+        node.style.width = rect.width+'px';
+        node.style.margin='0'; node.style.zIndex='500';
+        node.classList.add('dragging-ghost');
+        document.body.appendChild(node);
+        showTrash();
+      }
+      if(mode==='drag'){
+        const dx = t.clientX-startX, dy = t.clientY-startY;
+        node.style.left = (ghostLeft+dx)+'px'; node.style.top = (ghostTop+dy)+'px';
+        const over = pointOverTrash(t.clientX, t.clientY);
+        document.getElementById('trash-zone').classList.toggle('active', over);
+        node.style.opacity = over ? '0.3' : '1';
+        e.preventDefault();
+      }
+    }
+  }, {passive:false});
+
+  node.addEventListener('touchend', ()=>{
+    if(mode==='pinch'){
+      const scale = parseFloat(node.dataset.pinchScale)||1;
+      const newWidth = Math.max(30, Math.round(startWidth*scale));
+      el.width = newWidth;
+      if(startFontSize) el.fontSize = Math.max(8, Math.round(startFontSize*scale));
+      if(aspect) el.height = Math.round(newWidth*aspect);
+      else if(startHeight) el.height = Math.round(startHeight*scale);
+      node.style.transform=''; delete node.dataset.pinchScale;
+      renderStage(); selectElement(el.id);
+    } else if(mode==='drag'){
+      hideTrash();
+      const over = lastX!=null && pointOverTrash(lastX,lastY);
+      if(over){
+        slides[currentSlide].elements = slides[currentSlide].elements.filter(x=>x.id!==el.id);
+        selectedId=null;
+      } else {
+        // convert final on-screen position back to stage-space coordinates
+        const outerRect = document.getElementById('stage-outer').getBoundingClientRect();
+        const finalRect = node.getBoundingClientRect();
+        el.x = Math.round((finalRect.left - outerRect.left)/zoom);
+        el.y = Math.round((finalRect.top - outerRect.top)/zoom);
+      }
+      if(node.parentNode) node.parentNode.removeChild(node);
+      renderStage(); renderElToolbar();
+    } else if(mode==='pending'){
+      selectElement(el.id);
+    }
+    mode=null;
+  });
+  node.addEventListener('touchcancel', ()=>{
+    hideTrash();
+    if(node.parentNode===document.body) node.parentNode.removeChild(node);
+    mode=null; renderStage(); renderElToolbar();
+  });
+}
+
+/* =====================================================================
+   SELECTION
+   ===================================================================== */
+function selectElement(id){
+  selectedId = id;
+  document.querySelectorAll('#stage .el').forEach(n=>n.classList.toggle('selected', n.dataset.id===id));
+  renderElToolbar();
+}
+function getSelected(){ return slides[currentSlide].elements.find(e=>e.id===selectedId); }
+document.getElementById('stage-outer').addEventListener('mousedown', (e)=>{
+  if(e.target.id==='stage'){ selectedId=null; renderStage(); renderElToolbar(); }
+});
+
+/* =====================================================================
+   STAGE RENDER
+   ===================================================================== */
+function renderStage(){
+  const s = slides[currentSlide];
+  const stage = document.getElementById('stage');
+  stage.style.background = s.bg;
+  stage.innerHTML = '';
+  s.elements.slice().sort((a,b)=>a.z-b.z).forEach(el=> stage.appendChild(buildElNode(el, true)));
+}
+
+/* =====================================================================
+   STORY BAR (top) — segmented progress dots, tap to switch slide.
+   ===================================================================== */
+function renderStoryBar(){
+  const row = document.getElementById('story-bar');
+  row.innerHTML = '';
+  slides.forEach((s,i)=>{
+    const d = document.createElement('button');
+    d.className = 'dot'+(i===currentSlide?' active':'');
+    d.addEventListener('click', ()=>{ currentSlide=i; selectedId=null; renderAll(); });
+    row.appendChild(d);
+  });
+  const add = document.createElement('button');
+  add.id='dot-add'; add.textContent='＋';
+  attachTooltip(add, 'Agregar diapositiva');
+  add.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    openMenu(add, Object.entries(TEMPLATES).map(([k,v])=>({
+      label:v.label,
+      onClick:()=>{ slides.push(newSlide(k)); currentSlide=slides.length-1; selectedId=null; renderAll(); }
+    })));
+  });
+  row.appendChild(add);
+}
+
+/* =====================================================================
+   FLOATING ELEMENT TOOLBAR (contextual — only visible when something is selected)
+   ===================================================================== */
+function mkIconBtn(html, tip, onClick){
+  const b = document.createElement('button');
+  b.className='icon-btn'; b.innerHTML=html;
+  attachTooltip(b, tip);
+  b.addEventListener('click', onClick);
+  return b;
+}
+function rgbToHex(c){
+  if(!c) return '#ffffff';
+  if(c[0]==='#') return c.length===7?c:'#ffffff';
+  const m = c.match(/\d+/g); if(!m) return '#ffffff';
+  return '#'+m.slice(0,3).map(n=>(+n).toString(16).padStart(2,'0')).join('');
+}
+function renderElToolbar(){
+  const bar = document.getElementById('el-toolbar');
+  const el = getSelected();
+  bar.innerHTML='';
+  if(!el){ bar.classList.add('hidden'); return; }
+  bar.classList.remove('hidden');
+  const refresh = ()=>{ renderStage(); renderElToolbar(); };
+
+  if(el.type==='text'){
+    bar.appendChild(mkIconBtn('A－','Achicar texto', ()=>{ el.fontSize=Math.max(8,el.fontSize-2); refresh(); }));
+    bar.appendChild(mkIconBtn('A＋','Agrandar texto', ()=>{ el.fontSize=el.fontSize+2; refresh(); }));
+    bar.appendChild(mkIconBtn('<b>B</b>','Negrita', ()=>{ el.fontWeight = el.fontWeight>=700?400:700; refresh(); }));
+    bar.appendChild(mkIconBtn('⟸','Alinear izquierda', ()=>{ el.align='left'; refresh(); }));
+    bar.appendChild(mkIconBtn('⟺','Centrar', ()=>{ el.align='center'; refresh(); }));
+    bar.appendChild(mkIconBtn('⟹','Alinear derecha', ()=>{ el.align='right'; refresh(); }));
+    bar.appendChild(mkIconBtn('✦','Acento cromático a selección', ()=>{
+      const sel = window.getSelection();
+      if(!sel.rangeCount || sel.isCollapsed){ alert('Seleccioná parte del texto primero.'); return; }
+      try{
+        const span=document.createElement('span'); span.className='accent';
+        sel.getRangeAt(0).surroundContents(span);
+        el.html = document.querySelector(`#stage .el[data-id="${el.id}"]`).innerHTML;
+      }catch(err){ alert('Seleccioná texto dentro de una sola línea.'); }
+    }));
+    bar.appendChild(mkIconBtn(el.box?'▭':'▯','Alternar caja / borde', ()=>{ el.box=!el.box; refresh(); }));
+    bar.appendChild(mkIconBtn('𝙼','Fuente monoespaciada', ()=>{
+      el.fontFamily = el.fontFamily===FONT_MONO ? FONT_TITLE : FONT_MONO; refresh();
+    }));
+    const cw = document.createElement('div'); cw.className='icon-btn color-btn'; attachTooltip(cw,'Color de texto');
+    const ci = document.createElement('input'); ci.type='color'; ci.value=rgbToHex(el.color);
+    ci.addEventListener('input', ()=>{ el.color=ci.value; refresh(); });
+    cw.appendChild(ci); bar.appendChild(cw);
+  }
+
+  if(el.type==='barchart' || el.type==='piechart'){
+    bar.appendChild(mkIconBtn('➕','Agregar fila', ()=>{
+      if(el.type==='barchart') el.rows.push({id:nid(),label:'nuevo',value:1000});
+      else el.rows.push({id:nid(),label:'nuevo',value:10,color:'#5a5a5a'});
+      refresh();
+    }));
+    bar.appendChild(mkIconBtn('➖','Quitar última fila', ()=>{ if(el.rows.length>1) el.rows.pop(); refresh(); }));
+    if(el.type==='barchart'){
+      const cw = document.createElement('div'); cw.className='icon-btn color-btn'; attachTooltip(cw,'Color de barras');
+      const ci = document.createElement('input'); ci.type='color'; ci.value=rgbToHex(el.barColor||'#ffffff');
+      ci.addEventListener('input', ()=>{ el.barColor=ci.value; refresh(); });
+      cw.appendChild(ci); bar.appendChild(cw);
+    }
+  }
+
+  bar.appendChild(mkIconBtn('⬆','Traer al frente', ()=>{
+    const maxZ=Math.max(...slides[currentSlide].elements.map(e=>e.z)); el.z=maxZ+1; refresh();
+  }));
+  bar.appendChild(mkIconBtn('⬇','Enviar atrás', ()=>{
+    const minZ=Math.min(...slides[currentSlide].elements.map(e=>e.z)); el.z=minZ-1; refresh();
+  }));
+  bar.appendChild(mkIconBtn('🗑','Eliminar elemento', ()=>{
+    slides[currentSlide].elements = slides[currentSlide].elements.filter(e=>e.id!==el.id);
+    selectedId=null; renderStage(); renderElToolbar();
+  }));
+}
+
+/* =====================================================================
+   TOP-RIGHT ACTIONS (more menu + export) & ADD-ELEMENT button
+   ===================================================================== */
+attachTooltip(document.getElementById('more-btn'), 'Más opciones');
+attachTooltip(document.getElementById('export-btn'), 'Exportar todo (ZIP)');
+attachTooltip(document.getElementById('add-el-btn'), 'Agregar elemento');
+
+document.getElementById('more-btn').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  openMenu(e.currentTarget, [
+    {label:'⧉  Duplicar diapositiva', onClick:()=>{
+      const copy = JSON.parse(JSON.stringify(slides[currentSlide]));
+      copy.id=nid(); copy.elements.forEach(el=>el.id=nid());
+      slides.splice(currentSlide+1,0,copy); currentSlide++; selectedId=null; renderAll();
+    }},
+    {label:'🗑  Eliminar diapositiva', onClick:()=>{
+      if(slides.length===1) return;
+      slides.splice(currentSlide,1); if(currentSlide>=slides.length) currentSlide=slides.length-1;
+      selectedId=null; renderAll();
+    }}
+  ], 'right');
+});
+
+document.getElementById('export-btn').addEventListener('click', (e)=> exportAll(e.currentTarget));
+
+document.getElementById('add-el-btn').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  const els = slides[currentSlide].elements;
+  const z = els.length ? Math.max(...els.map(x=>x.z))+1 : 1;
+  const addAndSelect = (el)=>{ els.push(el); selectedId=el.id; renderStage(); renderElToolbar(); };
+  openMenu(e.currentTarget, [
+    {label:'Tt  Texto', onClick:()=> addAndSelect(textEl({html:'nuevo texto', x:100, y:120, width:800, fontSize:40, z}))},
+    {label:'🖼  Imagen / logo PNG', onClick:()=> document.getElementById('file-input').click()},
+    {label:'➖  Línea', onClick:()=> addAndSelect(baseEl({type:'line', x:80, y:80, width:920, height:1, color:'#3a3a3a', z}))},
+    {label:'◎  Ícono de marca', onClick:()=> addAndSelect(baseEl({type:'icon', x:960, y:1220, width:60, color:'#eaeaea', z}))},
+    {label:'📊  Gráfico de barras', onClick:()=> addAndSelect(baseEl({type:'barchart', x:80, y:200, width:920, height:900, barColor:'#ffffff', z,
+      rows:[{id:nid(),label:'Item A',value:1000},{id:nid(),label:'Item B',value:600},{id:nid(),label:'Item C',value:300}]}))},
+    {label:'🥧  Gráfico de torta', onClick:()=> addAndSelect(baseEl({type:'piechart', x:80, y:300, width:920, height:340, z,
+      rows:[{id:nid(),label:'A',value:50,color:'#22d5ee'},{id:nid(),label:'B',value:30,color:'#f472b6'},{id:nid(),label:'C',value:20,color:'#5a5a5a'}]}))}
+  ]);
+});
+
+document.getElementById('file-input').addEventListener('change', (e)=>{
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const els = slides[currentSlide].elements;
+      const z = els.length ? Math.max(...els.map(x=>x.z))+1 : 1;
+      let w = img.naturalWidth, h = img.naturalHeight;
+      const maxDim = 360;
+      if(w>maxDim || h>maxDim){ const r=Math.min(maxDim/w, maxDim/h); w*=r; h*=r; }
+      const el = baseEl({type:'image', src:ev.target.result, x:(W-w)/2, y:(H-h)/2, width:w, height:h, z});
+      els.push(el); selectedId=el.id; renderStage(); renderElToolbar();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value='';
+});
+
+/* =====================================================================
+   EXPORT — fully decoupled offscreen stage, built fresh from data at
+   real 1:1 scale. Never touches the live (zoomed/transformed) editor
+   DOM, so it can never capture surrounding workspace chrome.
+   ===================================================================== */
+async function renderSlideToCanvas(slide){
+  const host = document.createElement('div');
+  host.style.position='fixed'; host.style.left='-10000px'; host.style.top='0';
+  host.style.width=W+'px'; host.style.height=H+'px'; host.style.background=slide.bg;
+  host.style.overflow='hidden';
+  document.body.appendChild(host);
+  slide.elements.slice().sort((a,b)=>a.z-b.z).forEach(el=> host.appendChild(buildElNode(el, false)));
+  const canvas = await html2canvas(host, {backgroundColor:slide.bg, scale:2, width:W, height:H, useCORS:true});
+  document.body.removeChild(host);
+  return canvas;
+}
+async function exportAll(btn){
+  const orig = btn.innerHTML; btn.innerHTML='…'; btn.disabled=true;
+  try{
+    const zip = new JSZip();
+    for(let i=0;i<slides.length;i++){
+      const canvas = await renderSlideToCanvas(slides[i]);
+      const blob = await new Promise(res=>canvas.toBlob(b=>res(b),'image/png'));
+      zip.file(`slide_${String(i+1).padStart(2,'0')}.png`, blob);
+    }
+    const content = await zip.generateAsync({type:'blob'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(content); a.download='carrusel_taller_ia.zip'; a.click();
+  } finally { btn.innerHTML=orig; btn.disabled=false; }
+}
+
+/* =====================================================================
+   RENDER ALL
+   ===================================================================== */
+function renderAll(){
+  renderStoryBar();
+  fitZoom();
+  applyStageSize();
+  renderStage();
+  renderElToolbar();
+}
+renderAll();
+</script>
+</body>
+</html>
