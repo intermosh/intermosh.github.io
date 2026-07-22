@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ScriptLab — Analítica para guiones de YouTube</title>
+<meta name="description" content="Editor por bloques que analiza ritmo, retención y claridad de guiones de YouTube. Gratuito, open-source, 100% privado. IA local, nada sale de tu máquina.">
+<meta name="keywords" content="guiones youtube, analisis guion, retencion video, script lab, editor guiones, metricas youtube, open source">
+<meta name="author" content="KRANK - Intermosh">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://intermosh.github.io/scriptlab/">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="ScriptLab — Analítica para guiones de YouTube">
+<meta property="og:description" content="Editor por bloques que analiza ritmo, retención y claridad. Gratuito, open-source, 100% privado. IA local.">
+<meta property="og:url" content="https://intermosh.github.io/scriptlab/">
+<meta property="og:site_name" content="ScriptLab">
+<meta property="og:locale" content="es_AR">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ScriptLab — Analítica para guiones de YouTube">
+<meta name="twitter:description" content="Editor por bloques que analiza ritmo, retención y claridad. Gratuito, open-source, 100% privado.">
+
+<!-- Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "ScriptLab",
+  "description": "Editor por bloques para analizar la arquitectura de guiones de YouTube. Métricas de retención, salud, carga cognitiva y arco emocional.",
+  "applicationCategory": "MultimediaApplication",
+  "operatingSystem": "Web Browser",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "author": {
+    "@type": "Person",
+    "name": "KRANK",
+    "url": "https://www.youtube.com/@intermosh"
+  },
+  "url": "https://intermosh.github.io/scriptlab/",
+  "softwareHelp": { "@type": "CreativeWork", "url": "https://github.com/intermosh" },
+  "featureList": "Análisis de retención, Salud del guion, Arco emocional, Carga cognitiva, IA local, Privacidad total"
+}
+</script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--panel:#161b27;--panel2:#1c2333;--border:#26304a;
+  --text:#e6ebf5;--muted:#8b97ad;--faint:#5c6781;
+  --purple:#7969ff;--teal:#32d2ac;--good:#5cdb87;--warn:#f4b857;--bad:#ff6879;
+  --hook:#ff7d5c;--ctx:#69a8ff;--evid:#ae83ff;--segm:#b3bdce;--giro:#f4b857;--vis:#32d2ac;--cta:#5cdb87;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font:16px/1.65 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:var(--purple);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ===== LAYOUT ===== */
+.wrap{max-width:960px;margin:0 auto;padding:0 24px}
+section{padding:80px 0}
+@media(max-width:640px){section{padding:52px 0}.wrap{padding:0 16px}}
+
+/* ===== NAV ===== */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(13,17,23,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px}
+nav .inner{max-width:960px;margin:0 auto;display:flex;align-items:center;height:52px;justify-content:space-between}
+nav .brand{font-weight:700;font-size:15px;color:var(--text);display:flex;align-items:center;gap:8px}
+nav .brand i{color:var(--purple);font-style:normal;font-weight:800}
+nav .links{display:flex;gap:24px;font-size:13px}
+nav .links a{color:var(--muted);transition:color .2s}
+nav .links a:hover{color:var(--text);text-decoration:none}
+nav .cta-nav{background:var(--purple);color:#fff;padding:7px 18px;border-radius:8px;font-size:13px;font-weight:600;transition:transform .15s,box-shadow .15s}
+nav .cta-nav:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(121,105,255,.35);text-decoration:none}
+@media(max-width:640px){nav .links{display:none}}
+
+/* ===== HERO ===== */
+.hero{padding:140px 0 80px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-40%;left:50%;width:800px;height:800px;background:radial-gradient(circle,rgba(121,105,255,.12) 0%,transparent 70%);transform:translateX(-50%);pointer-events:none}
+.hero h1{font-size:clamp(32px,5vw,52px);font-weight:800;line-height:1.15;margin-bottom:20px;letter-spacing:-.02em}
+.hero h1 .accent{background:linear-gradient(135deg,var(--purple),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:18px;color:var(--muted);max-width:580px;margin:0 auto 36px;line-height:1.6}
+.hero-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.btn-primary{background:var(--purple);color:#fff;padding:13px 32px;border-radius:10px;font-size:16px;font-weight:600;transition:transform .15s,box-shadow .15s;display:inline-flex;align-items:center;gap:8px}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(121,105,255,.4);text-decoration:none}
+.btn-secondary{border:1px solid var(--border);color:var(--text);padding:13px 32px;border-radius:10px;font-size:16px;font-weight:500;transition:border-color .2s,background .2s;display:inline-flex;align-items:center;gap:8px}
+.btn-secondary:hover{border-color:var(--purple);background:rgba(121,105,255,.08);text-decoration:none}
+
+/* ===== METRIC CARDS MOCKUP ===== */
+.metrics-preview{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:500px;margin:40px auto 0}
+@media(max-width:500px){.metrics-preview{grid-template-columns:1fr 1fr 1fr;gap:6px}}
+.m-card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:16px 10px;text-align:center;opacity:0;transform:translateY(20px);animation:fadeUp .6s ease forwards}
+.m-card:nth-child(2){animation-delay:.1s}
+.m-card:nth-child(3){animation-delay:.2s}
+.m-card .mc-label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:600;margin-bottom:6px}
+.m-card .mc-value{font-size:32px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.m-card .mc-desc{font-size:10px;color:var(--muted);margin-top:6px}
+
+/* ===== FEATURES ===== */
+.features{background:var(--panel);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+@media(max-width:700px){.feat-grid{grid-template-columns:1fr;gap:20px}}
+.feat{opacity:0;transform:translateY(24px)}
+.feat.visible{animation:fadeUp .5s ease forwards}
+.feat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:12px}
+.feat h3{font-size:15px;font-weight:700;margin-bottom:6px}
+.feat p{font-size:13px;color:var(--muted);line-height:1.55}
+
+/* ===== HOW IT WORKS ===== */
+.steps{counter-reset:step}
+.step-row{display:flex;gap:32px;align-items:flex-start;margin-bottom:40px;opacity:0;transform:translateX(-20px)}
+.step-row.visible{animation:fadeRight .5s ease forwards}
+.step-row:nth-child(2){animation-delay:.1s}
+.step-row:nth-child(3){animation-delay:.2s}
+.step-row:nth-child(4){animation-delay:.3s}
+.step-num{counter-increment:step;flex-shrink:0;width:44px;height:44px;border-radius:50%;background:var(--panel2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:var(--purple)}
+.step-body h3{font-size:16px;font-weight:700;margin-bottom:4px}
+.step-body p{font-size:14px;color:var(--muted);line-height:1.55}
+
+/* ===== RETENTION CURVE MOCKUP ===== */
+.curve-section{text-align:center}
+.curve-wrap{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:24px 20px;max-width:600px;margin:30px auto 0;position:relative;overflow:hidden}
+.curve-wrap .curve-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.curve-wrap .curve-header span{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);font-weight:600}
+.curve-wrap .curve-header .drop{color:var(--bad);font-weight:700}
+.curve-svg{width:100%;height:120px}
+
+/* ===== BLOCKS MOCKUP ===== */
+.blocks-mockup{max-width:520px;margin:30px auto 0;display:flex;flex-direction:column;gap:8px}
+.bm-block{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:var(--panel2);border:1px solid var(--border);opacity:0;transform:translateY(12px)}
+.bm-block.visible{animation:fadeUp .4s ease forwards}
+.bm-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.bm-label{font-size:12px;font-weight:600;flex:1}
+.bm-time{font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums}
+.bm-tag{font-size:10px;padding:2px 8px;border-radius:99px;font-weight:600}
+
+/* ===== PRIVACY ===== */
+.privacy-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:700px;margin:30px auto 0}
+@media(max-width:600px){.privacy-grid{grid-template-columns:1fr}}
+.pv-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px;opacity:0;transform:translateY(16px)}
+.pv-card.visible{animation:fadeUp .5s ease forwards}
+.pv-card .pv-icon{font-size:24px;margin-bottom:10px}
+.pv-card h3{font-size:14px;font-weight:700;margin-bottom:6px}
+.pv-card p{font-size:13px;color:var(--muted);line-height:1.5}
+
+/* ===== CTA BOTTOM ===== */
+.cta-bottom{text-align:center;padding:100px 0 60px}
+.cta-bottom h2{font-size:clamp(24px,3.5vw,36px);font-weight:800;margin-bottom:16px}
+.cta-bottom p{color:var(--muted);font-size:16px;margin-bottom:30px;max-width:460px;margin-left:auto;margin-right:auto}
+
+/* ===== FOOTER ===== */
+footer{border-top:1px solid var(--border);padding:30px 0;text-align:center;font-size:12px;color:var(--faint)}
+footer a{color:var(--muted)}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+@keyframes fadeRight{to{opacity:1;transform:translateX(0)}}
+@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+/* ===== SECTION TITLES ===== */
+.sec-title{text-align:center;margin-bottom:40px}
+.sec-title h2{font-size:clamp(22px,3vw,30px);font-weight:800;margin-bottom:10px}
+.sec-title p{font-size:15px;color:var(--muted);max-width:500px;margin:0 auto}
+
+/* ===== FLOATING PARTICLES ===== */
+.particles{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:-1;overflow:hidden}
+.particle{position:absolute;width:3px;height:3px;border-radius:50%;background:var(--purple);opacity:.15;animation:float linear infinite}
+@keyframes float{0%{transform:translateY(100vh) scale(0)}50%{opacity:.25}100%{transform:translateY(-10vh) scale(1)}}
+</style>
+</head>
+<body>
+
+<!-- Particles -->
+<div class="particles" id="particles"></div>
+
+<!-- Nav -->
+<nav>
+  <div class="inner">
+    <div class="brand"><i>S</i>criptLab</div>
+    <div class="links">
+      <a href="#features">Funciones</a>
+      <a href="#how">Cómo funciona</a>
+      <a href="#metrics">Métricas</a>
+      <a href="#privacy">Privacidad</a>
+    </div>
+    <a href="scriptlab.html" class="cta-nav">Abrir ScriptLab</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="wrap">
+    <h1>Tu guion tiene una estructura.<br><span class="accent">ScriptLab la mide.</span></h1>
+    <p>Editor por bloques que analiza ritmo, retención y claridad de guiones de YouTube. Sin enviar nada a ningún servidor. Todo se procesa en tu navegador.</p>
+    <div class="hero-btns">
+      <a href="scriptlab.html" class="btn-primary">▶ Abrir ScriptLab</a>
+      <a href="https://github.com/intermosh" target="_blank" class="btn-secondary">⌂ GitHub</a>
+    </div>
+    <div class="metrics-preview">
+      <div class="m-card">
+        <div class="mc-label">Salud</div>
+        <div class="mc-value" style="color:var(--purple)">78</div>
+        <div class="mc-desc">/100</div>
+      </div>
+      <div class="m-card">
+        <div class="mc-label">Retención</div>
+        <div class="mc-value" style="color:var(--teal)">64%</div>
+        <div class="mc-desc">APV estimado</div>
+      </div>
+      <div class="m-card">
+        <div class="mc-label">Engagement</div>
+        <div class="mc-value" style="color:var(--good)">72%</div>
+        <div class="mc-desc">Variación emocional</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features" id="features">
+  <div class="wrap">
+    <div class="sec-title">
+      <h2>Lo que ScriptLab analiza</h2>
+      <p>Métricas reales, no opiniones. Cada número tiene una fuente.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat" data-anim>
+        <div class="feat-icon" style="background:rgba(121,105,255,.12);color:var(--purple)">◆</div>
+        <h3>Salud del guion</h3>
+        <p>Hook, claridad (Fernández-Huerta), ritmo narrativo y alineación con la promesa. Un solo número que resume la calidad.</p>
+      </div>
+      <div class="feat" data-anim>
+        <div class="feat-icon" style="background:rgba(50,210,172,.12);color:var(--teal)">◔</div>
+        <h3>Retención estimada</h3>
+        <p>Proyección de APV basada en 8 factores con citas académicas. Curva de retención por bloque con detección de puntos de fuga.</p>
+      </div>
+      <div class="feat" data-anim>
+        <div class="feat-icon" style="background:rgba(92,219,135,.12);color:var(--good)">♡</div>
+        <h3>Arco emocional</h3>
+        <p>Modelo de sentimiento ejecutado en tu navegador. Engagement, momentum y detección de saltos tonales entre bloques.</p>
+      </div>
+      <div class="feat" data-anim>
+        <div class="feat-icon" style="background:rgba(244,184,87,.12);color:var(--warn)">◎</div>
+        <h3>Carga cognitiva</h3>
+        <p>¿Tu audiencia puede procesar lo que decís? Mide ritmo de habla, densidad temática y descansos cognitivos.</p>
+      </div>
+      <div class="feat" data-anim>
+        <div class="feat-icon" style="background:rgba(255,125,92,.12);color:var(--hook)">⊕</div>
+        <h3>Análisis semántico</h3>
+        <p>Repetición, ideas centrales, ritmo de temas y cobertura. Detecta si tu guion dice lo mismo dos veces o deja huecos.</p>
+      </div>
+      <div class="feat" data-anim>
+        <div class="feat-icon" style="background:rgba(105,168,255,.12);color:var(--ctx)">☰</div>
+        <h3>Editor por bloques</h3>
+        <p>HOOK, CONTEXTO, EVIDENCIA, GIRO, VISUAL, CTA. Arrastrá, reordená, medí. Cada bloque tiene su propia métrica.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section id="how">
+  <div class="wrap">
+    <div class="sec-title">
+      <h2>Cómo funciona</h2>
+      <p>Sin cuentas. Sin servidores. Sin esperar.</p>
+    </div>
+    <div class="steps">
+      <div class="step-row" data-anim>
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Escribí o importá tu guion</h3>
+          <p>Pegá texto, importá Markdown o JSON. ScriptLab lo organiza en bloques automáticamente.</p>
+        </div>
+      </div>
+      <div class="step-row" data-anim>
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Las métricas aparecen en tiempo real</h3>
+          <p>Mientras escribís, el motor calcula salud, retención, carga cognitiva y estructura. Sin apretar ningún botón.</p>
+        </div>
+      </div>
+      <div class="step-row" data-anim>
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Activá el Modo IA (opcional)</h3>
+          <p>Descargá los modelos una vez (~110 MB). Después, todo corre localmente: embeddings, sentimiento, análisis semántico.</p>
+        </div>
+      </div>
+      <div class="step-row" data-anim>
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Exportá en el formato que necesites</h3>
+          <p>JSON, Markdown, HTML, texto plano o PDF. También podés exportar el diagnóstico completo para compartir o archivar.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Metrics: Retention curve -->
+<section class="curve-section" id="metrics">
+  <div class="wrap">
+    <div class="sec-title">
+      <h2>Métricas que podés auditar</h2>
+      <p>Cada número tiene una fórmula. Cada peso tiene una cita.</p>
+    </div>
+    <div class="curve-wrap">
+      <div class="curve-header">
+        <span>Retención estimada</span>
+        <span class="drop">Primeros 45s: −28%</span>
+      </div>
+      <svg class="curve-svg" viewBox="0 0 560 120" preserveAspectRatio="none">
+        <!-- baseline dashed -->
+        <line x1="0" y1="105" x2="560" y2="105" stroke="var(--border)" stroke-width="1" stroke-dasharray="4 4"/>
+        <!-- curve -->
+        <path d="M0,10 C30,10 60,28 100,38 C160,52 220,60 300,65 C380,70 440,74 500,78 L560,80" fill="none" stroke="var(--bad)" stroke-width="2.5" stroke-linecap="round" class="curve-path"/>
+        <!-- dots -->
+        <circle cx="0" cy="10" r="4" fill="var(--bad)" opacity=".8"/>
+        <circle cx="100" cy="38" r="3.5" fill="var(--bad)" opacity=".7"/>
+        <circle cx="200" cy="55" r="3" fill="var(--warn)" opacity=".7"/>
+        <circle cx="300" cy="65" r="3" fill="var(--warn)" opacity=".6"/>
+        <circle cx="400" cy="72" r="3" fill="var(--muted)" opacity=".5"/>
+        <circle cx="560" cy="80" r="3" fill="var(--muted)" opacity=".4"/>
+        <!-- labels -->
+        <text x="4" y="118" font-size="9" fill="var(--faint)" font-family="system-ui">0:00</text>
+        <text x="520" y="118" font-size="9" fill="var(--faint)" font-family="system-ui">12:30</text>
+      </svg>
+    </div>
+
+    <!-- Block types mockup -->
+    <div class="blocks-mockup">
+      <div class="bm-block" data-anim><div class="bm-dot" style="background:var(--hook)"></div><div class="bm-label">HOOK — Apertura</div><div class="bm-time">0:00 – 0:25</div><div class="bm-tag" style="background:rgba(92,219,135,.12);color:var(--good)">Óptimo</div></div>
+      <div class="bm-block" data-anim><div class="bm-dot" style="background:var(--ctx)"></div><div class="bm-label">CONTEXTO — Antecedentes</div><div class="bm-time">0:25 – 1:10</div><div class="bm-tag" style="background:rgba(92,219,135,.12);color:var(--good)">Óptimo</div></div>
+      <div class="bm-block" data-anim><div class="bm-dot" style="background:var(--evid)"></div><div class="bm-label">EVIDENCIA — Datos</div><div class="bm-time">1:10 – 2:30</div><div class="bm-tag" style="background:rgba(244,184,87,.12);color:var(--warn)">Revisar</div></div>
+      <div class="bm-block" data-anim><div class="bm-dot" style="background:var(--giro)"></div><div class="bm-label">GIRO — Pattern interrupt</div><div class="bm-time">2:30 – 2:50</div><div class="bm-tag" style="background:rgba(92,219,135,.12);color:var(--good)">Óptimo</div></div>
+      <div class="bm-block" data-anim><div class="bm-dot" style="background:var(--cta)"></div><div class="bm-label">CTA — Cierre</div><div class="bm-time">2:50 – 3:10</div><div class="bm-tag" style="background:rgba(92,219,135,.12);color:var(--good)">Óptimo</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Privacy -->
+<section id="privacy" class="features">
+  <div class="wrap">
+    <div class="sec-title">
+      <h2>Tu guion no sale de tu computadora</h2>
+      <p>ScriptLab es open-source y no recopila datos. Punto.</p>
+    </div>
+    <div class="privacy-grid">
+      <div class="pv-card" data-anim>
+        <div class="pv-icon">🔒</div>
+        <h3>IA 100% local</h3>
+        <p>Los modelos de embeddings y sentimiento se ejecutan en tu navegador vía WebAssembly. Ni una línea de texto se envía a un servidor.</p>
+      </div>
+      <div class="pv-card" data-anim>
+        <div class="pv-icon">⊘</div>
+        <h3>Sin cuentas ni registros</h3>
+        <p>No hay login, no hay email, no hay tracking. Abrís ScriptLab y escribís. Tus datos se quedan en tu IndexedDB.</p>
+      </div>
+      <div class="pv-card" data-anim>
+        <div class="pv-icon">◈</div>
+        <h3>Open-source</h3>
+        <p>Cada línea de código es auditable. Cada fórmula tiene una cita. Cada peso tiene una fuente. Sin cajas negras.</p>
+      </div>
+      <div class="pv-card" data-anim>
+        <div class="pv-icon">🌎</div>
+        <h3>Optimizado para español</h3>
+        <p>Modelos multilingües con métricas calibradas para contenido en español latinoamericano. Legibilidad Fernández-Huerta.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-bottom">
+  <div class="wrap">
+    <h2>Probalo. Es gratis.</h2>
+    <p>Sin servidores, sin cuentas, sin límites. Tu guion, tus métricas, tu máquina.</p>
+    <a href="scriptlab.html" class="btn-primary">▶ Abrir ScriptLab</a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="wrap">
+    <p><strong>ScriptLab</strong> — Creado por <a href="https://www.youtube.com/@intermosh" target="_blank">KRANK</a> de <a href="https://www.youtube.com/@intermosh" target="_blank">Intermosh</a> · <a href="https://github.com/intermosh" target="_blank">GitHub</a> · Open-source · Sin licencia declarada</p>
+  </div>
+</footer>
+
+<script>
+/* Particles */
+(function(){
+  const c=document.getElementById('particles');
+  for(let i=0;i<20;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    p.style.left=Math.random()*100+'%';
+    p.style.animationDuration=(8+Math.random()*12)+'s';
+    p.style.animationDelay=(Math.random()*10)+'s';
+    p.style.width=p.style.height=(2+Math.random()*3)+'px';
+    c.appendChild(p);
+  }
+})();
+
+/* Intersection Observer for scroll animations */
+(function(){
+  const obs=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}});
+  },{threshold:.15});
+  document.querySelectorAll('[data-anim]').forEach(el=>obs.observe(el));
+})();
+
+/* Smooth curve draw */
+(function(){
+  const path=document.querySelector('.curve-path');
+  if(!path)return;
+  const len=path.getTotalLength();
+  path.style.strokeDasharray=len;
+  path.style.strokeDashoffset=len;
+  const obs=new IntersectionObserver(([e])=>{
+    if(e.isIntersecting){
+      path.style.transition='stroke-dashoffset 2s ease';
+      path.style.strokeDashoffset=0;
+      obs.unobserve(path);
+    }
+  },{threshold:.3});
+  obs.observe(path);
+})();
+
+/* Counter animation for metric cards */
+(function(){
+  const cards=document.querySelectorAll('.mc-value');
+  const obs=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(!e.isIntersecting)return;
+      const el=e.target;
+      const text=el.textContent;
+      const num=parseInt(text);
+      if(isNaN(num))return;
+      const suffix=text.replace(/[\d]/g,'');
+      let current=0;
+      const step=Math.max(1,Math.floor(num/30));
+      const iv=setInterval(()=>{
+        current+=step;
+        if(current>=num){current=num;clearInterval(iv)}
+        el.textContent=current+suffix;
+      },30);
+      obs.unobserve(el);
+    });
+  },{threshold:.5});
+  cards.forEach(c=>obs.observe(c));
+})();
+</script>
+</body>
+</html>
