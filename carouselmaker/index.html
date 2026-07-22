@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Taller IA · Editor de Carruseles</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -10,27 +10,71 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 :root{
-  --panel:#151517; --panel2:#1c1d20; --border:#2a2b30;
-  --text:#eaeaec; --mute:#9a9ba2; --accent:#22d5ee; --accent2:#f472b6;
+  --bg:#0b0b0d; --panel:#151517; --panel2:#1c1d20; --border:#2a2b30;
+  --text:#eaeaec; --mute:#8a8b92; --accent:#22d5ee; --accent2:#f472b6;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;margin:0;overscroll-behavior:none;}
 body{
-  background:#000;color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;
+  background:var(--bg);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;
   display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden;
 }
 button{font-family:inherit;cursor:pointer;}
 input{font-family:inherit;}
 
-/* ===== CANVAS — fills the whole viewport, tools float on top of it ===== */
-#canvas-area{flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#050506;}
-#stage-outer{position:relative;flex:none;box-shadow:0 0 0 1px #1a1a1c;}
+/* ===== TOPBAR (normal flow, wraps — never clips) ===== */
+#topbar{flex:none;background:var(--panel);border-bottom:1px solid var(--border);}
+#tabs-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--border);}
+.tab{
+  flex:none;padding:7px 16px;border-radius:16px;background:var(--panel2);border:1px solid var(--border);
+  font-size:12px;font-weight:500;color:var(--mute);display:flex;align-items:center;gap:8px;
+}
+.tab.active{background:var(--accent);color:#04222a;font-weight:700;border-color:var(--accent);}
+.tab .tab-x{opacity:.6;font-size:11px;}
+.tab .tab-x:hover{opacity:1;}
+#tab-add-btn{
+  flex:none;width:32px;height:32px;border-radius:50%;background:var(--panel2);border:1px dashed var(--border);
+  color:var(--text);font-size:16px;display:flex;align-items:center;justify-content:center;
+}
+#tab-add-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+#toolbar-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:8px 10px;}
+.tool-group{display:flex;gap:4px;flex:none;padding-right:10px;border-right:1px solid var(--border);}
+.tool-group:last-child{border-right:0;}
+.icon-btn{
+  width:34px;height:34px;flex:none;border-radius:8px;background:var(--panel2);border:1px solid var(--border);
+  color:var(--text);font-size:15px;display:flex;align-items:center;justify-content:center;
+}
+.icon-btn:hover{border-color:var(--accent);}
+.icon-btn.primary{background:var(--accent);color:#04222a;border-color:var(--accent);font-weight:700;}
+.icon-btn.color-btn{padding:0;overflow:hidden;}
+.icon-btn.color-btn input[type=color]{width:44px;height:44px;border:0;padding:0;margin:-5px;cursor:pointer;background:none;}
+
+/* ===== GLOBAL FLOATING UI (body-level: never clipped by any scroll/overflow container) ===== */
+#gtooltip{
+  position:fixed;display:none;z-index:1000;background:#000;color:#fff;padding:4px 9px;border-radius:6px;
+  font-size:11px;white-space:nowrap;pointer-events:none;border:1px solid #333;
+}
+.floating-menu{
+  position:fixed;z-index:1000;background:var(--panel2);border:1px solid var(--border);border-radius:10px;
+  padding:6px;display:flex;flex-direction:column;gap:2px;min-width:190px;box-shadow:0 12px 30px rgba(0,0,0,.5);
+}
+.floating-menu button{text-align:left;background:transparent;border:0;color:var(--text);padding:8px 10px;border-radius:6px;font-size:12px;}
+.floating-menu button:hover{background:#26272c;color:var(--accent);}
+
+/* ===== CANVAS ===== */
+#canvas-area{
+  flex:1;min-height:0;display:flex;align-items:center;justify-content:center;
+  overflow:auto;position:relative;padding:18px;
+  background:radial-gradient(circle at 50% 0%, #141416 0%, #08080a 70%);
+}
+#stage-outer{position:relative;flex:none;box-shadow:0 20px 70px rgba(0,0,0,.65);}
 #stage{position:absolute;top:0;left:0;transform-origin:top left;background:#000;overflow:hidden;}
 
 .el{position:absolute;outline:none;cursor:grab;white-space:pre-wrap;word-wrap:break-word;user-select:text;}
 .el.locked{cursor:default;user-select:none;}
 .el.selected{box-shadow:0 0 0 2px var(--accent);}
-.el.dragging-ghost{box-shadow:0 18px 40px rgba(0,0,0,.5);transform:scale(1.04);}
+.el.dragging-ghost{box-shadow:0 18px 40px rgba(0,0,0,.55);}
 .grip{
   position:absolute;width:22px;height:22px;background:var(--accent);border-radius:6px;
   display:none;align-items:center;justify-content:center;color:#04222a;font-size:12px;z-index:5;cursor:grab;
@@ -40,11 +84,12 @@ input{font-family:inherit;}
 .grip.resize{bottom:-11px;right:-11px;cursor:nwse-resize;}
 .accent{text-shadow:-1.5px 0 rgba(34,213,238,.85), 1.5px 0 rgba(244,114,182,.75);}
 img.el{cursor:grab;}
-@media (pointer:coarse){ .grip{display:none!important;} } /* touch = gestures, not tiny handles */
+@media (pointer:coarse){ .grip{display:none!important;} } /* touch uses direct drag + pinch instead of tiny handles */
 
 /* chart internals */
 .bar-row{position:relative;}
-.bar-val{background:transparent;border:0;color:inherit;font-family:'JetBrains Mono',monospace;font-size:15px;width:100%;padding:0 0 4px 0;}
+.bar-val{background:transparent;border:0;color:inherit;font-family:'JetBrains Mono',monospace;font-size:15px;
+  width:100%;padding:0 0 4px 0;}
 .bar-track{display:flex;align-items:center;gap:14px;}
 .bar-label{background:transparent;border:0;color:inherit;font-weight:700;font-size:16px;width:130px;flex:none;}
 .bar-fill-wrap{flex:1;position:relative;height:32px;}
@@ -57,73 +102,31 @@ img.el{cursor:grab;}
 .legend-row input[type=text]{background:transparent;border:0;color:inherit;font-family:inherit;}
 .legend-label{font-weight:600;font-size:16px;width:140px;}
 .legend-value{font-family:'JetBrains Mono',monospace;font-size:14px;width:70px;text-align:right;}
+input:disabled{opacity:1;}
 
-/* =====================================================================
-   MINIMAL OVERLAY CHROME — Instagram-Stories style: tools float directly
-   on the canvas surface over a soft gradient, nothing else on screen.
-   ===================================================================== */
-.overlay-fade-top{position:fixed;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top,0px) + 12px) 12px 28px;
-  background:linear-gradient(to bottom, rgba(0,0,0,.6), transparent);z-index:80;pointer-events:none;}
-.overlay-fade-top>*{pointer-events:auto;}
-.overlay-fade-bottom{position:fixed;bottom:0;left:0;right:0;padding:28px 12px calc(env(safe-area-inset-bottom,0px) + 14px);
-  background:linear-gradient(to top, rgba(0,0,0,.6), transparent);z-index:70;pointer-events:none;display:flex;align-items:flex-end;justify-content:space-between;}
-.overlay-fade-bottom>*{pointer-events:auto;}
-
-#story-bar{display:flex;align-items:center;gap:4px;}
-.dot{flex:1;max-width:46px;height:4px;border-radius:2px;background:rgba(255,255,255,.28);}
-.dot.active{background:var(--accent);}
-#dot-add{flex:none;width:20px;height:20px;border-radius:50%;border:1.5px dashed rgba(255,255,255,.55);
-  background:transparent;color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;margin-left:4px;}
-
-#top-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px;}
-.pill-btn{
-  height:34px;padding:0 12px;border-radius:17px;background:rgba(255,255,255,.12);backdrop-filter:blur(6px);
-  border:1px solid rgba(255,255,255,.14);color:#fff;font-size:15px;display:flex;align-items:center;justify-content:center;gap:6px;
+/* ===== FLOATING ELEMENT TOOLBAR ===== */
+#el-toolbar{
+  position:fixed;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:6px;flex-wrap:wrap;
+  background:var(--panel);border:1px solid var(--border);padding:6px;border-radius:12px;
+  box-shadow:0 14px 40px rgba(0,0,0,.55);z-index:60;max-width:96vw;justify-content:center;
 }
-.pill-btn.primary{background:var(--accent);color:#04222a;border-color:var(--accent);font-weight:700;}
-.pill-btn.icon-only{width:34px;padding:0;}
-
-#add-el-btn{
-  width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.12);backdrop-filter:blur(6px);
-  border:1px solid rgba(255,255,255,.16);color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;
-}
+#el-toolbar.hidden{display:none;}
 #trash-zone{
-  position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);transform:translateX(-50%);
-  width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.12);backdrop-filter:blur(6px);
-  border:1px solid rgba(255,255,255,.16);display:none;align-items:center;justify-content:center;font-size:24px;
-  z-index:75;transition:background .12s,transform .12s,border-color .12s;
+  position:fixed;left:50%;bottom:14px;transform:translateX(-50%);width:64px;height:64px;border-radius:50%;
+  background:var(--panel);border:2px solid var(--border);display:none;align-items:center;justify-content:center;
+  font-size:26px;z-index:70;transition:background .12s,transform .12s,border-color .12s;
 }
 #trash-zone.show{display:flex;}
 #trash-zone.active{background:#e05c5c;border-color:#e05c5c;transform:translateX(-50%) scale(1.2);}
-
-#el-toolbar{
-  position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);transform:translateX(-50%);
-  display:flex;gap:4px;flex-wrap:wrap;justify-content:center;max-width:94vw;
-  background:rgba(21,21,23,.88);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.1);
-  padding:5px;border-radius:14px;z-index:76;
+.hint-empty{
+  position:fixed;bottom:16px;left:50%;transform:translateX(-50%);color:var(--mute);font-size:11px;
+  background:var(--panel);border:1px solid var(--border);padding:8px 14px;border-radius:10px;z-index:40;
 }
-#el-toolbar.hidden{display:none;}
-.icon-btn{
-  width:32px;height:32px;flex:none;border-radius:8px;background:transparent;border:0;
-  color:var(--text);font-size:15px;display:flex;align-items:center;justify-content:center;
-}
-.icon-btn:hover{background:rgba(255,255,255,.1);}
-.icon-btn.color-btn{padding:0;overflow:hidden;}
-.icon-btn.color-btn input[type=color]{width:40px;height:40px;border:0;padding:0;margin:-4px;cursor:pointer;background:none;}
-
-/* ===== GLOBAL FLOATING UI (never clipped) ===== */
-#gtooltip{
-  position:fixed;display:none;z-index:1000;background:#000;color:#fff;padding:4px 9px;border-radius:6px;
-  font-size:11px;white-space:nowrap;pointer-events:none;border:1px solid #333;
-}
-.floating-menu{
-  position:fixed;z-index:1000;background:#1c1d20;border:1px solid var(--border);border-radius:10px;
-  padding:6px;display:flex;flex-direction:column;gap:2px;min-width:200px;box-shadow:0 12px 30px rgba(0,0,0,.5);
-}
-.floating-menu button{text-align:left;background:transparent;border:0;color:var(--text);padding:9px 11px;border-radius:6px;font-size:13px;}
-.floating-menu button:hover{background:#26272c;color:var(--accent);}
 
 @media (max-width:640px){
+  .icon-btn{width:30px;height:30px;font-size:13px;}
+  .tab{padding:6px 12px;font-size:11px;}
+  #canvas-area{padding:8px;}
   .bar-label{width:88px;font-size:12px;}
   .bar-val{font-size:12px;}
   .legend-label{width:90px;font-size:13px;}
@@ -132,24 +135,38 @@ img.el{cursor:grab;}
 </head>
 <body>
 
+<div id="topbar">
+  <div id="tabs-row"></div>
+  <div id="toolbar-row">
+    <div class="tool-group">
+      <button class="icon-btn" data-action="dup" data-tip="Duplicar diapositiva">⧉</button>
+      <button class="icon-btn" data-action="del-slide" data-tip="Eliminar diapositiva">🗑</button>
+    </div>
+    <div class="tool-group">
+      <button class="icon-btn" data-action="add-text" data-tip="Agregar texto">Tt</button>
+      <button class="icon-btn" data-action="add-image" data-tip="Insertar imagen / logo PNG">🖼</button>
+      <button class="icon-btn" data-action="add-line" data-tip="Insertar línea">➖</button>
+      <button class="icon-btn" data-action="add-icon" data-tip="Insertar ícono circular">◎</button>
+      <button class="icon-btn" data-action="add-bar" data-tip="Insertar gráfico de barras">📊</button>
+      <button class="icon-btn" data-action="add-pie" data-tip="Insertar gráfico de torta">🥧</button>
+    </div>
+    <div class="tool-group">
+      <button class="icon-btn" data-action="zoom-out" data-tip="Alejar">－</button>
+      <button class="icon-btn" data-action="zoom-fit" data-tip="Ajustar a pantalla">⤢</button>
+      <button class="icon-btn" data-action="zoom-in" data-tip="Acercar">＋</button>
+    </div>
+    <div class="tool-group">
+      <button class="icon-btn primary" data-action="export" data-tip="Exportar todo (ZIP)">⭳</button>
+    </div>
+  </div>
+</div>
+
 <main id="canvas-area">
   <div id="stage-outer"><div id="stage"></div></div>
 </main>
 
-<div class="overlay-fade-top">
-  <div id="story-bar"></div>
-  <div id="top-actions">
-    <button class="pill-btn icon-only" id="more-btn">⋮</button>
-    <button class="pill-btn primary icon-only" id="export-btn">⭳</button>
-  </div>
-</div>
-
-<div class="overlay-fade-bottom">
-  <button id="add-el-btn">＋</button>
-  <div></div>
-</div>
-
 <div id="el-toolbar" class="hidden"></div>
+<div id="hint-empty" class="hint-empty">Tocá un elemento para editarlo</div>
 <div id="trash-zone">🗑</div>
 <input type="file" id="file-input" accept="image/*" style="display:none;">
 <div id="gtooltip"></div>
@@ -157,13 +174,15 @@ img.el{cursor:grab;}
 <script>
 /* =====================================================================
    GLOBAL FLOATING UI — tooltip + dropdown menu, both appended to <body>
-   so they are never clipped by any ancestor.
+   so they are never clipped by any scrolling/overflow ancestor.
    ===================================================================== */
 const gtip = document.getElementById('gtooltip');
 function attachTooltip(el, text){
+  el.setAttribute('data-tip', text);
   el.addEventListener('mouseenter', ()=>showTip(el,text));
   el.addEventListener('mouseleave', hideTip);
   el.addEventListener('mousedown', hideTip);
+  el.addEventListener('touchstart', ()=>{ showTip(el,text); setTimeout(hideTip,1000); }, {passive:true});
 }
 function showTip(el,text){
   gtip.textContent = text; gtip.style.display='block';
@@ -182,7 +201,7 @@ function showTip(el,text){
 function hideTip(){ gtip.style.display='none'; }
 
 let openMenuEl = null;
-function openMenu(trigger, items, align){
+function openMenu(trigger, items){
   closeMenu();
   const menu = document.createElement('div');
   menu.className = 'floating-menu';
@@ -194,18 +213,16 @@ function openMenu(trigger, items, align){
   });
   document.body.appendChild(menu);
   const r = trigger.getBoundingClientRect();
-  const mr0 = menu.getBoundingClientRect();
-  let left = align==='right' ? r.right - mr0.width : r.left;
-  let top = r.bottom + 6;
-  document.body.appendChild(menu);
+  menu.style.left = r.left + 'px';
+  menu.style.top = (r.bottom + 6) + 'px';
   requestAnimationFrame(()=>{
     const mr = menu.getBoundingClientRect();
+    let left = r.left, top = r.bottom + 6;
     if(mr.right > window.innerWidth-4) left = window.innerWidth - 4 - mr.width;
     if(left < 4) left = 4;
     if(mr.bottom > window.innerHeight-4) top = r.top - mr.height - 6;
     menu.style.left = left+'px'; menu.style.top = top+'px';
   });
-  menu.style.left = left+'px'; menu.style.top = top+'px';
   openMenuEl = menu;
   setTimeout(()=>document.addEventListener('click', onOutsideMenuClick), 0);
 }
@@ -222,6 +239,7 @@ let slides = [];
 let currentSlide = 0;
 let selectedId = null;
 let zoom = 0.4;
+let manualZoom = false;
 let uid = 1;
 const nid = () => 'el' + (uid++);
 
@@ -298,12 +316,12 @@ function tplPie(){
 function tplBlank(){ return [baseEl({type:'icon', x:960, y:1220, width:60, color:'#eaeaea'})]; }
 
 const TEMPLATES = {
-  portada:{label:'＋ Portada / Statement', build:tplPortada},
-  deconstruccion:{label:'＋ Deconstrucción / Código', build:tplDeconstruccion},
-  cta:{label:'＋ CTA / Cierre', build:tplCta},
-  bar:{label:'＋ Gráfico de barras', build:tplBar},
-  pie:{label:'＋ Gráfico de torta', build:tplPie},
-  blank:{label:'＋ En blanco', build:tplBlank}
+  portada:{label:'Portada / Statement', build:tplPortada},
+  deconstruccion:{label:'Deconstrucción / Código', build:tplDeconstruccion},
+  cta:{label:'CTA / Cierre', build:tplCta},
+  bar:{label:'Gráfico de barras', build:tplBar},
+  pie:{label:'Gráfico de torta', build:tplPie},
+  blank:{label:'En blanco', build:tplBlank}
 };
 function newSlide(tplKey){ return {id:nid(), bg:'#080808', elements:(TEMPLATES[tplKey]||TEMPLATES.blank).build()}; }
 
@@ -313,12 +331,11 @@ slides.push(newSlide('cta'));
 slides.push(newSlide('bar'));
 
 /* =====================================================================
-   ZOOM — canvas always auto-fits the viewport, no manual controls
-   (matches the Stories editor: the frame just fills the screen).
+   ZOOM (editing view only — export never depends on this)
    ===================================================================== */
 function fitZoom(){
   const area = document.getElementById('canvas-area');
-  const pad = 0;
+  const pad = 24;
   const availW = area.clientWidth - pad*2, availH = area.clientHeight - pad*2;
   zoom = Math.max(0.12, Math.min(availW/W, availH/H));
 }
@@ -328,10 +345,10 @@ function applyStageSize(){
   stage.style.width = W+'px'; stage.style.height = H+'px';
   stage.style.transform = 'scale('+zoom+')';
 }
-window.addEventListener('resize', ()=>{ fitZoom(); applyStageSize(); });
+window.addEventListener('resize', ()=>{ if(!manualZoom) fitZoom(); applyStageSize(); });
 
 /* =====================================================================
-   ELEMENT NODE BUILDER — reused for the live editable stage
+   ELEMENT NODE BUILDER — reused for both the live editable stage
    (interactive=true) and the offscreen export stage (interactive=false).
    ===================================================================== */
 function buildElNode(el, interactive){
@@ -480,23 +497,31 @@ function startResize(e, el, node){
 
 /* =====================================================================
    TOUCH GESTURES (Instagram-style): drag the object directly, pinch with
-   two fingers to scale, drag onto the trash to delete. While dragging,
-   the object is reparented to <body> as a fixed element — this is the
-   fix for the bug where drag used to be clamped inside the canvas frame
-   (it was clipped by #stage's overflow:hidden) and could never reach a
-   trash target sitting outside that frame.
+   two fingers to scale, drag onto the trash to delete.
+
+   FIX: while a drag is in progress the element is reparented to <body>
+   as a fixed-position element at its real on-screen box. Previously it
+   stayed inside #stage, which has overflow:hidden — the finger could
+   move freely but the element itself got visually clipped at the
+   canvas frame's edge, so it could never reach a trash zone sitting
+   outside that frame. Reparenting removes that clipping entirely; on
+   drop, its final screen position is converted back into stage-space
+   coordinates and it's re-rendered in place.
    ===================================================================== */
 function pointOverTrash(x,y){
   const r = document.getElementById('trash-zone').getBoundingClientRect();
   return x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom;
 }
-function showTrash(){ document.getElementById('el-toolbar').classList.add('hidden'); document.getElementById('trash-zone').classList.add('show'); }
+function showTrash(){
+  document.getElementById('el-toolbar').classList.add('hidden');
+  document.getElementById('trash-zone').classList.add('show');
+}
 function hideTrash(){ document.getElementById('trash-zone').classList.remove('show','active'); }
 
 function attachTouchInteractions(el, node){
   let mode = null; // 'pending' | 'drag' | 'pinch'
   let startX, startY, lastX, lastY;
-  let ghostLeft, ghostTop; // node's on-screen fixed position while dragging (real px, post-reparent)
+  let ghostLeft, ghostTop;
   let startDist, startWidth, startFontSize, startHeight, aspect;
 
   node.addEventListener('touchstart', (e)=>{
@@ -531,7 +556,7 @@ function attachTouchInteractions(el, node){
         mode='drag';
         if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
         // Reparent to <body> at its CURRENT on-screen box so it can move freely
-        // across the whole viewport (no longer clipped by the canvas frame).
+        // across the whole viewport — no longer clipped by the canvas frame.
         const rect = node.getBoundingClientRect();
         ghostLeft = rect.left; ghostTop = rect.top;
         node.style.position='fixed';
@@ -570,7 +595,6 @@ function attachTouchInteractions(el, node){
         slides[currentSlide].elements = slides[currentSlide].elements.filter(x=>x.id!==el.id);
         selectedId=null;
       } else {
-        // convert final on-screen position back to stage-space coordinates
         const outerRect = document.getElementById('stage-outer').getBoundingClientRect();
         const finalRect = node.getBoundingClientRect();
         el.x = Math.round((finalRect.left - outerRect.left)/zoom);
@@ -615,36 +639,46 @@ function renderStage(){
 }
 
 /* =====================================================================
-   STORY BAR (top) — segmented progress dots, tap to switch slide.
+   TABS
    ===================================================================== */
-function renderStoryBar(){
-  const row = document.getElementById('story-bar');
+function renderTabs(){
+  const row = document.getElementById('tabs-row');
   row.innerHTML = '';
   slides.forEach((s,i)=>{
-    const d = document.createElement('button');
-    d.className = 'dot'+(i===currentSlide?' active':'');
-    d.addEventListener('click', ()=>{ currentSlide=i; selectedId=null; renderAll(); });
-    row.appendChild(d);
+    const t = document.createElement('div');
+    t.className = 'tab'+(i===currentSlide?' active':'');
+    const num = document.createElement('span'); num.textContent = i+1;
+    const x = document.createElement('span'); x.className='tab-x'; x.textContent='✕';
+    t.appendChild(num); t.appendChild(x);
+    t.addEventListener('click', (e)=>{
+      if(e.target===x){
+        if(slides.length===1) return;
+        slides.splice(i,1); if(currentSlide>=slides.length) currentSlide=slides.length-1;
+        selectedId=null; renderAll(); return;
+      }
+      currentSlide=i; selectedId=null; renderAll();
+    });
+    row.appendChild(t);
   });
-  const add = document.createElement('button');
-  add.id='dot-add'; add.textContent='＋';
-  attachTooltip(add, 'Agregar diapositiva');
-  add.addEventListener('click', (e)=>{
+  const addBtn = document.createElement('button');
+  addBtn.id='tab-add-btn'; addBtn.textContent='＋';
+  attachTooltip(addBtn, 'Agregar diapositiva');
+  addBtn.addEventListener('click', (e)=>{
     e.stopPropagation();
-    openMenu(add, Object.entries(TEMPLATES).map(([k,v])=>({
+    openMenu(addBtn, Object.entries(TEMPLATES).map(([k,v])=>({
       label:v.label,
       onClick:()=>{ slides.push(newSlide(k)); currentSlide=slides.length-1; selectedId=null; renderAll(); }
     })));
   });
-  row.appendChild(add);
+  row.appendChild(addBtn);
 }
 
 /* =====================================================================
-   FLOATING ELEMENT TOOLBAR (contextual — only visible when something is selected)
+   FLOATING ELEMENT TOOLBAR
    ===================================================================== */
-function mkIconBtn(html, tip, onClick){
+function mkIconBtn(html, tip, onClick, active){
   const b = document.createElement('button');
-  b.className='icon-btn'; b.innerHTML=html;
+  b.className='icon-btn'+(active?' primary':''); b.innerHTML=html;
   attachTooltip(b, tip);
   b.addEventListener('click', onClick);
   return b;
@@ -657,10 +691,11 @@ function rgbToHex(c){
 }
 function renderElToolbar(){
   const bar = document.getElementById('el-toolbar');
+  const hint = document.getElementById('hint-empty');
   const el = getSelected();
   bar.innerHTML='';
-  if(!el){ bar.classList.add('hidden'); return; }
-  bar.classList.remove('hidden');
+  if(!el){ bar.classList.add('hidden'); hint.style.display='block'; return; }
+  hint.style.display='none'; bar.classList.remove('hidden');
   const refresh = ()=>{ renderStage(); renderElToolbar(); };
 
   if(el.type==='text'){
@@ -717,45 +752,50 @@ function renderElToolbar(){
 }
 
 /* =====================================================================
-   TOP-RIGHT ACTIONS (more menu + export) & ADD-ELEMENT button
+   TOP TOOLBAR ACTIONS
    ===================================================================== */
-attachTooltip(document.getElementById('more-btn'), 'Más opciones');
-attachTooltip(document.getElementById('export-btn'), 'Exportar todo (ZIP)');
-attachTooltip(document.getElementById('add-el-btn'), 'Agregar elemento');
-
-document.getElementById('more-btn').addEventListener('click', (e)=>{
-  e.stopPropagation();
-  openMenu(e.currentTarget, [
-    {label:'⧉  Duplicar diapositiva', onClick:()=>{
-      const copy = JSON.parse(JSON.stringify(slides[currentSlide]));
-      copy.id=nid(); copy.elements.forEach(el=>el.id=nid());
-      slides.splice(currentSlide+1,0,copy); currentSlide++; selectedId=null; renderAll();
-    }},
-    {label:'🗑  Eliminar diapositiva', onClick:()=>{
-      if(slides.length===1) return;
-      slides.splice(currentSlide,1); if(currentSlide>=slides.length) currentSlide=slides.length-1;
-      selectedId=null; renderAll();
-    }}
-  ], 'right');
-});
-
-document.getElementById('export-btn').addEventListener('click', (e)=> exportAll(e.currentTarget));
-
-document.getElementById('add-el-btn').addEventListener('click', (e)=>{
-  e.stopPropagation();
+document.querySelectorAll('#toolbar-row .icon-btn').forEach(b=> attachTooltip(b, b.dataset.tip));
+document.getElementById('toolbar-row').addEventListener('click', (e)=>{
+  const btn = e.target.closest('[data-action]'); if(!btn) return;
+  const action = btn.dataset.action;
   const els = slides[currentSlide].elements;
   const z = els.length ? Math.max(...els.map(x=>x.z))+1 : 1;
-  const addAndSelect = (el)=>{ els.push(el); selectedId=el.id; renderStage(); renderElToolbar(); };
-  openMenu(e.currentTarget, [
-    {label:'Tt  Texto', onClick:()=> addAndSelect(textEl({html:'nuevo texto', x:100, y:120, width:800, fontSize:40, z}))},
-    {label:'🖼  Imagen / logo PNG', onClick:()=> document.getElementById('file-input').click()},
-    {label:'➖  Línea', onClick:()=> addAndSelect(baseEl({type:'line', x:80, y:80, width:920, height:1, color:'#3a3a3a', z}))},
-    {label:'◎  Ícono de marca', onClick:()=> addAndSelect(baseEl({type:'icon', x:960, y:1220, width:60, color:'#eaeaea', z}))},
-    {label:'📊  Gráfico de barras', onClick:()=> addAndSelect(baseEl({type:'barchart', x:80, y:200, width:920, height:900, barColor:'#ffffff', z,
-      rows:[{id:nid(),label:'Item A',value:1000},{id:nid(),label:'Item B',value:600},{id:nid(),label:'Item C',value:300}]}))},
-    {label:'🥧  Gráfico de torta', onClick:()=> addAndSelect(baseEl({type:'piechart', x:80, y:300, width:920, height:340, z,
-      rows:[{id:nid(),label:'A',value:50,color:'#22d5ee'},{id:nid(),label:'B',value:30,color:'#f472b6'},{id:nid(),label:'C',value:20,color:'#5a5a5a'}]}))}
-  ]);
+  if(action==='dup'){
+    const copy = JSON.parse(JSON.stringify(slides[currentSlide]));
+    copy.id=nid(); copy.elements.forEach(el=>el.id=nid());
+    slides.splice(currentSlide+1,0,copy); currentSlide++; selectedId=null; renderAll();
+  } else if(action==='del-slide'){
+    if(slides.length===1) return;
+    slides.splice(currentSlide,1); if(currentSlide>=slides.length) currentSlide=slides.length-1;
+    selectedId=null; renderAll();
+  } else if(action==='add-text'){
+    const el = textEl({html:'nuevo texto', x:100, y:120, width:800, fontSize:40, z});
+    els.push(el); selectedId=el.id; renderStage(); renderElToolbar();
+  } else if(action==='add-image'){
+    document.getElementById('file-input').click();
+  } else if(action==='add-line'){
+    const el = baseEl({type:'line', x:80, y:80, width:920, height:1, color:'#3a3a3a', z});
+    els.push(el); selectedId=el.id; renderStage(); renderElToolbar();
+  } else if(action==='add-icon'){
+    const el = baseEl({type:'icon', x:960, y:1220, width:60, color:'#eaeaea', z});
+    els.push(el); selectedId=el.id; renderStage(); renderElToolbar();
+  } else if(action==='add-bar'){
+    const el = baseEl({type:'barchart', x:80, y:200, width:920, height:900, barColor:'#ffffff', z,
+      rows:[{id:nid(),label:'Item A',value:1000},{id:nid(),label:'Item B',value:600},{id:nid(),label:'Item C',value:300}]});
+    els.push(el); selectedId=el.id; renderStage(); renderElToolbar();
+  } else if(action==='add-pie'){
+    const el = baseEl({type:'piechart', x:80, y:300, width:920, height:340, z,
+      rows:[{id:nid(),label:'A',value:50,color:'#22d5ee'},{id:nid(),label:'B',value:30,color:'#f472b6'},{id:nid(),label:'C',value:20,color:'#5a5a5a'}]});
+    els.push(el); selectedId=el.id; renderStage(); renderElToolbar();
+  } else if(action==='zoom-in'){
+    manualZoom=true; zoom=Math.min(1.4, zoom+0.08); applyStageSize();
+  } else if(action==='zoom-out'){
+    manualZoom=true; zoom=Math.max(0.1, zoom-0.08); applyStageSize();
+  } else if(action==='zoom-fit'){
+    manualZoom=false; fitZoom(); applyStageSize();
+  } else if(action==='export'){
+    exportAll(btn);
+  }
 });
 
 document.getElementById('file-input').addEventListener('change', (e)=>{
@@ -789,7 +829,9 @@ async function renderSlideToCanvas(slide){
   host.style.width=W+'px'; host.style.height=H+'px'; host.style.background=slide.bg;
   host.style.overflow='hidden';
   document.body.appendChild(host);
-  slide.elements.slice().sort((a,b)=>a.z-b.z).forEach(el=> host.appendChild(buildElNode(el, false)));
+  slide.elements.slice().sort((a,b)=>a.z-b.z).forEach(el=>{
+    host.appendChild(buildElNode(el, false));
+  });
   const canvas = await html2canvas(host, {backgroundColor:slide.bg, scale:2, width:W, height:H, useCORS:true});
   document.body.removeChild(host);
   return canvas;
@@ -813,8 +855,8 @@ async function exportAll(btn){
    RENDER ALL
    ===================================================================== */
 function renderAll(){
-  renderStoryBar();
-  fitZoom();
+  renderTabs();
+  if(!manualZoom) fitZoom();
   applyStageSize();
   renderStage();
   renderElToolbar();
