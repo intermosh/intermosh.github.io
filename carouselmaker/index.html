@@ -61,6 +61,20 @@ input{font-family:inherit;}
 }
 .floating-menu button{text-align:left;background:transparent;border:0;color:var(--text);padding:8px 10px;border-radius:6px;font-size:12px;}
 .floating-menu button:hover{background:#26272c;color:var(--accent);}
+.data-editor{
+  position:fixed;z-index:1000;background:var(--panel2);border:1px solid var(--border);border-radius:10px;
+  padding:12px;width:300px;max-width:92vw;box-shadow:0 12px 30px rgba(0,0,0,.5);
+}
+.data-editor label{display:block;font-size:11px;color:var(--mute);margin-bottom:6px;}
+.data-editor textarea{
+  width:100%;min-height:150px;background:var(--panel);border:1px solid var(--border);color:var(--text);
+  border-radius:6px;padding:8px;font-family:'JetBrains Mono',monospace;font-size:12px;resize:vertical;
+}
+.data-editor .de-actions{display:flex;gap:8px;margin-top:10px;justify-content:flex-end;}
+.data-editor button.de-btn{
+  background:var(--panel);border:1px solid var(--border);color:var(--text);padding:7px 14px;border-radius:6px;font-size:12px;
+}
+.data-editor button.de-save{background:var(--accent);color:#04222a;border-color:var(--accent);font-weight:700;}
 
 /* ===== CANVAS ===== */
 #canvas-area{
@@ -82,6 +96,7 @@ input{font-family:inherit;}
 .el.selected .grip{display:flex;}
 .grip.move{top:-11px;left:-11px;}
 .grip.resize{bottom:-11px;right:-11px;cursor:nwse-resize;}
+.grip.resize-h{bottom:-11px;left:50%;margin-left:-11px;cursor:ns-resize;}
 .accent{text-shadow:-1.5px 0 rgba(34,213,238,.85), 1.5px 0 rgba(244,114,182,.75);}
 img.el{cursor:grab;}
 @media (pointer:coarse){ .grip{display:none!important;} } /* touch uses direct drag + pinch instead of tiny handles */
@@ -103,6 +118,12 @@ img.el{cursor:grab;}
 .legend-label{font-weight:600;font-size:16px;width:140px;}
 .legend-value{font-family:'JetBrains Mono',monospace;font-size:14px;width:70px;text-align:right;}
 input:disabled{opacity:1;}
+.guide{position:absolute;z-index:900;}
+.guide-h{left:0;right:0;height:12px;cursor:ns-resize;}
+.guide-h::after{content:'';position:absolute;left:0;right:0;top:6px;border-top:1px dashed var(--accent);}
+.guide-v{top:0;bottom:0;width:12px;cursor:ew-resize;}
+.guide-v::after{content:'';position:absolute;top:0;bottom:0;left:6px;border-left:1px dashed var(--accent);}
+#guides-btn.active{background:var(--accent);color:#04222a;border-color:var(--accent);}
 
 /* ===== FLOATING ELEMENT TOOLBAR ===== */
 #el-toolbar{
@@ -139,12 +160,14 @@ input:disabled{opacity:1;}
   <div id="tabs-row"></div>
   <div id="toolbar-row">
     <div class="tool-group">
+      <button class="icon-btn" id="guides-btn" data-action="toggle-guides" data-tip="Ajustar márgenes">▦</button>
       <button class="icon-btn" data-action="dup" data-tip="Duplicar diapositiva">⧉</button>
       <button class="icon-btn" data-action="del-slide" data-tip="Eliminar diapositiva">🗑</button>
     </div>
     <div class="tool-group">
       <button class="icon-btn" data-action="add-text" data-tip="Agregar texto">Tt</button>
       <button class="icon-btn" data-action="add-image" data-tip="Insertar imagen / logo PNG">🖼</button>
+      <button class="icon-btn" data-action="add-code" data-tip="Insertar línea de código">&lt;/&gt;</button>
       <button class="icon-btn" data-action="add-line" data-tip="Insertar línea">➖</button>
       <button class="icon-btn" data-action="add-icon" data-tip="Insertar ícono circular">◎</button>
       <button class="icon-btn" data-action="add-bar" data-tip="Insertar gráfico de barras">📊</button>
@@ -231,6 +254,54 @@ function closeMenu(){
   document.removeEventListener('click', onOutsideMenuClick);
 }
 function onOutsideMenuClick(e){ if(openMenuEl && !openMenuEl.contains(e.target)) closeMenu(); }
+
+const PALETTE = ['#22d5ee','#f472b6','#ffffff','#5a5a5a','#fbbf24','#34d399','#a78bfa','#fb7185'];
+function openDataEditor(el, trigger){
+  closeMenu();
+  const panel = document.createElement('div');
+  panel.className = 'data-editor';
+  const isPie = el.type==='piechart';
+  panel.innerHTML = `<label>Una fila por barra${isPie?' / porción':''} — formato "etiqueta = valor"</label>`;
+  const ta = document.createElement('textarea');
+  ta.value = el.rows.map(r=> r.label+' = '+r.value).join('\n');
+  panel.appendChild(ta);
+  const actions = document.createElement('div'); actions.className='de-actions';
+  const cancel = document.createElement('button'); cancel.className='de-btn'; cancel.textContent='Cancelar';
+  cancel.addEventListener('click', closeMenu);
+  const save = document.createElement('button'); save.className='de-btn de-save'; save.textContent='Guardar';
+  save.addEventListener('click', ()=>{
+    const lines = ta.value.split('\n').map(l=>l.trim()).filter(Boolean);
+    if(lines.length===0){ closeMenu(); return; }
+    const newRows = lines.map((line,i)=>{
+      const idx = line.lastIndexOf('=');
+      const label = (idx>=0 ? line.slice(0,idx) : line).trim() || ('Item '+(i+1));
+      const value = idx>=0 ? parseNum(line.slice(idx+1)) : 0;
+      const prev = el.rows[i];
+      return isPie
+        ? {id: prev?prev.id:nid(), label, value, color: prev?prev.color:PALETTE[i%PALETTE.length]}
+        : {id: prev?prev.id:nid(), label, value};
+    });
+    el.rows = newRows;
+    closeMenu(); renderStage(); renderElToolbar();
+  });
+  actions.appendChild(cancel); actions.appendChild(save);
+  panel.appendChild(actions);
+  document.body.appendChild(panel);
+  const r = trigger.getBoundingClientRect();
+  let left = r.left, top = r.bottom + 6;
+  requestAnimationFrame(()=>{
+    const pr = panel.getBoundingClientRect();
+    if(pr.right > window.innerWidth-4) left = window.innerWidth - 4 - pr.width;
+    if(left < 4) left = 4;
+    if(pr.bottom > window.innerHeight-4) top = r.top - pr.height - 6;
+    panel.style.left = left+'px'; panel.style.top = top+'px';
+  });
+  panel.style.left = left+'px'; panel.style.top = top+'px';
+  openMenuEl = panel;
+  setTimeout(()=>document.addEventListener('click', onOutsideMenuClick), 0);
+  ta.addEventListener('click', e=>e.stopPropagation());
+  panel.addEventListener('click', e=>e.stopPropagation());
+}
 
 /* =====================================================================
    DATA MODEL
@@ -398,6 +469,11 @@ function buildElNode(el, interactive){
       rs.addEventListener('mousedown', e=>startResize(e, el, node));
       node.appendChild(rs);
     }
+    if(el.type==='barchart' || el.type==='piechart'){
+      const rh = document.createElement('div'); rh.className='grip resize-h'; rh.textContent='↕';
+      rh.addEventListener('mousedown', e=>startResizeHeight(e, el, node));
+      node.appendChild(rh);
+    }
     node.addEventListener('mousedown', ()=>selectElement(el.id));
     attachTouchInteractions(el, node);
   }
@@ -487,6 +563,21 @@ function startResize(e, el, node){
   function onMove(ev){
     el.width = Math.max(40, Math.round(ow+(ev.clientX-startX)/zoom)); node.style.width = el.width+'px';
     if(ratio!=null) el.height = Math.round(el.width*ratio);
+  }
+  function onUp(){
+    document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp);
+    renderStage(); renderElToolbar();
+  }
+  document.addEventListener('mousemove',onMove); document.addEventListener('mouseup',onUp);
+}
+
+function startResizeHeight(e, el, node){
+  e.preventDefault(); e.stopPropagation(); selectElement(el.id);
+  const startY=e.clientY, oh=el.height||400;
+  const wrap = node.firstChild;
+  function onMove(ev){
+    el.height = Math.max(80, Math.round(oh+(ev.clientY-startY)/zoom));
+    if(wrap) wrap.style.height = el.height+'px';
   }
   function onUp(){
     document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp);
@@ -636,6 +727,41 @@ function renderStage(){
   stage.style.background = s.bg;
   stage.innerHTML = '';
   s.elements.slice().sort((a,b)=>a.z-b.z).forEach(el=> stage.appendChild(buildElNode(el, true)));
+  renderGuidesOverlay();
+}
+
+/* =====================================================================
+   MARGIN GUIDES — shared across every slide (one set of 4 lines for the
+   whole project, not per-diapositiva).
+   ===================================================================== */
+let guidesVisible = false;
+const guides = { top:80, bottom:H-80, left:80, right:W-80 };
+function positionGuideNode(g, orientation, key){
+  if(orientation==='h') g.style.top = (guides[key]-6)+'px';
+  else g.style.left = (guides[key]-6)+'px';
+}
+function startGuideDrag(e, key, orientation, node){
+  e.preventDefault(); e.stopPropagation();
+  const startX=e.clientX, startY=e.clientY, startVal=guides[key];
+  function onMove(ev){
+    if(orientation==='h') guides[key]=Math.round(Math.max(0,Math.min(H,startVal+(ev.clientY-startY)/zoom)));
+    else guides[key]=Math.round(Math.max(0,Math.min(W,startVal+(ev.clientX-startX)/zoom)));
+    positionGuideNode(node, orientation, key);
+  }
+  function onUp(){ document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp); }
+  document.addEventListener('mousemove',onMove); document.addEventListener('mouseup',onUp);
+}
+function renderGuidesOverlay(){
+  if(!guidesVisible) return;
+  const stage = document.getElementById('stage');
+  const mk = (orientation, key)=>{
+    const g = document.createElement('div');
+    g.className = 'guide guide-'+orientation;
+    positionGuideNode(g, orientation, key);
+    g.addEventListener('mousedown', e=>startGuideDrag(e, key, orientation, g));
+    stage.appendChild(g);
+  };
+  mk('h','top'); mk('h','bottom'); mk('v','left'); mk('v','right');
 }
 
 /* =====================================================================
@@ -731,6 +857,7 @@ function renderElToolbar(){
       refresh();
     }));
     bar.appendChild(mkIconBtn('➖','Quitar última fila', ()=>{ if(el.rows.length>1) el.rows.pop(); refresh(); }));
+    bar.appendChild(mkIconBtn('📝','Asignar valores', (e)=>{ openDataEditor(el, e.currentTarget); }));
     if(el.type==='barchart'){
       const cw = document.createElement('div'); cw.className='icon-btn color-btn'; attachTooltip(cw,'Color de barras');
       const ci = document.createElement('input'); ci.type='color'; ci.value=rgbToHex(el.barColor||'#ffffff');
@@ -760,7 +887,11 @@ document.getElementById('toolbar-row').addEventListener('click', (e)=>{
   const action = btn.dataset.action;
   const els = slides[currentSlide].elements;
   const z = els.length ? Math.max(...els.map(x=>x.z))+1 : 1;
-  if(action==='dup'){
+  if(action==='toggle-guides'){
+    guidesVisible = !guidesVisible;
+    btn.classList.toggle('active', guidesVisible);
+    renderStage();
+  } else if(action==='dup'){
     const copy = JSON.parse(JSON.stringify(slides[currentSlide]));
     copy.id=nid(); copy.elements.forEach(el=>el.id=nid());
     slides.splice(currentSlide+1,0,copy); currentSlide++; selectedId=null; renderAll();
@@ -773,6 +904,10 @@ document.getElementById('toolbar-row').addEventListener('click', (e)=>{
     els.push(el); selectedId=el.id; renderStage(); renderElToolbar();
   } else if(action==='add-image'){
     document.getElementById('file-input').click();
+  } else if(action==='add-code'){
+    const el = textEl({html:'variable.x → destino.y', x:80, y:300, width:700, fontSize:20,
+      fontFamily:FONT_MONO, fontWeight:500, lineHeight:1.8, color:'#5aa9ff', box:true, z});
+    els.push(el); selectedId=el.id; renderStage(); renderElToolbar();
   } else if(action==='add-line'){
     const el = baseEl({type:'line', x:80, y:80, width:920, height:1, color:'#3a3a3a', z});
     els.push(el); selectedId=el.id; renderStage(); renderElToolbar();
