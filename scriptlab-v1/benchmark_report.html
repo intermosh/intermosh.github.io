@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>ScriptLab v4 - Benchmark Report</title>
+<style>
+  :root {
+    --bg: #1a1a1a;
+    --fg: #f5f5f5;
+    --panel: #2a2a2a;
+    --border: #333;
+    --good: #4ade80;
+    --warn: #fbbf24;
+    --bad: #f87171;
+    --accent: #7969ff;
+  }
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    max-width: 900px;
+    margin: 2rem auto;
+    line-height: 1.5;
+  }
+  h1 { text-align: center; color: var(--accent); }
+  .summary { text-align: center; margin-bottom: 2rem; color: #aaa; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .card h2 { margin-top: 0; color: var(--fg); font-size: 1.3rem; }
+  .meta { display: flex; gap: 1rem; color: #888; font-size: 0.9rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .score-box { text-align: center; padding: 1rem; border-radius: 6px; background: rgba(0,0,0,0.2); }
+  .score-box .num { font-size: 2.5rem; font-weight: bold; }
+  .score-box .label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #aaa; }
+  .good { color: var(--good); }
+  .warn { color: var(--warn); }
+  .bad { color: var(--bad); }
+  ul { margin: 0.5rem 0; padding-left: 1.5rem; }
+  li { margin-bottom: 0.25rem; font-size: 0.95rem; }
+  .insights li { color: var(--good); }
+  .risks li { color: var(--warn); }
+  .risks li.critical { color: var(--bad); }
+  table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+  th, td { padding: 0.5rem; border-bottom: 1px solid var(--border); text-align: left; font-size: 0.9rem; }
+  th { color: #888; text-transform: uppercase; font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<h1>Benchmark Test Report</h1>
+<p class="summary">Motor de Retención Heurístico (APV) - ScriptLab v4 RC</p>
+<div class="card">
+      <h2>El truco de los 2 minutos que cambia cómo funciona tu cerebro</h2>
+      <div class="meta">
+        <span><b>Archivo:</b> benchmark-espectacular.scriptlab.json</span>
+        <span><b>Bloques:</b> 10</span>
+        <span><b>Confianza:</b> 80%</span>
+      </div>
+      
+      <div class="grid">
+        <div class="score-box">
+          <div class="label">Retención APV</div>
+          <div class="num good">80%</div>
+        </div>
+        <div>
+          <div style="margin-bottom:1rem">
+            <b>Insights Positivos:</b>
+            <ul class="insights">
+              <li>✓ Hook fuerte: Longitud óptima del hook (15-80 palabras), Contiene pregunta (curiosity gap), Contiene datos/números, Fuerte alineación con promesa, Lenguaje de urgencia/curiosidad</li><li>✓ Retención estimada alta (80% APV)</li>
+            </ul>
+          </div>
+          <div>
+            <b>Riesgos / Problemas:</b>
+            <ul class="risks">
+              <li>Sin riesgos detectados</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <table>
+        <tr>
+          <th>Métrica</th>
+          <th>Puntaje</th>
+        </tr>
+        <tr><td>Hook</td><td class="good">90/100</td></tr>
+        <tr><td>Ritmo (Pacing)</td><td class="good">75/100</td></tr>
+        <tr><td>Pattern Interrupts</td><td class="good">70/100</td></tr>
+        <tr><td>Densidad de Contenido</td><td class="good">85/100</td></tr>
+        <tr><td>Entrega de Promesa</td><td class="good">70/100</td></tr>
+        <tr><td>Legibilidad</td><td class="good">70/100</td></tr>
+        <tr><td>CTA</td><td class="good">80/100</td></tr>
+        <tr><td>Narrativa (Compleción)</td><td class="good">100/100</td></tr>
+      </table>
+    </div><div class="card">
+      <h2>Cómo ser más productivo</h2>
+      <div class="meta">
+        <span><b>Archivo:</b> benchmark-malo.scriptlab.json</span>
+        <span><b>Bloques:</b> 3</span>
+        <span><b>Confianza:</b> 45%</span>
+      </div>
+      
+      <div class="grid">
+        <div class="score-box">
+          <div class="label">Retención APV</div>
+          <div class="num bad">29%</div>
+        </div>
+        <div>
+          <div style="margin-bottom:1rem">
+            <b>Insights Positivos:</b>
+            <ul class="insights">
+              <li>✗ Retención estimada baja (29% APV)</li>
+            </ul>
+          </div>
+          <div>
+            <b>Riesgos / Problemas:</b>
+            <ul class="risks">
+              <li class="critical">✗ Hook débil: Hook largo pero aceptable, Débil alineación con promesa, Lenguaje de urgencia/curiosidad, (Hook implícito — primer bloque con características de hook)</li><li class="">⚠ Ritmo irregular: Duración promedio óptima (38s), Ritmo monótono (CV ≤0.15), Sin bloques >50s, Oraciones monótonas</li><li class="">⚠ Pocos cambios de ritmo narrativo</li><li class="critical">✗ La promesa nunca se cumple en el guion</li><li class="">⚠ Sin CTA definido</li><li class="">⚠ Faltan elementos: Hook, Contexto, Evidencia, CTA</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <table>
+        <tr>
+          <th>Métrica</th>
+          <th>Puntaje</th>
+        </tr>
+        <tr><td>Hook</td><td class="bad">24/100</td></tr>
+        <tr><td>Ritmo (Pacing)</td><td class="warn">45/100</td></tr>
+        <tr><td>Pattern Interrupts</td><td class="warn">30/100</td></tr>
+        <tr><td>Densidad de Contenido</td><td class="warn">35/100</td></tr>
+        <tr><td>Entrega de Promesa</td><td class="bad">20/100</td></tr>
+        <tr><td>Legibilidad</td><td class="warn">25/100</td></tr>
+        <tr><td>CTA</td><td class="warn">30/100</td></tr>
+        <tr><td>Narrativa (Compleción)</td><td class="bad">0/100</td></tr>
+      </table>
+    </div><div class="card">
+      <h2>Por qué el cielo es azul (y no es por lo que te dijeron)</h2>
+      <div class="meta">
+        <span><b>Archivo:</b> benchmark-medio.scriptlab.json</span>
+        <span><b>Bloques:</b> 5</span>
+        <span><b>Confianza:</b> 55%</span>
+      </div>
+      
+      <div class="grid">
+        <div class="score-box">
+          <div class="label">Retención APV</div>
+          <div class="num good">64%</div>
+        </div>
+        <div>
+          <div style="margin-bottom:1rem">
+            <b>Insights Positivos:</b>
+            <ul class="insights">
+              <li>✓ Retención estimada alta (64% APV)</li>
+            </ul>
+          </div>
+          <div>
+            <b>Riesgos / Problemas:</b>
+            <ul class="risks">
+              <li class="">⚠ Hook mejorable: Longitud óptima del hook (15-80 palabras), Contiene pregunta (curiosity gap), Alineación parcial con promesa</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <table>
+        <tr>
+          <th>Métrica</th>
+          <th>Puntaje</th>
+        </tr>
+        <tr><td>Hook</td><td class="bad">57/100</td></tr>
+        <tr><td>Ritmo (Pacing)</td><td class="good">65/100</td></tr>
+        <tr><td>Pattern Interrupts</td><td class="good">89/100</td></tr>
+        <tr><td>Densidad de Contenido</td><td class="warn">35/100</td></tr>
+        <tr><td>Entrega de Promesa</td><td class="good">70/100</td></tr>
+        <tr><td>Legibilidad</td><td class="good">70/100</td></tr>
+        <tr><td>CTA</td><td class="good">70/100</td></tr>
+        <tr><td>Narrativa (Compleción)</td><td class="good">80/100</td></tr>
+      </table>
+    </div><div class="card">
+      <h2>Videojuegos de Mentes Perturbadas — El art brut moderno</h2>
+      <div class="meta">
+        <span><b>Archivo:</b> benchmark-mentes-perturbadas.scriptlab.json</span>
+        <span><b>Bloques:</b> 15</span>
+        <span><b>Confianza:</b> 85%</span>
+      </div>
+      
+      <div class="grid">
+        <div class="score-box">
+          <div class="label">Retención APV</div>
+          <div class="num good">62%</div>
+        </div>
+        <div>
+          <div style="margin-bottom:1rem">
+            <b>Insights Positivos:</b>
+            <ul class="insights">
+              <li>✓ Retención estimada alta (62% APV)</li>
+            </ul>
+          </div>
+          <div>
+            <b>Riesgos / Problemas:</b>
+            <ul class="risks">
+              <li class="">⚠ Hook mejorable: Longitud óptima del hook (15-80 palabras), Contiene datos/números, Alineación parcial con promesa</li><li class="">⚠ Ritmo irregular: Bloques algo largos, Buen ritmo variable (CV: 0.50), 6 bloque(s) >50s, Buena varianza de oraciones</li><li class="">⚠ La promesa se entrega muy tarde (>60% del video)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <table>
+        <tr>
+          <th>Métrica</th>
+          <th>Puntaje</th>
+        </tr>
+        <tr><td>Hook</td><td class="bad">50/100</td></tr>
+        <tr><td>Ritmo (Pacing)</td><td class="warn">47/100</td></tr>
+        <tr><td>Pattern Interrupts</td><td class="good">94/100</td></tr>
+        <tr><td>Densidad de Contenido</td><td class="good">65/100</td></tr>
+        <tr><td>Entrega de Promesa</td><td class="bad">50/100</td></tr>
+        <tr><td>Legibilidad</td><td class="good">85/100</td></tr>
+        <tr><td>CTA</td><td class="good">50/100</td></tr>
+        <tr><td>Narrativa (Compleción)</td><td class="good">90/100</td></tr>
+      </table>
+    </div><div class="card" style="text-align:center">
+  <h2>Estado General del Motor</h2>
+  <p class="num good" style="font-size: 2rem;">
+    ✓ Flujo de ejecución sin fallas
+  </p>
+  <p>4 de 4 guiones procesados correctamente.</p>
+</div></body></html>

@@ -58,11 +58,21 @@ export function exportHTML(project, analysis) {
     '<p>' + clean(b.content).replace(/\n/g, '<br>') + '</p></section>'
   ).join('');
   download(
-    '<!doctype html><meta charset="utf-8"><title>' + clean(project.title) + '</title>' +
-    '<style>body{font:16px system-ui;max-width:780px;margin:40px auto;line-height:1.6;color:#222}' +
-    'section{border-left:4px solid #7969ff;padding:10px 20px;margin:15px 0;background:#fafafa}' +
-    'small{color:#666}</style><h1>' + clean(project.title) + '</h1><p><strong>Promesa:</strong> ' + clean(project.promise) + '</p>' +
-    '<p>Salud del guion: ' + (analysis?.score || 0) + '/100</p>' + blocks,
+    '<!doctype html><html lang="es"><head><meta charset="utf-8"><title>' + clean(project.title) + '</title>' +
+    '<style>' +
+    ':root { --bg: #fff; --fg: #222; --accent: #7969ff; --sec-bg: #fafafa; --sec-border: #7969ff; --text-muted: #666; }' +
+    '.dark { --bg: #16161c; --fg: #f3f3f5; --sec-bg: #1a1a24; --sec-border: #7969ff; --text-muted: #9ca3af; }' +
+    'body{font:16px system-ui;max-width:780px;margin:40px auto;line-height:1.6;color:var(--fg);background:var(--bg); transition: background 0.2s, color 0.2s;}' +
+    'section{border-left:4px solid var(--sec-border);padding:10px 20px;margin:15px 0;background:var(--sec-bg)}' +
+    'small{color:var(--text-muted)}' +
+    '#theme-btn { position: fixed; top: 20px; right: 20px; background: transparent; color: var(--fg); border: 1px solid var(--fg); border-radius: 20px; padding: 6px 12px; cursor: pointer; font-family: inherit; font-size: 13px; }' +
+    '@media print { #theme-btn { display: none; } }' +
+    '</style></head><body class="dark">' +
+    '<button id="theme-btn">◐ Alternar tema</button>' +
+    '<h1>' + clean(project.title) + '</h1><p><strong>Promesa:</strong> ' + clean(project.promise) + '</p>' +
+    '<p>Salud del guion: ' + (analysis?.score || 0) + '/100</p>' + blocks +
+    '<script>document.getElementById("theme-btn").onclick = () => document.body.classList.toggle("dark");</script>' +
+    '</body></html>',
     fileSlug(project.title) + '.html',
     'text/html'
   );
@@ -213,9 +223,32 @@ export async function exportReportHTML(state, results) {
     details { display: block; }
     details > summary { display: none; } /* Open details for printing */
     details > div { display: block !important; margin-top: 10px; }
+    
+    /* Floating theme toggle button */
+    #theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--panel);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 18px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #theme-toggle:hover { background: var(--panel2); }
+    @media print { #theme-toggle { display: none !important; } }
   </style>
 </head>
 <body class="dark">
+  <button id="theme-toggle" aria-label="Alternar tema" title="Alternar tema">◐</button>
   <h1 style="text-align:center; margin-bottom:40px; color: var(--fg)">Reporte de Diagnóstico: ${title}</h1>
   ${metricsNode.innerHTML}`;
 
@@ -225,7 +258,11 @@ export async function exportReportHTML(state, results) {
     ${iaNode.innerHTML}`;
   }
 
-  html += `</body></html>`;
+  html += `<script>
+    document.getElementById('theme-toggle').onclick = function() {
+      document.body.classList.toggle('light');
+    };
+  </script></body></html>`;
   download(html, fileSlug(title) + '-diagnostic.html', 'text/html');
 }
 

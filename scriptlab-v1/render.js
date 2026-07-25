@@ -8,7 +8,7 @@ import { analysis, quality } from './scoring.js';
 import { wordCount, durationInSeconds } from './ai-shared.js';
 import { all, put } from './db.js';
 import { scheduleAI, scheduleSentiment, scheduleRetention, setRenderCallbacks, workerSend } from './workers.js';
-import { analyzeCognitiveLoad } from './retention-engine.js';
+import { analyzeCognitiveLoad, computeRetentionPrediction } from './retention-engine.js';
 
 const $ = s => document.querySelector(s);
 /* Chart.js eliminado (D16). Curva de retención → SVG inline. */
@@ -525,9 +525,55 @@ export function view(id) {
   document.querySelectorAll('.view').forEach(x => x.classList.toggle('on', x.dataset.view === id));
 }
 
+/* ============================================================
+   Undo/Redo — snapshot stack (max 30 entries)
+   ============================================================ */
+const _MAX_UNDO = 30;
+
+function _pushUndo() {
+  if (!state.p) return;
+  const snap = { blocks: structuredClone(state.p.blocks), title: state.p.title, promise: state.p.promise };
+  const last = state._undoStack?.[state._undoStack.length - 1];
+  if (last && JSON.stringify(last.blocks) === JSON.stringify(snap.blocks) && last.title === snap.title && last.promise === snap.promise) return;
+  if (!state._undoStack) state._undoStack = [];
+  state._undoStack.push(snap);
+  if (state._undoStack.length > _MAX_UNDO) state._undoStack.shift();
+  state._redoStack = [];
+}
+
+export function undo() {
+  if (!state._undoStack?.length) return;
+  const current = { blocks: structuredClone(state.p.blocks), title: state.p.title, promise: state.p.promise };
+  if (!state._redoStack) state._redoStack = [];
+  state._redoStack.push(current);
+  const snap = state._undoStack.pop();
+  state.p.blocks = snap.blocks;
+  state.p.title = snap.title;
+  state.p.promise = snap.promise;
+  state.flowDirty = true;
+  markAnalysisDirty();
+  render();
+}
+
+export function redo() {
+  if (!state._redoStack?.length) return;
+  const current = { blocks: structuredClone(state.p.blocks), title: state.p.title, promise: state.p.promise };
+  if (!state._undoStack) state._undoStack = [];
+  state._undoStack.push(current);
+  const snap = state._redoStack.pop();
+  state.p.blocks = snap.blocks;
+  state.p.title = snap.title;
+  state.p.promise = snap.promise;
+  state.flowDirty = true;
+  markAnalysisDirty();
+  render();
+}
+
 export function saveDebounced() {
   markAnalysisDirty();
   clearTimeout(state.timer);
+  _pushUndo();
+  _showSaveIndicator('saving');
   state.timer = setTimeout(async () => {
     const proj = state.p;
     proj.title = document.querySelector('#title')?.value || 'Nuevo guion';
@@ -538,7 +584,32 @@ export function saveDebounced() {
       proj.lastSnapshotAt = Date.now();
       await put('snapshots', { id: crypto.randomUUID(), projectId: proj.id, createdAt: proj.lastSnapshotAt, data: structuredClone(proj) });
     }
+    _showSaveIndicator('saved');
   }, 350);
+}
+
+function _showSaveIndicator(status) {
+  let el = document.querySelector('#autosave-indicator');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'autosave-indicator';
+    el.style.cssText = 'position:fixed;bottom:12px;right:12px;z-index:999;font-size:11px;padding:4px 10px;border-radius:6px;opacity:0;transition:opacity .3s;pointer-events:none';
+    document.body.appendChild(el);
+  }
+  if (status === 'saving') {
+    el.textContent = 'Guardando…';
+    el.style.background = 'var(--panel2)';
+    el.style.color = 'var(--muted)';
+    el.style.border = '1px solid var(--border)';
+    el.style.opacity = '1';
+  } else if (status === 'saved') {
+    el.textContent = '✓ Guardado';
+    el.style.background = 'rgba(92,219,135,.12)';
+    el.style.color = 'var(--good)';
+    el.style.border = '1px solid rgba(92,219,135,.2)';
+    el.style.opacity = '1';
+    setTimeout(() => { el.style.opacity = '0'; }, 1500);
+  }
 }
 
 export function addBlock(type = 'HOOK', insertBefore = null) {
@@ -697,114 +768,161 @@ function renderRetentionCurveSVG(curve) {
    Movid desde main.js para respetar §13: render.js maneja todo el DOM,
    main.js solo orquesta. main.js las importa y las llama desde runDeep().
    ============================================================ */
-export function renderExtractive(result) {
-  const root = $('#extractive-block');
-  if (!root) return;
-  const sentences = result.sentences || [];
-  if (!sentences.length) {
-    root.innerHTML = '<div class="deep-empty">Sin oraciones suficientes.</div>';
-    return;
-  }
-  root.innerHTML = '<p style="font-size:11px;color:var(--faint);margin-bottom:6px">Ideas centrales:</p>' +
-    sentences.map(s =>
-      '<div class="key-sentence">' + esc(s.text) + '<span class="score-badge">Relevancia: ' + Math.round((s.score || 0) * 100) + '%</span></div>'
-    ).join('');
-}
-
-export function renderRedundancy(result) {
-  const root = $('#redundancy-block');
-  if (!root) return;
-  let html = '<p style="font-size:11px;color:var(--faint);margin-bottom:6px">Repetición: ' +
-    (result.redundantCount || 0) + ' redundancias · ' + (result.contrastCount || 0) + ' contrastes válidos</p>';
-
-  if (result.redundantPairs && result.redundantPairs.length) {
-    html += result.redundantPairs.slice(0, 6).map(pair =>
-      '<div class="redundancy-pair"><span class="sim-tag high">' + Math.round(pair.similarity * 100) + '%</span>' +
-      '<blockquote>' + esc(pair.textA.substring(0, 120)) + '</blockquote>' +
-      '<blockquote>' + esc(pair.textB.substring(0, 120)) + '</blockquote></div>'
-    ).join('');
-  }
-  if (result.contrastPairs && result.contrastPairs.length) {
-    html += '<p style="font-size:11px;color:var(--teal);margin:8px 0 4px">Contrastes narrativos (válidos):</p>';
-    html += result.contrastPairs.slice(0, 4).map(pair =>
-      '<div class="redundancy-pair contrast"><span class="sim-tag contrast">' + Math.round(pair.similarity * 100) + '% · Δ' + (pair.valenceDiff || 0).toFixed(2) + '</span>' +
-      '<blockquote>' + esc(pair.textA.substring(0, 120)) + '</blockquote>' +
-      '<blockquote>' + esc(pair.textB.substring(0, 120)) + '</blockquote></div>'
-    ).join('');
-  }
-  if (!result.redundantPairs?.length && !result.contrastPairs?.length) {
-    html += '<div class="deep-empty" style="color:var(--good)">✓ Sin redundancias detectadas.</div>';
-  }
-  root.innerHTML = html;
-}
-
-export function renderDensity(result) {
-  const root = $('#density-block');
-  if (!root) return;
-  const changes = result.changes || [];
-  const totalSegments = Number(result.totalSegments || result.segments?.length || 0);
-  if (!totalSegments) {
-    root.innerHTML = '<div class="density-card"><span class="density-info">Ritmo de temas</span><p class="density-explainer">Escribí contenido suficiente para estimar temas por minuto.</p></div>';
-    return;
-  }
-  const topicCount = Number.isFinite(Number(result.topicCount)) ? Number(result.topicCount) : changes.length + 1;
-  const topicsPerMinute = Number.isFinite(Number(result.topicsPerMinute)) && Number(result.topicsPerMinute) > 0
-    ? Number(result.topicsPerMinute)
-    : topicCount / totalSegments;
-  let html = '<div class="density-card">' +
-    '<div class="density-card-head"><div><span class="density-value">' + topicsPerMinute.toFixed(1) + '</span>' +
-    '<span class="density-unit">temas/min aprox.</span></div>' +
-    '<span class="density-info">Ritmo de temas</span></div>' +
-    '<p class="density-explainer">Temas nuevos detectados por minuto. Se calcula comparando segmentos consecutivos del guion.</p>' +
-    '<div class="density-meta">' + topicCount + ' temas estimados · ' + changes.length + ' cambios de tema · ' + totalSegments + ' segmentos</div>' +
-    '</div>';
-  if (changes.length) {
-    html += changes.slice(0, 5).map(c =>
-      '<div class="density-change">Cambio temático tras segmento ' + (c.afterSegment + 1) + ' · similitud ' + Math.round(c.similarity * 100) + '%</div>'
-    ).join('');
-  } else {
-    html += '<div class="density-change density-none">No se detectaron cortes temáticos fuertes entre segmentos.</div>';
-  }
-  root.innerHTML = html;
-}
-
-export function renderGaps() {
-  const root = $('#gaps-block');
-  if (!root) return Promise.resolve();
+export function renderGapsObj() {
   const proj = state.p;
   const structuralTopics = PREDEFINED_TOPICS.filter(t => t.kind === 'structural');
   const semanticTopics = PREDEFINED_TOPICS.filter(t => t.kind === 'semantic');
 
-  let html = '<p style="font-size:11px;color:var(--faint);margin-bottom:6px">Estructura del guion:</p><div class="chips">';
-  structuralTopics.forEach(t => {
-    const has = proj.blocks.some(b => b.type === t.blockType);
-    html += '<span class="schip ' + (has ? 'ok' : 'no') + '">' + (has ? '✓' : '✗') + ' ' + t.label + '</span>';
-  });
-  html += '</div>';
+  const structural = structuralTopics.map(t => ({
+    label: t.label,
+    has: proj.blocks.some(b => b.type === t.blockType)
+  }));
 
-  // Cobertura semántica (requiere IA)
   if (state.mode !== 'ia' || !state.worker) {
-    html += '<p style="font-size:11px;color:var(--faint);margin-top:10px">Cobertura semántica: activá el Modo IA.</p>';
-    root.innerHTML = html;
-    return Promise.resolve();  // Bug 1 fix: siempre retorna Promise
+    return Promise.resolve({ structural, semantic: null });
   }
 
   const blocks = proj.blocks.map(b => b.content).filter(t => t && t.trim());
   if (!blocks.length) {
-    root.innerHTML = html;
-    return Promise.resolve();  // Bug 1 fix
+    return Promise.resolve({ structural, semantic: null });
   }
 
-  // Bug 1 fix: retornar la promise del workerSend para que runDeep la espere.
   return workerSend('DETECT_GAPS', { blocks, topics: semanticTopics })
-    .then(result => {
-      let semHtml = '<p style="font-size:11px;color:var(--faint);margin-top:10px">Cobertura semántica (IA):</p><div class="gaps-list">';
-      result.gaps.forEach(g => { semHtml += '<div class="gap-item"><div class="gap-topic">' + esc(g.topic) + '</div><small>Mejor match: ' + Math.round(g.maxSimilarity * 100) + '%</small></div>'; });
-      result.covered.forEach(g => { semHtml += '<div class="gap-item covered"><div class="gap-topic">' + esc(g.topic) + '</div><small>Cubierto (' + Math.round(g.maxSimilarity * 100) + '%)</small></div>'; });
-      semHtml += '</div>';
-      root.innerHTML = html + semHtml;
-    })
-    .catch(err => { root.innerHTML = html + '<div class="deep-empty">Error: ' + esc(err.message) + '</div>'; });
+    .then(result => ({ structural, semantic: result }));
+}
+
+export function renderDeepReport(results) {
+  const root = $('#deep-report');
+  if (!root) return;
+  root.hidden = false;
+
+  const proj = state.p;
+
+  // Fix: Sync fallback for retention data if it's not ready
+  let rData = state.retentionResult;
+  if (!rData || !rData.scores) {
+    rData = computeRetentionPrediction({
+      blocks: proj.blocks,
+      wpm: proj.wpm || 150,
+      promise: proj.promise || '',
+      title: proj.title || ''
+    });
+  }
+  const scores = rData.scores || {};
+
+  const issues = [];
+  let retentionMod = 0;
+
+  // Fix: Partial AI Failure warning
+  if (results.extractiveError || results.redundancyError || results.densityError || results.gapsError) {
+    issues.push({
+      type: 'red',
+      title: 'Fallo Parcial de IA',
+      desc: 'Algunos módulos semánticos fallaron al procesarse. Los resultados podrían estar incompletos.',
+      impact: 'Advertencia del Sistema'
+    });
+  }
+
+  // Fix: Missing Emotional Context warning
+  if (!state.sentimentResult || !state.sentimentResult.sentimentArc || state.sentimentResult.sentimentArc.length === 0) {
+    if (state.mode === 'ia') {
+      issues.push({
+        type: 'yellow',
+        title: 'Falta Contexto Emocional',
+        desc: 'Esperando análisis de sentimiento. La detección de redundancia podría producir falsos positivos.',
+        impact: 'Advertencia de Contexto'
+      });
+    }
+  }
+  
+  // Hook
+  const hookScore = scores.hook?.score || 0;
+  if (hookScore < 50) {
+    issues.push({
+      type: 'red',
+      title: 'Gancho Débil',
+      desc: 'El inicio no captura la atención ni hace una promesa fuerte.',
+      impact: '+15% retención'
+    });
+  }
+
+  // Structure / Missing elements
+  if (results.gaps?.structural) {
+    const missingStruct = results.gaps.structural.filter(s => !s.has);
+    if (missingStruct.length > 0) {
+      issues.push({
+        type: 'yellow',
+        title: 'Faltan Elementos Narrativos',
+        desc: 'Considerá agregar: ' + missingStruct.map(s => s.label).join(', '),
+        impact: '+10% retención'
+      });
+    }
+  }
+
+  // Pacing
+  const pacingScore = scores.pacing?.score || 0;
+  if (pacingScore < 50) {
+    issues.push({
+      type: 'yellow',
+      title: 'Problemas de Ritmo',
+      desc: 'Las oraciones son monótonas o los bloques son muy largos sin pausas cognitivas.',
+      impact: '+12% retención'
+    });
+  }
+
+  // Redundancy
+  if (results.redundancy && results.redundancy.redundantPairs?.length > 0) {
+    issues.push({
+      type: 'yellow',
+      title: 'Contenido Repetitivo',
+      desc: results.redundancy.redundantPairs.length + ' ideas repetidas sin contraste narrativo. Considerá recortarlas.',
+      impact: '+5% pacing'
+    });
+  }
+
+  // Density
+  if (results.density && results.density.topicsPerMinute < 1) {
+    issues.push({
+      type: 'red',
+      title: 'Baja Densidad de Contenido',
+      desc: 'Solo ' + results.density.topicsPerMinute.toFixed(1) + ' temas por minuto. La audiencia podría aburrirse.',
+      impact: '+15% retención'
+    });
+  }
+
+  // CTA
+  const ctaScore = scores.cta?.score || 0;
+  if (ctaScore < 50 && proj.blocks.some(b => b.type === 'CTA')) {
+    issues.push({
+      type: 'yellow',
+      title: 'CTA Débil',
+      desc: 'El llamado a la acción carece de urgencia o verbos de acción.',
+      impact: '+8% engagement'
+    });
+  }
+
+  const overallScore = Math.round(rData.overallRetention || 0);
+  const status = overallScore >= 60 ? 'Bueno' : overallScore >= 40 ? 'Necesita trabajo' : 'Crítico';
+
+  $('#report-overall-score').textContent = overallScore;
+  $('#report-overall-status').textContent = status;
+  $('#report-issue-count').textContent = issues.length + ' problemas encontrados';
+  $('#report-hook-score').textContent = hookScore;
+  $('#report-struct-score').textContent = scores.narrative?.score || 0;
+  $('#report-pacing-score').textContent = pacingScore;
+
+  const issuesList = $('#report-issues-list');
+  if (issues.length === 0) {
+    issuesList.innerHTML = '<div class="issue-item" style="border-left-color: var(--good)"><div class="issue-title">¡Todo excelente!</div><div class="issue-desc">No se encontraron problemas críticos en el guion.</div></div>';
+  } else {
+    issuesList.innerHTML = issues.map(i => 
+      '<div class="issue-item ' + i.type + '">' +
+        '<div class="issue-title">' + esc(i.title) + '</div>' +
+        '<div class="issue-desc">' + esc(i.desc) + '</div>' +
+        '<div class="issue-impact">' + esc(i.impact) + '</div>' +
+      '</div>'
+    ).join('');
+  }
 }
 
 /* ============================================================

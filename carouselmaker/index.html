@@ -124,6 +124,20 @@ input:disabled{opacity:1;}
 .guide-v{top:0;bottom:0;width:12px;cursor:ew-resize;}
 .guide-v::after{content:'';position:absolute;top:0;bottom:0;left:6px;border-left:1px dashed var(--accent);}
 #guides-btn.active{background:var(--accent);color:#04222a;border-color:var(--accent);}
+.icon-btn:disabled{opacity:.35;pointer-events:none;}
+#toast{
+  position:fixed;top:14px;left:50%;transform:translateX(-50%) translateY(-140%);z-index:2000;
+  background:#1c1d20;border:1px solid var(--border);color:var(--text);padding:9px 16px;border-radius:8px;
+  font-size:12px;box-shadow:0 10px 30px rgba(0,0,0,.4);transition:transform .25s;
+}
+#toast.show{transform:translateX(-50%) translateY(0);}
+#toast.error{border-color:#e05c5c;color:#ffb4b4;}
+.num-input{
+  width:46px;height:32px;background:var(--panel2);border:1px solid var(--border);color:var(--text);
+  border-radius:6px;font-size:11px;text-align:center;font-family:'JetBrains Mono',monospace;
+}
+.num-wrap{display:flex;flex-direction:column;align-items:center;gap:1px;}
+.num-wrap span{font-size:8px;color:var(--mute);letter-spacing:.5px;text-transform:uppercase;}
 
 /* ===== FLOATING ELEMENT TOOLBAR ===== */
 #el-toolbar{
@@ -161,6 +175,7 @@ input:disabled{opacity:1;}
   <div id="toolbar-row">
     <div class="tool-group">
       <button class="icon-btn" id="guides-btn" data-action="toggle-guides" data-tip="Ajustar márgenes">▦</button>
+      <button class="icon-btn" data-action="size" data-tip="Tamaño del carrusel">⬚</button>
       <button class="icon-btn" data-action="dup" data-tip="Duplicar diapositiva">⧉</button>
       <button class="icon-btn" data-action="del-slide" data-tip="Eliminar diapositiva">🗑</button>
     </div>
@@ -172,6 +187,12 @@ input:disabled{opacity:1;}
       <button class="icon-btn" data-action="add-icon" data-tip="Insertar ícono circular">◎</button>
       <button class="icon-btn" data-action="add-bar" data-tip="Insertar gráfico de barras">📊</button>
       <button class="icon-btn" data-action="add-pie" data-tip="Insertar gráfico de torta">🥧</button>
+    </div>
+    <div class="tool-group">
+      <button class="icon-btn" id="undo-btn" data-action="undo" data-tip="Deshacer (Ctrl+Z)">↶</button>
+      <button class="icon-btn" id="redo-btn" data-action="redo" data-tip="Rehacer (Ctrl+Shift+Z)">↷</button>
+      <button class="icon-btn" data-action="save-project" data-tip="Guardar proyecto (.json)">💾</button>
+      <button class="icon-btn" data-action="open-project" data-tip="Abrir proyecto (.json)">📂</button>
     </div>
     <div class="tool-group">
       <button class="icon-btn" data-action="zoom-out" data-tip="Alejar">－</button>
@@ -192,6 +213,8 @@ input:disabled{opacity:1;}
 <div id="hint-empty" class="hint-empty">Tocá un elemento para editarlo</div>
 <div id="trash-zone">🗑</div>
 <input type="file" id="file-input" accept="image/*" style="display:none;">
+<input type="file" id="project-input" accept="application/json,.json" style="display:none;">
+<div id="toast"></div>
 <div id="gtooltip"></div>
 
 <script>
@@ -282,7 +305,7 @@ function openDataEditor(el, trigger){
         : {id: prev?prev.id:nid(), label, value};
     });
     el.rows = newRows;
-    closeMenu(); renderStage(); renderElToolbar();
+    closeMenu(); renderStage(); renderElToolbar(); pushHistory();
   });
   actions.appendChild(cancel); actions.appendChild(save);
   panel.appendChild(actions);
@@ -314,9 +337,13 @@ let manualZoom = false;
 let uid = 1;
 const nid = () => 'el' + (uid++);
 
-const FONT_TITLE = "'Poppins',sans-serif";
+const FONT_TITLE = "'Century Gothic Paneuropean','Century Gothic',Arial,sans-serif";
 const FONT_MONO = "'JetBrains Mono',monospace";
-const W = 1080, H = 1350;
+/* Canonical space templates are authored in; actual canvas W/H below can differ
+   and every template is auto-scaled into it (see scaleElementsToCanvas). */
+const BASE_W = 1080, BASE_H = 1350;
+const SIZE_PRESETS = { '1024x1278':{w:1024,h:1278}, '1024x1024':{w:1024,h:1024} };
+let W = 1024, H = 1278;
 
 /* Exact brand isotype, geometry copied from manual_09.html (concentric rings + 8-point diamond) */
 const ICON_SVG = `<svg viewBox="0 0 40 40" width="100%" height="100%" style="display:block;">
@@ -338,13 +365,26 @@ function textEl(o){
   }, o));
 }
 
-/* ===== TEMPLATES ===== */
+/* ===== LOGO — one shared size/position for the whole project. Editing it on
+   any slide updates every other slide that currently shows it; deleting it
+   only removes it from that one slide; re-adding it restores the last
+   known transform. ===== */
+let logoTransform = { x:Math.round(960*W/BASE_W), y:Math.round(1220*H/BASE_H), width:Math.round(60*Math.min(W/BASE_W,H/BASE_H)) };
+function makeIconEl(z){ return baseEl({type:'icon', x:logoTransform.x, y:logoTransform.y, width:logoTransform.width, color:'#eaeaea', z:z||1}); }
+function syncLogoTransform(el){
+  logoTransform = { x:el.x, y:el.y, width:el.width };
+  slides.forEach(s=> s.elements.forEach(e=>{
+    if(e.type==='icon'){ e.x=logoTransform.x; e.y=logoTransform.y; e.width=logoTransform.width; }
+  }));
+}
+
+/* ===== TEMPLATES (authored at BASE_W x BASE_H, auto-scaled to the active canvas size) ===== */
 function tplPortada(){
   return [
     baseEl({type:'line', x:80, y:80, width:920, height:1, color:'#3a3a3a'}),
     textEl({html:'no le pedí<br>un <span class="accent">synth</span>.', x:80, y:290, width:820, fontSize:56, lineHeight:1.18}),
     textEl({html:'le di instrucciones<br>para que construyera<br>uno.', x:80, y:530, width:700, fontSize:26, fontWeight:400, lineHeight:1.55, color:'#c9c9c9'}),
-    baseEl({type:'icon', x:960, y:1220, width:60, color:'#eaeaea'})
+    makeIconEl()
   ];
 }
 function tplDeconstruccion(){
@@ -352,14 +392,14 @@ function tplDeconstruccion(){
     textEl({html:'deconstrucción', x:80, y:80, width:400, fontSize:16, fontWeight:600, letterSpacing:1, color:'#8a8a8a'}),
     textEl({html:'mano.pitch → osc.freq<br>mano.abre → filter.cutoff', x:80, y:150, width:700, fontSize:22, fontFamily:FONT_MONO, fontWeight:500, lineHeight:2, color:'#5aa9ff', box:true}),
     textEl({html:'mapeo gesto → parámetro,<br>línea por línea.', x:80, y:430, width:800, fontSize:38, lineHeight:1.3}),
-    baseEl({type:'icon', x:960, y:1220, width:60, color:'#eaeaea'})
+    makeIconEl()
   ];
 }
 function tplCta(){
   return [
     textEl({html:'<span class="accent">copiá</span> el prompt.<br>probalo.<br>contame qué<br>generaste.', x:80, y:420, width:820, fontSize:44, lineHeight:1.3}),
     textEl({html:'@tallerdeia', x:80, y:1240, width:300, fontSize:15, fontWeight:400, color:'#8a8a8a'}),
-    baseEl({type:'icon', x:960, y:1220, width:60, color:'#eaeaea'})
+    makeIconEl()
   ];
 }
 function tplBar(){
@@ -371,7 +411,7 @@ function tplBar(){
       {id:nid(),label:'Claude',value:200000},{id:nid(),label:'KIMI',value:128000},
       {id:nid(),label:'Gemini',value:32000},{id:nid(),label:'ChatGPT',value:16000}
     ]}),
-    baseEl({type:'icon', x:960, y:1220, width:60, color:'#eaeaea'})
+    makeIconEl()
   ];
 }
 function tplPie(){
@@ -381,10 +421,10 @@ function tplPie(){
       {id:nid(),label:'DeepSeek',value:35,color:'#22d5ee'},{id:nid(),label:'Claude',value:25,color:'#f472b6'},
       {id:nid(),label:'GPT',value:20,color:'#ffffff'},{id:nid(),label:'Otros',value:20,color:'#5a5a5a'}
     ]}),
-    baseEl({type:'icon', x:960, y:1220, width:60, color:'#eaeaea'})
+    makeIconEl()
   ];
 }
-function tplBlank(){ return [baseEl({type:'icon', x:960, y:1220, width:60, color:'#eaeaea'})]; }
+function tplBlank(){ return [makeIconEl()]; }
 
 const TEMPLATES = {
   portada:{label:'Portada / Statement', build:tplPortada},
@@ -394,7 +434,22 @@ const TEMPLATES = {
   pie:{label:'Gráfico de torta', build:tplPie},
   blank:{label:'En blanco', build:tplBlank}
 };
-function newSlide(tplKey){ return {id:nid(), bg:'#080808', elements:(TEMPLATES[tplKey]||TEMPLATES.blank).build()}; }
+function scaleElementsToCanvas(elements){
+  const rw = W/BASE_W, rh = H/BASE_H, rm = Math.min(rw,rh);
+  elements.forEach(el=>{
+    el.x = Math.round(el.x*rw); el.y = Math.round(el.y*rh);
+    if(el.width) el.width = Math.round(el.width*rw);
+    if(el.height) el.height = Math.round(el.height*rh);
+    if(el.fontSize) el.fontSize = Math.round(el.fontSize*rm);
+    if(el.letterSpacing) el.letterSpacing = +(el.letterSpacing*rw).toFixed(2);
+  });
+  return elements;
+}
+function newSlide(tplKey){
+  const elements = scaleElementsToCanvas((TEMPLATES[tplKey]||TEMPLATES.blank).build());
+  elements.forEach(el=>{ if(el.type==='icon'){ el.x=logoTransform.x; el.y=logoTransform.y; el.width=logoTransform.width; } });
+  return {id:nid(), bg:'#080808', elements};
+}
 
 slides.push(newSlide('portada'));
 slides.push(newSlide('deconstruccion'));
@@ -404,6 +459,22 @@ slides.push(newSlide('bar'));
 /* =====================================================================
    ZOOM (editing view only — export never depends on this)
    ===================================================================== */
+function resizeCanvas(newW, newH){
+  const rw = newW/W, rh = newH/H, rm = Math.min(rw,rh);
+  slides.forEach(s=> s.elements.forEach(el=>{
+    el.x = Math.round(el.x*rw); el.y = Math.round(el.y*rh);
+    if(el.width) el.width = Math.round(el.width*rw);
+    if(el.height) el.height = Math.round(el.height*rh);
+    if(el.fontSize) el.fontSize = Math.round(el.fontSize*rm);
+    if(el.letterSpacing) el.letterSpacing = +(el.letterSpacing*rw).toFixed(2);
+  }));
+  guides.top = Math.round(guides.top*rh); guides.bottom = Math.round(guides.bottom*rh);
+  guides.left = Math.round(guides.left*rw); guides.right = Math.round(guides.right*rw);
+  logoTransform = { x:Math.round(logoTransform.x*rw), y:Math.round(logoTransform.y*rh), width:Math.round(logoTransform.width*rm) };
+  W = newW; H = newH;
+  fitZoom(); applyStageSize(); renderStage(); renderElToolbar(); pushHistory();
+}
+
 function fitZoom(){
   const area = document.getElementById('canvas-area');
   const pad = 24;
@@ -432,8 +503,13 @@ function buildElNode(el, interactive){
     node.style.height=(el.width||60)+'px'; node.style.color=el.color;
     node.innerHTML = ICON_SVG; node.classList.add('locked');
   } else if(el.type==='image'){
-    node = document.createElement('img');
-    node.src = el.src; node.style.height=(el.height||300)+'px'; node.style.objectFit='contain';
+    node = document.createElement('div');
+    node.style.height = (el.height||300)+'px';
+    const img = document.createElement('img');
+    img.src = el.src; img.draggable = false; img.style.pointerEvents = 'none';
+    img.style.width = '100%'; img.style.height = '100%'; img.style.display = 'block'; img.style.objectFit = 'contain';
+    img.addEventListener('dragstart', ev=>ev.preventDefault());
+    node.appendChild(img);
   } else if(el.type==='barchart'){
     node = document.createElement('div');
     node.appendChild(renderBarChart(el, interactive));
@@ -451,10 +527,13 @@ function buildElNode(el, interactive){
     if(el.box){ node.style.border='1px solid #333'; node.style.borderRadius='14px'; node.style.padding='26px 28px'; }
     else node.style.padding='2px';
     node.innerHTML = el.html;
-    if(interactive) node.addEventListener('input', ()=>{ el.html = node.innerHTML; });
+    if(interactive){
+      node.addEventListener('input', ()=>{ el.html = node.innerHTML; });
+      node.addEventListener('blur', ()=> pushHistory());
+    }
   }
   node.className = (node.className?node.className+' ':'') + 'el';
-  if(el.id===selectedId) node.classList.add('selected');
+  if(interactive && el.id===selectedId) node.classList.add('selected');
   node.dataset.id = el.id;
   node.style.left = el.x+'px'; node.style.top = el.y+'px';
   if(el.width) node.style.width = el.width+'px';
@@ -473,6 +552,11 @@ function buildElNode(el, interactive){
       const rh = document.createElement('div'); rh.className='grip resize-h'; rh.textContent='↕';
       rh.addEventListener('mousedown', e=>startResizeHeight(e, el, node));
       node.appendChild(rh);
+    }
+    if(el.type==='text'){
+      const lh = document.createElement('div'); lh.className='grip resize-h'; lh.textContent='↕';
+      lh.addEventListener('mousedown', e=>startLineHeightDrag(e, el, node));
+      node.appendChild(lh);
     }
     node.addEventListener('mousedown', ()=>selectElement(el.id));
     attachTouchInteractions(el, node);
@@ -497,10 +581,12 @@ function renderBarChart(el, interactive){
     const val = document.createElement('input');
     val.className='bar-val'; val.value = fmt(row.value); val.disabled = !interactive;
     val.addEventListener('input', ()=>{ row.value = parseNum(val.value); redraw(); });
+    val.addEventListener('change', pushHistory);
     const track = document.createElement('div'); track.className='bar-track';
     const lbl = document.createElement('input');
     lbl.className='bar-label'; lbl.value = row.label; lbl.disabled = !interactive;
     lbl.addEventListener('input', ()=>{ row.label = lbl.value; });
+    lbl.addEventListener('change', pushHistory);
     const fw = document.createElement('div'); fw.className='bar-fill-wrap'; fw.style.width=trackW+'px';
     const fill = document.createElement('div'); fill.className='bar-fill'; fill.style.background = el.barColor||'#fff';
     fw.appendChild(fill); fills.push(fill);
@@ -532,10 +618,13 @@ function renderPieChart(el, interactive){
     const lr = document.createElement('div'); lr.className='legend-row';
     const sw = document.createElement('input'); sw.type='color'; sw.value=row.color; sw.disabled=!interactive;
     sw.addEventListener('input', ()=>{ row.color=sw.value; redraw(); });
+    sw.addEventListener('change', pushHistory);
     const lb = document.createElement('input'); lb.className='legend-label'; lb.value=row.label; lb.disabled=!interactive;
     lb.addEventListener('input', ()=>{ row.label=lb.value; });
+    lb.addEventListener('change', pushHistory);
     const vl = document.createElement('input'); vl.className='legend-value'; vl.value=row.value; vl.disabled=!interactive;
     vl.addEventListener('input', ()=>{ row.value=parseNum(vl.value); redraw(); });
+    vl.addEventListener('change', pushHistory);
     lr.appendChild(sw); lr.appendChild(lb); lr.appendChild(vl);
     legend.appendChild(lr);
   });
@@ -554,7 +643,11 @@ function startDrag(e, el, node){
     el.x = Math.round(ox + (ev.clientX-startX)/zoom); el.y = Math.round(oy + (ev.clientY-startY)/zoom);
     node.style.left = el.x+'px'; node.style.top = el.y+'px';
   }
-  function onUp(){ document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp); }
+  function onUp(){
+    document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp);
+    if(el.type==='icon') syncLogoTransform(el);
+    pushHistory();
+  }
   document.addEventListener('mousemove',onMove); document.addEventListener('mouseup',onUp);
 }
 function startResize(e, el, node){
@@ -562,11 +655,30 @@ function startResize(e, el, node){
   const startX=e.clientX, ow=el.width||400, oh=el.height||null, ratio = oh ? oh/ow : null;
   function onMove(ev){
     el.width = Math.max(40, Math.round(ow+(ev.clientX-startX)/zoom)); node.style.width = el.width+'px';
-    if(ratio!=null) el.height = Math.round(el.width*ratio);
+    if(ratio!=null){ el.height = Math.round(el.width*ratio); node.style.height = el.height+'px'; }
   }
   function onUp(){
     document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp);
-    renderStage(); renderElToolbar();
+    if(el.type==='icon') syncLogoTransform(el);
+    renderStage(); renderElToolbar(); pushHistory();
+  }
+  document.addEventListener('mousemove',onMove); document.addEventListener('mouseup',onUp);
+}
+
+function startLineHeightDrag(e, el, node){
+  e.preventDefault(); e.stopPropagation(); selectElement(el.id);
+  const startY=e.clientY;
+  const startH = node.offsetHeight || 40;
+  const startLH = el.lineHeight || 1.25;
+  function onMove(ev){
+    const newH = Math.max(12, startH + (ev.clientY-startY)/zoom);
+    const ratio = newH/startH;
+    el.lineHeight = Math.max(0.7, Math.min(4, +(startLH*ratio).toFixed(2)));
+    node.style.lineHeight = el.lineHeight;
+  }
+  function onUp(){
+    document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp);
+    renderElToolbar(); pushHistory();
   }
   document.addEventListener('mousemove',onMove); document.addEventListener('mouseup',onUp);
 }
@@ -581,7 +693,7 @@ function startResizeHeight(e, el, node){
   }
   function onUp(){
     document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp);
-    renderStage(); renderElToolbar();
+    renderStage(); renderElToolbar(); pushHistory();
   }
   document.addEventListener('mousemove',onMove); document.addEventListener('mouseup',onUp);
 }
@@ -678,7 +790,8 @@ function attachTouchInteractions(el, node){
       if(aspect) el.height = Math.round(newWidth*aspect);
       else if(startHeight) el.height = Math.round(startHeight*scale);
       node.style.transform=''; delete node.dataset.pinchScale;
-      renderStage(); selectElement(el.id);
+      if(el.type==='icon') syncLogoTransform(el);
+      renderStage(); selectElement(el.id); pushHistory();
     } else if(mode==='drag'){
       hideTrash();
       const over = lastX!=null && pointOverTrash(lastX,lastY);
@@ -690,9 +803,10 @@ function attachTouchInteractions(el, node){
         const finalRect = node.getBoundingClientRect();
         el.x = Math.round((finalRect.left - outerRect.left)/zoom);
         el.y = Math.round((finalRect.top - outerRect.top)/zoom);
+        if(el.type==='icon') syncLogoTransform(el);
       }
       if(node.parentNode) node.parentNode.removeChild(node);
-      renderStage(); renderElToolbar();
+      renderStage(); renderElToolbar(); pushHistory();
     } else if(mode==='pending'){
       selectElement(el.id);
     }
@@ -748,7 +862,7 @@ function startGuideDrag(e, key, orientation, node){
     else guides[key]=Math.round(Math.max(0,Math.min(W,startVal+(ev.clientX-startX)/zoom)));
     positionGuideNode(node, orientation, key);
   }
-  function onUp(){ document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp); }
+  function onUp(){ document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp); pushHistory(); }
   document.addEventListener('mousemove',onMove); document.addEventListener('mouseup',onUp);
 }
 function renderGuidesOverlay(){
@@ -780,7 +894,7 @@ function renderTabs(){
       if(e.target===x){
         if(slides.length===1) return;
         slides.splice(i,1); if(currentSlide>=slides.length) currentSlide=slides.length-1;
-        selectedId=null; renderAll(); return;
+        selectedId=null; renderAll(); pushHistory(); return;
       }
       currentSlide=i; selectedId=null; renderAll();
     });
@@ -793,7 +907,7 @@ function renderTabs(){
     e.stopPropagation();
     openMenu(addBtn, Object.entries(TEMPLATES).map(([k,v])=>({
       label:v.label,
-      onClick:()=>{ slides.push(newSlide(k)); currentSlide=slides.length-1; selectedId=null; renderAll(); }
+      onClick:()=>{ slides.push(newSlide(k)); currentSlide=slides.length-1; selectedId=null; renderAll(); pushHistory(); }
     })));
   });
   row.appendChild(addBtn);
@@ -802,6 +916,17 @@ function renderTabs(){
 /* =====================================================================
    FLOATING ELEMENT TOOLBAR
    ===================================================================== */
+function mkNumField(label, value, step, min, max, onChange){
+  const wrap = document.createElement('div'); wrap.className='num-wrap';
+  const inp = document.createElement('input');
+  inp.type='number'; inp.className='num-input'; inp.value = value; inp.step = step;
+  if(min!=null) inp.min=min; if(max!=null) inp.max=max;
+  inp.addEventListener('click', e=>e.stopPropagation());
+  inp.addEventListener('change', ()=>{ const v=parseFloat(inp.value); if(!isNaN(v)) onChange(v); });
+  const lab = document.createElement('span'); lab.textContent = label;
+  wrap.appendChild(inp); wrap.appendChild(lab);
+  return wrap;
+}
 function mkIconBtn(html, tip, onClick, active){
   const b = document.createElement('button');
   b.className='icon-btn'+(active?' primary':''); b.innerHTML=html;
@@ -822,23 +947,26 @@ function renderElToolbar(){
   bar.innerHTML='';
   if(!el){ bar.classList.add('hidden'); hint.style.display='block'; return; }
   hint.style.display='none'; bar.classList.remove('hidden');
-  const refresh = ()=>{ renderStage(); renderElToolbar(); };
+  const refresh = ()=>{ renderStage(); renderElToolbar(); pushHistory(); };
 
   if(el.type==='text'){
     bar.appendChild(mkIconBtn('A－','Achicar texto', ()=>{ el.fontSize=Math.max(8,el.fontSize-2); refresh(); }));
+    bar.appendChild(mkNumField('tamaño', el.fontSize, 1, 6, 300, v=>{ el.fontSize=Math.max(6,Math.round(v)); refresh(); }));
     bar.appendChild(mkIconBtn('A＋','Agrandar texto', ()=>{ el.fontSize=el.fontSize+2; refresh(); }));
+    bar.appendChild(mkNumField('interl.', el.lineHeight, 0.05, 0.5, 4, v=>{ el.lineHeight=Math.max(0.5,+v.toFixed(2)); refresh(); }));
     bar.appendChild(mkIconBtn('<b>B</b>','Negrita', ()=>{ el.fontWeight = el.fontWeight>=700?400:700; refresh(); }));
     bar.appendChild(mkIconBtn('⟸','Alinear izquierda', ()=>{ el.align='left'; refresh(); }));
     bar.appendChild(mkIconBtn('⟺','Centrar', ()=>{ el.align='center'; refresh(); }));
     bar.appendChild(mkIconBtn('⟹','Alinear derecha', ()=>{ el.align='right'; refresh(); }));
     bar.appendChild(mkIconBtn('✦','Acento cromático a selección', ()=>{
       const sel = window.getSelection();
-      if(!sel.rangeCount || sel.isCollapsed){ alert('Seleccioná parte del texto primero.'); return; }
+      if(!sel.rangeCount || sel.isCollapsed){ showToast('Seleccioná parte del texto primero.', true); return; }
       try{
         const span=document.createElement('span'); span.className='accent';
         sel.getRangeAt(0).surroundContents(span);
         el.html = document.querySelector(`#stage .el[data-id="${el.id}"]`).innerHTML;
-      }catch(err){ alert('Seleccioná texto dentro de una sola línea.'); }
+        pushHistory();
+      }catch(err){ showToast('Seleccioná texto dentro de una sola línea.', true); }
     }));
     bar.appendChild(mkIconBtn(el.box?'▭':'▯','Alternar caja / borde', ()=>{ el.box=!el.box; refresh(); }));
     bar.appendChild(mkIconBtn('𝙼','Fuente monoespaciada', ()=>{
@@ -874,7 +1002,7 @@ function renderElToolbar(){
   }));
   bar.appendChild(mkIconBtn('🗑','Eliminar elemento', ()=>{
     slides[currentSlide].elements = slides[currentSlide].elements.filter(e=>e.id!==el.id);
-    selectedId=null; renderStage(); renderElToolbar();
+    selectedId=null; renderStage(); renderElToolbar(); pushHistory();
   }));
 }
 
@@ -891,6 +1019,11 @@ document.getElementById('toolbar-row').addEventListener('click', (e)=>{
     guidesVisible = !guidesVisible;
     btn.classList.toggle('active', guidesVisible);
     renderStage();
+  } else if(action==='size'){
+    openMenu(btn, [
+      {label:'1024 × 1278  (4:5)', onClick:()=> resizeCanvas(1024,1278)},
+      {label:'1024 × 1024  (1:1)', onClick:()=> resizeCanvas(1024,1024)}
+    ]);
   } else if(action==='dup'){
     const copy = JSON.parse(JSON.stringify(slides[currentSlide]));
     copy.id=nid(); copy.elements.forEach(el=>el.id=nid());
@@ -912,7 +1045,7 @@ document.getElementById('toolbar-row').addEventListener('click', (e)=>{
     const el = baseEl({type:'line', x:80, y:80, width:920, height:1, color:'#3a3a3a', z});
     els.push(el); selectedId=el.id; renderStage(); renderElToolbar();
   } else if(action==='add-icon'){
-    const el = baseEl({type:'icon', x:960, y:1220, width:60, color:'#eaeaea', z});
+    const el = makeIconEl(z);
     els.push(el); selectedId=el.id; renderStage(); renderElToolbar();
   } else if(action==='add-bar'){
     const el = baseEl({type:'barchart', x:80, y:200, width:920, height:900, barColor:'#ffffff', z,
@@ -931,6 +1064,7 @@ document.getElementById('toolbar-row').addEventListener('click', (e)=>{
   } else if(action==='export'){
     exportAll(btn);
   }
+  if(['dup','del-slide','add-text','add-code','add-line','add-icon','add-bar','add-pie'].includes(action)) pushHistory();
 });
 
 document.getElementById('file-input').addEventListener('change', (e)=>{
@@ -945,10 +1079,12 @@ document.getElementById('file-input').addEventListener('change', (e)=>{
       const maxDim = 360;
       if(w>maxDim || h>maxDim){ const r=Math.min(maxDim/w, maxDim/h); w*=r; h*=r; }
       const el = baseEl({type:'image', src:ev.target.result, x:(W-w)/2, y:(H-h)/2, width:w, height:h, z});
-      els.push(el); selectedId=el.id; renderStage(); renderElToolbar();
+      els.push(el); selectedId=el.id; renderStage(); renderElToolbar(); pushHistory();
     };
+    img.onerror = ()=> showToast('No se pudo cargar esa imagen', true);
     img.src = ev.target.result;
   };
+  reader.onerror = ()=> showToast('No se pudo leer el archivo', true);
   reader.readAsDataURL(file);
   e.target.value='';
 });
@@ -964,12 +1100,22 @@ async function renderSlideToCanvas(slide){
   host.style.width=W+'px'; host.style.height=H+'px'; host.style.background=slide.bg;
   host.style.overflow='hidden';
   document.body.appendChild(host);
-  slide.elements.slice().sort((a,b)=>a.z-b.z).forEach(el=>{
-    host.appendChild(buildElNode(el, false));
-  });
-  const canvas = await html2canvas(host, {backgroundColor:slide.bg, scale:2, width:W, height:H, useCORS:true});
-  document.body.removeChild(host);
-  return canvas;
+  try{
+    slide.elements.slice().sort((a,b)=>a.z-b.z).forEach(el=>{
+      host.appendChild(buildElNode(el, false));
+    });
+    const canvas = await html2canvas(host, {
+      backgroundColor:slide.bg, scale:2, width:W, height:H, useCORS:true,
+      ignoreElements: (node)=>{
+        if(node===host || host.contains(node)) return false; // the export tree itself: always keep
+        if(node.contains && node.contains(host)) return false; // its ancestors (html/body): needed for the clone to resolve
+        return true; // any other live-editor UI (canvas, grips, toolbars, menus, tooltips): excluded
+      }
+    });
+    return canvas;
+  } finally {
+    if(host.parentNode) host.parentNode.removeChild(host);
+  }
 }
 async function exportAll(btn){
   const orig = btn.innerHTML; btn.innerHTML='…'; btn.disabled=true;
@@ -978,17 +1124,160 @@ async function exportAll(btn){
     for(let i=0;i<slides.length;i++){
       const canvas = await renderSlideToCanvas(slides[i]);
       const blob = await new Promise(res=>canvas.toBlob(b=>res(b),'image/png'));
+      if(!blob) throw new Error('No se pudo generar la imagen de la diapositiva '+(i+1));
       zip.file(`slide_${String(i+1).padStart(2,'0')}.png`, blob);
     }
     const content = await zip.generateAsync({type:'blob'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(content); a.download='carrusel_taller_ia.zip'; a.click();
+    showToast('Carrusel exportado');
+  } catch(err){
+    showToast('Error al exportar: '+(err && err.message ? err.message : 'intentá de nuevo'), true);
   } finally { btn.innerHTML=orig; btn.disabled=false; }
 }
 
 /* =====================================================================
    RENDER ALL
    ===================================================================== */
+/* =====================================================================
+   PROJECT STATE — undo/redo history, best-effort autosave, and manual
+   save/load to a .json file (the one persistence path guaranteed to
+   work everywhere, independent of any browser storage API).
+   ===================================================================== */
+let history = [];
+let historyIndex = -1;
+let restoringState = false;
+let autosaveTimer = null;
+
+function serializeProject(){
+  return JSON.stringify({slides, currentSlide, guides, logoTransform, W, H});
+}
+function applyProjectState(json){
+  const d = JSON.parse(json);
+  restoringState = true;
+  slides = d.slides;
+  currentSlide = Math.min(d.currentSlide||0, slides.length-1);
+  guides.top=d.guides.top; guides.bottom=d.guides.bottom; guides.left=d.guides.left; guides.right=d.guides.right;
+  logoTransform = d.logoTransform;
+  W = d.W; H = d.H;
+  selectedId = null;
+  closeMenu();
+  restoringState = false;
+}
+function updateHistoryButtons(){
+  const u = document.getElementById('undo-btn'), r = document.getElementById('redo-btn');
+  if(u) u.disabled = historyIndex<=0;
+  if(r) r.disabled = historyIndex>=history.length-1;
+}
+function pushHistory(){
+  if(restoringState) return;
+  history = history.slice(0, historyIndex+1);
+  history.push(serializeProject());
+  if(history.length>60) history.shift();
+  historyIndex = history.length-1;
+  updateHistoryButtons();
+  scheduleAutosave();
+}
+function undo(){
+  if(historyIndex<=0) return;
+  historyIndex--;
+  applyProjectState(history[historyIndex]);
+  fitZoom(); applyStageSize(); renderTabs(); renderStage(); renderElToolbar(); updateHistoryButtons();
+}
+function redo(){
+  if(historyIndex>=history.length-1) return;
+  historyIndex++;
+  applyProjectState(history[historyIndex]);
+  fitZoom(); applyStageSize(); renderTabs(); renderStage(); renderElToolbar(); updateHistoryButtons();
+}
+
+/* ---- autosave: tries the artifact storage API, then localStorage, then
+   gives up silently — the app stays fully usable either way since
+   "Guardar proyecto" (.json) always works regardless of environment. ---- */
+function scheduleAutosave(){
+  clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(async ()=>{
+    const data = serializeProject();
+    try{
+      if(window.storage && window.storage.set){ await window.storage.set('project', data, false); return; }
+    }catch(err){ /* fall through */ }
+    try{ localStorage.setItem('taller_ia_carousel_autosave', data); }catch(err){ /* no persistence available in this environment */ }
+  }, 700);
+}
+async function loadAutosave(){
+  try{
+    if(window.storage && window.storage.get){
+      const r = await window.storage.get('project', false);
+      if(r && r.value) return r.value;
+    }
+  }catch(err){ /* key not found or API unavailable */ }
+  try{ const v = localStorage.getItem('taller_ia_carousel_autosave'); if(v) return v; }catch(err){}
+  return null;
+}
+
+function downloadProject(){
+  try{
+    const blob = new Blob([serializeProject()], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'proyecto_taller_ia.json'; a.click();
+    showToast('Proyecto guardado');
+  }catch(err){ showToast('No se pudo guardar el proyecto', true); }
+}
+function loadProjectFile(file){
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    try{
+      applyProjectState(ev.target.result);
+      history = [serializeProject()]; historyIndex = 0;
+      fitZoom(); applyStageSize(); renderAll();
+      showToast('Proyecto cargado');
+    }catch(err){ showToast('El archivo no es un proyecto válido', true); }
+  };
+  reader.onerror = ()=> showToast('No se pudo leer el archivo', true);
+  reader.readAsText(file);
+}
+
+function showToast(msg, isError){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = isError ? 'show error' : 'show';
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(()=> t.classList.remove('show'), 2600);
+}
+
+document.getElementById('undo-btn').addEventListener('click', undo);
+document.getElementById('redo-btn').addEventListener('click', redo);
+document.querySelector('[data-action="save-project"]').addEventListener('click', downloadProject);
+document.querySelector('[data-action="open-project"]').addEventListener('click', ()=> document.getElementById('project-input').click());
+document.getElementById('project-input').addEventListener('change', (e)=>{
+  const file = e.target.files[0]; if(file) loadProjectFile(file);
+  e.target.value='';
+});
+
+/* ---- keyboard shortcuts: undo/redo everywhere, delete + nudge when an
+   element is selected and the person isn't typing into a field. ---- */
+document.addEventListener('keydown', (e)=>{
+  const tag = (document.activeElement && document.activeElement.tagName) || '';
+  const editingText = document.activeElement && document.activeElement.isContentEditable;
+  const inField = tag==='INPUT' || tag==='TEXTAREA' || editingText;
+  const mod = e.ctrlKey || e.metaKey;
+  if(mod && e.key.toLowerCase()==='z' && !e.shiftKey){ e.preventDefault(); undo(); return; }
+  if(mod && (e.key.toLowerCase()==='y' || (e.key.toLowerCase()==='z' && e.shiftKey))){ e.preventDefault(); redo(); return; }
+  if(inField) return;
+  const el = getSelected(); if(!el) return;
+  if(e.key==='Delete' || e.key==='Backspace'){
+    e.preventDefault();
+    slides[currentSlide].elements = slides[currentSlide].elements.filter(x=>x.id!==el.id);
+    selectedId=null; renderStage(); renderElToolbar(); pushHistory();
+  } else if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){
+    e.preventDefault();
+    const step = e.shiftKey ? 10 : 1;
+    if(e.key==='ArrowUp') el.y-=step; if(e.key==='ArrowDown') el.y+=step;
+    if(e.key==='ArrowLeft') el.x-=step; if(e.key==='ArrowRight') el.x+=step;
+    renderStage(); renderElToolbar(); pushHistory();
+  }
+});
+
 function renderAll(){
   renderTabs();
   if(!manualZoom) fitZoom();
@@ -997,6 +1286,22 @@ function renderAll(){
   renderElToolbar();
 }
 renderAll();
+history = [serializeProject()]; historyIndex = 0; updateHistoryButtons();
+
+(async function initAutosaveRestore(){
+  const saved = await loadAutosave();
+  if(!saved) return;
+  try{
+    JSON.parse(saved);
+    if(confirm('Se encontró una sesión anterior sin exportar. ¿Restaurarla?')){
+      applyProjectState(saved);
+      history = [saved]; historyIndex = 0; updateHistoryButtons();
+      fitZoom(); applyStageSize(); renderAll();
+      showToast('Sesión anterior restaurada');
+    }
+  }catch(err){ /* corrupted autosave, ignore */ }
+})();
+
 </script>
 </body>
 </html>
