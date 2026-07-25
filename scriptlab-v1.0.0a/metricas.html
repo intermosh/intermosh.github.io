@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="engine-version" content="combined-2.0.0">
+<meta name="app-version" content="1.0.0a">
+<link rel="icon" href="./favicon.svg" type="image/svg+xml">
+<title>Métricas y fuentes — ScriptLab</title>
+<style>
+:root{--bg:#0d1117;--panel:#161b27;--panel2:#1c2333;--border:#26304a;--track:#1f2a40;--text:#e6ebf5;--muted:#8b97ad;--faint:#5c6781;--purple:#7969ff;--teal:#32d2ac;--good:#5cdb87;--warn:#f4b857;--bad:#ff6879;--hook:#ff7d5c;--ctx:#69a8ff;--evid:#ae83ff;--r:12px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font:14px/1.6 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif}
+a{color:var(--purple);text-decoration:none}a:hover{text-decoration:underline}
+.wrap{max-width:920px;margin:0 auto;padding:22px 18px 64px}
+nav{display:flex;align-items:center;gap:16px;padding:12px 0 22px;border-bottom:1px solid var(--border);margin-bottom:26px;flex-wrap:wrap}
+.brand{font-weight:600;font-size:16px}.brand i{color:var(--purple);font-style:normal}
+nav .links{display:flex;gap:14px;margin-left:auto;font-size:13px;flex-wrap:wrap}
+h1{font-size:26px;letter-spacing:-.02em;margin-bottom:6px}
+h2{font-size:18px;margin:34px 0 10px;padding-top:10px;border-top:1px solid var(--border)}
+h3{font-size:14px;margin:18px 0 6px;color:var(--muted)}
+p{margin:8px 0;color:var(--muted)}
+.lede{font-size:15px;color:var(--text)}
+code,.mono{font:12px ui-monospace,Menlo,Consolas,monospace;background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:1px 6px;color:var(--teal)}
+.formula{font:13px/1.7 ui-monospace,Menlo,Consolas,monospace;background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0;color:var(--text);overflow-x:auto;white-space:pre-wrap}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);text-align:left;padding:8px 10px;border-bottom:2px solid var(--border)}
+td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.w td{background:rgba(121,105,255,.03)}
+.tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.03em;border-radius:99px;padding:2px 8px;white-space:nowrap}
+.tag.p{background:rgba(50,210,172,.12);color:var(--teal)}
+.tag.s{background:rgba(244,184,87,.12);color:var(--warn)}
+.tag.nv{background:rgba(255,104,121,.12);color:var(--bad)}
+.tag.i{background:rgba(174,131,255,.15);color:var(--evid)}
+ul,ol{margin:8px 0 8px 20px;color:var(--muted)}
+li{margin:4px 0}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin:10px 0}
+.callout{border-left:3px solid var(--teal);background:var(--panel);padding:10px 14px;border-radius:0 8px 8px 0;margin:12px 0}
+.callout.warnb{border-left-color:var(--warn)}
+.note{font-size:12px;color:var(--faint)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--border);font-size:12px;color:var(--faint);text-align:center;line-height:2}
+strong{color:var(--text);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <span class="brand">Script<b>i</b>Lab</span>
+    <span class="tag p">motor combined-2.0.0</span>
+    <div class="links">
+      <a href="./index.html">Inicio</a>
+      <a href="./scriptlab.html">Abrir la app</a>
+      <a href="./docs/SCRIPT-LAB-METRICAS-Y-FUENTES.md">Versión markdown</a>
+    </div>
+  </nav>
+
+  <h1>Métricas, pesos y fuentes</h1>
+  <p class="lede">Todo lo que ScriptLab calcula, con cada peso justificado por su fuente (primaria o secundaria) y lo que <strong>todavía no está validado</strong> marcado en rojo. La heurística corre al instante; la IA es opcional y 100% local. <strong>Nada sale de tu navegador.</strong></p>
+
+  <div class="callout"><strong>Regla de oro:</strong> en la app, la fórmula del APV se muestra desglosada término a término y el total exhibido <strong>es</strong> la suma de lo exhibido (auditable a mano). Ningún número entra al motor sin una etiqueta epistémica en el código.</div>
+
+  <!-- ============ 1. ICN ============ -->
+  <h2>1 · Salud del guion (ICN) — <code>js/scoring.js</code></h2>
+  <div class="formula">ICN = hook(hs)×0.31 + claridad(cl)×0.22 + ritmo(pa)×0.22 + promesa(pr)×0.17 + 8×(calidadCTA/100)</div>
+  <table>
+    <tr><th>Sub-score</th><th>Cómo se calcula</th><th>Fuente / estado</th></tr>
+    <tr><td>Hook <code>hs</code></td><td>Puntos por longitud (15–80 palabras), pregunta (+15), números (+8/+10), urgencia/curiosidad (+10/+12), solapamiento léxico con la promesa (+20/+25); hook implícito ×0.7.</td><td><span class="tag s">SECUNDARIA</span> ventana 15 s: <a href="https://prepublish.ai/guides/first-30-seconds" rel="noopener">PrePublish</a> (52 % vs 44 %) y <a href="https://www.retentionrabbit.com/blog/2025-youtube-audience-retention-benchmark-report" rel="noopener">RetentionRabbit</a> (+18 % al min 1). Umbrales internos <span class="tag nv">NO VALIDADO</span></td></tr>
+    <tr><td>Claridad <code>cl</code></td><td>Mapeo por bandas del FH crudo; <code>null</code> (&lt;3 palabras) → 50 neutral.</td><td><span class="tag i">INFERENCIAL</span> del FH validado (§3). El mapeo a retención <span class="tag nv">NO VALIDADO</span></td></tr>
+    <tr><td>Ritmo <code>pa</code></td><td><code>10 + visuales×8 + bonusCV(15 si 0.3&lt;CV&lt;1) + (n&gt;3 oraciones ? 8 : 3)</code></td><td><span class="tag s">SECUNDARIA</span> dirección: “pacing variation &gt; vocabulary” (<a href="https://prepublish.ai/blog/youtube-retention-benchmarks-2026" rel="noopener">PrePublish</a>, 1.8×); valores <span class="tag nv">NO VALIDADO</span></td></tr>
+    <tr><td>Promesa <code>pr</code></td><td>75 si el hook (o implícito) tiene solapamiento léxico con la promesa; si no, 20.</td><td><span class="tag nv">NO VALIDADO</span> heurística propia</td></tr>
+    <tr class="w"><td>Bonus CTA</td><td><code>8 × ctaScore/100</code> — escalado por calidad (posición 75–95 % del video ideal, 10–40 palabras, verbos de acción). Sin CTA real → +0. Reemplazó al +8 plano en combined-2.0.0.</td><td><span class="tag s">SECUNDARIA</span> estudio de CTAs de <a href="https://wistia.com/learn/marketing/how-compelling-copy-can-transform-a-cta" rel="noopener">Wistia</a>: mid-roll 16.95 % vs post-roll 10.98 % vs pre-roll 3.15 % conversión; <a href="https://www.retentionrabbit.com/blog/2025-youtube-audience-retention-benchmark-report" rel="noopener">RR 2025</a>: solo 16 % llega al final del video.</td></tr>
+  </table>
+
+  <!-- ============ 2. APV ============ -->
+  <h2>2 · Retención estimada (APV) — <code>js/retention-engine.js</code></h2>
+  <div class="formula">APV = round(clamp[15,95]( Σ scoreᵢ × pesoᵢₙₒᵣₘ ))
+normalización = 0.89 + 0.11×𝟙{hay arco}  →  con arco: Σ=1.00 sin renorm · sin arco: 8 pesos ÷0.89</div>
+  <table>
+    <tr><th>Factor</th><th>Peso</th><th>Qué mide</th><th>Fuente (link)</th><th>Estado</th></tr>
+    <tr><td>Hook</td><td class="num">0.25</td><td>Longitud, pregunta, datos, urgencia, alineación con promesa.</td><td>PrePublish (52/44 @15s) · RetentionRabbit (ventana 8 s, 55 % perdido al min 1) · Backlinko 2017 (correlación retención↔ranking)</td><td><span class="tag s">SECUNDARIA convergente</span></td></tr>
+    <tr><td>Pacing</td><td class="num">0.17</td><td>Duración de bloques (15–45 s), CV de duraciones (0.3–0.8), varianza de oraciones.</td><td><a href="https://link.springer.com/article/10.1007/s10758-024-09745-2" rel="noopener">Seidel 2024 (Springer)</a> segmentación &gt; no segmentación · <a href="https://doi.org/10.1145/2556325.2566239" rel="noopener">Guo, Kim &amp; Rubin 2014</a> (6.9M sesiones edX)</td><td><span class="tag p">PRIMARIA+SECUNDARIA</span> números internos <span class="tag nv">NO VALIDADO</span></td></tr>
+    <tr><td>Pattern interrupts</td><td class="num">0.14</td><td>% de bloques GIRO/VISUAL/CTA; sweet spot 15–35 %.</td><td>Kahneman 1973 (orienting response) · Sokolov 1963 (habituación) · <a href="https://air.io/en/youtube-hacks/advanced-retention-editing-cutting-patterns-that-keep-viewers-past-minute-8" rel="noopener">AIR Media-Tech</a> (primer interrupt 25–35 s)</td><td><span class="tag p">PRIMARIA teoría</span> banda exacta <span class="tag nv">NO VALIDADO</span></td></tr>
+    <tr class="w"><td><strong>Arco emocional</strong></td><td class="num">0.11</td><td><code>arcScore = 100×(0.4·flips + 0.4·engagement + 0.2·momentum⁺)</code>, flips = cambios de dirección de la pendiente emocional.</td><td><a href="https://link.springer.com/article/10.1007/s11747-026-01147-3" rel="noopener">Berger et al. 2026 (JAMS/Springer)</a>: flips ↑ engagement, mecanismo causal = arousal (33.598 podcasts + 3.381 TED + 2 labs) · <a href="https://www.eneuro.org/content/10/7/ENEURO.0484-22.2023.abstract" rel="noopener">Song et al. 2023 (eNeuro)</a>: el final predice el engagement · <a href="https://en.wikipedia.org/wiki/Peak%E2%80%93end_rule" rel="noopener">Kahneman et al. 1993</a> peak-end</td><td><span class="tag p">PRIMARIA causal</span> pesos internos 0.4/0.4/0.2 <span class="tag nv">NO VALIDADO</span> (decisión de diseño)</td></tr>
+    <tr><td>Densidad de contenido</td><td class="num">0.11</td><td>Temas nuevos por minuto (overlap léxico &lt;15 %); sweet spot 1.5–3/min.</td><td>Miller 1956 (7±2) · Sweller 1988 (CLT)</td><td><span class="tag p">PRIMARIA teoría</span> número <span class="tag nv">NO VALIDADO</span></td></tr>
+    <tr><td>Entrega de promesa</td><td class="num">0.09</td><td>Si/dónde se resuelve la promesa (mejor en el primer 30 %).</td><td>RetentionRabbit 2025 · PrePublish (payoff-at-15)</td><td><span class="tag s">SECUNDARIA correlacional</span></td></tr>
+    <tr><td>Legibilidad</td><td class="num">0.07</td><td>FH crudo en bandas (60–80 ideal, &gt;90 penaliza infantil).</td><td>Fernández-Huerta 1959 (Consigna 214)</td><td><span class="tag p">PRIMARIA fórmula</span> mapeo a video <span class="tag i">INFERENCIAL</span></td></tr>
+    <tr><td>CTA</td><td class="num">0.03</td><td>Posición/longitud/verbos del llamado a la acción.</td><td><a href="https://wistia.com/learn/marketing/how-compelling-copy-can-transform-a-cta" rel="noopener">Wistia</a> (16.95 % mid vs 10.98 % end) · guías de placement por duración</td><td><span class="tag s">SECUNDARIA</span> mide conversión, no retención</td></tr>
+    <tr><td>Completitud narrativa</td><td class="num">0.03</td><td>Presencia de hook, contexto, evidencia, CTA (+bonus giro/visual).</td><td><a href="https://www.eneuro.org/content/10/7/ENEURO.0484-22.2023.abstract" rel="noopener">Song et al. 2023</a> (dramatic arc) · Booker 2004</td><td><span class="tag p">PRIMARIA estructura</span></td></tr>
+  </table>
+  <p class="note">Curva de retención por bloque: interpolación entre curva base (Wistia 2025: ~50 % engagement &lt;1 min → 45 % en 3–5 min) y curva de hook fuerte, con modificadores (−0.04 bloques &gt;50 s, +0.05 hook fuerte, +0.03 CTA, −0.15 bloque vacío — todos <span class="tag nv">NO VALIDADO</span>)</p>
+
+  <!-- ============ 3. Sílabas y FH ============ -->
+  <h2>3 · Sílabas (RAE) y Fernández-Huerta — <code>js/ai-shared.js</code></h2>
+  <ul>
+    <li><code>syllables()</code>: grupos vocálicos delimitados por consonantes + reglas RAE (2 abiertas = hiato; cerrada tónica = hiato; cerrada átona + abierta = diptongo aunque la abierta sea tónica — <em>canción</em>; iu/ui átonas = diptongo; triptongo cerrada+abierta+cerrada sin tónicas; “y” como cerrada). Cobertura: 39 casos en la suite.</li>
+    <li><code>fernandezHuerta()</code>: <code>206.84 − 60×(síl/pal) − 1.02×(pal/frase)</code> <span class="tag p">VALIDADA</span> (Fernández-Huerta 1959, adaptación española de Flesch). Devuelve <code>null</code> con &lt;3 palabras y <strong>sin piso 0</strong> (puede ser negativa; nunca un falso “FH=0”).</li>
+  </ul>
+
+  <!-- ============ 4. Arco emocional ============ -->
+  <h2>4 · Arco emocional (IA local) — <code>js/sentiment-engine.js</code></h2>
+  <ul>
+    <li>Modelo: <strong>robertuito</strong> (sentimiento español) en Web Worker, descargado una vez (~110 MB con embeddings) y cacheado en el navegador. Los bloques VISUAL no se vocalizan → no entran al arco.</li>
+    <li>Bloques largos se trocean en chunks de ≤200 palabras respetando oraciones; la cola sin puntuación final se conserva; el promedio pondera por palabras.</li>
+    <li><strong>missing ≠ 0:</strong> un bloque que falla se muestra como punto hueco “N/D” y queda excluido de agregados (nunca fabrica un NEU-0). Los fallos se cuentan y se avisan.</li>
+    <li>Etiquetas con umbrales VADER canónicos <code>≥ +0.05 POS / ≤ −0.05 NEG</code> <span class="tag p">VALIDADO</span> (<a href="https://github.com/cjhutto/vaderSentiment" rel="noopener">Hutto &amp; Gilbert 2014, ICWSM</a>). Caveat: VADER está calibrado en inglés; el etiquetado ±0.05 es convención.</li>
+    <li>Agregados: engagement <code>min(1, varianza×2 + |media|×0.5)</code> <span class="tag i">INFERENCIAL</span> · momentum <code>media(último tercio) − media(primer tercio)</code> (dirección <span class="tag p">PRIMARIA</span>: peak-end 1993; Song 2023) · saltos tonales |Δ| ≥ 0.25 / 0.50 / 0.75 <span class="tag i">INFERENCIAL</span>.</li>
+  </ul>
+
+  <!-- ============ 5. Carga cognitiva ============ -->
+  <h2>5 · Carga cognitiva — <code>analyzeCognitiveLoad()</code></h2>
+  <p>Score 0–100+ donde <strong>mayor = más pesada</strong>: mezcla WPM configurado, temas/min, palabras/oración y descansos. Bandas: &lt;25 Liviana · &lt;50 Moderada · &lt;75 Pesada · ≥75 Sobrecarga. <span class="tag i">INFERENCIAL</span> (Sweller 1988; Miller 1956).</p>
+
+  <!-- ============ 6. Calibración ============ -->
+  <h2>6 · Calibración con datos reales</h2>
+  <p>Cargando el APV real de tus videos publicados (formato × género, mínimo 5 registros por bucket) el ICN se recalibra: <code>ICN = rawICN×0.7 + referencia×0.3</code>. Pesos del blend <span class="tag nv">NO VALIDADO</span> (heurística de shrinkage).</p>
+
+  <!-- ============ 7. Lo no validado ============ -->
+  <h2>7 · Lo que <u>no</u> está validado (y la app lo dice)</h2>
+  <div class="callout warnb">Tras el research del PASO 3 (docs/RESEARCH-PASO3.md) quedaron sin número en literatura y se mantienen etiquetados <span class="tag nv">NO VALIDADO</span> en el código: bloques 15–45 s · temas/min 1.5–3.0 · sweet spot de interrupts 15–35 % · overlaps hook↔promesa 0.3/0.1 · bandas CV 0.3–0.8 · banda FH 60–80 → retención · base 40/longitud del CTA · modificadores de la curva de retención · forma de la curva base.</div>
+
+  <!-- ============ 8. Fuentes ============ -->
+  <h2>8 · Fuentes</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Primarias</h3>
+      <ul>
+        <li><a href="https://link.springer.com/article/10.1007/s11747-026-01147-3" rel="noopener">Berger et al. (2026)</a> — emotionality flips causales (JAMS/Springer)</li>
+        <li><a href="https://www.eneuro.org/content/10/7/ENEURO.0484-22.2023.abstract" rel="noopener">Song et al. (2023)</a> — engagement y dramatic arc (eNeuro)</li>
+        <li><a href="https://link.springer.com/article/10.1007/s10758-024-09745-2" rel="noopener">Seidel (2024)</a> — segmentación de videos (Springer TKL)</li>
+        <li><a href="https://doi.org/10.1145/2556325.2566239" rel="noopener">Guo, Kim &amp; Rubin (2014)</a> — 6.9M sesiones edX (ACM L@S)</li>
+        <li><a href="https://en.wikipedia.org/wiki/Peak%E2%80%93end_rule" rel="noopener">Kahneman et al. (1993) / Redelmeier &amp; Kahneman (1996)</a> — peak-end rule</li>
+        <li><a href="https://github.com/cjhutto/vaderSentiment" rel="noopener">Hutto &amp; Gilbert (2014)</a> — VADER, umbrales ±0.05 (ICWSM)</li>
+        <li><a href="https://journals.sagepub.com/doi/abs/10.1177/0956797611413294" rel="noopener">Berger &amp; Milkman (2012)</a> — arousal ↑ transmisión (Psych. Science)</li>
+        <li>Miller (1956) — 7±2 chunks · Sweller (1988) — carga cognitiva · Kahneman (1973) — orienting response · Sokolov (1963) — habituación · Fernández-Huerta (1959) — Consigna 214</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Secundarias / industria</h3>
+      <ul>
+        <li><a href="https://backlinko.com/youtube-ranking-factors" rel="noopener">Backlinko (2017)</a> — 1.3M videos, retención↔ranking</li>
+        <li><a href="https://www.retentionrabbit.com/blog/2025-youtube-audience-retention-benchmark-report" rel="noopener">RetentionRabbit (2025)</a> — 10k+ videos: 23.7 % avg, 55 % fuera al min 1</li>
+        <li><a href="https://prepublish.ai/guides/first-30-seconds" rel="noopener">PrePublish (2026)</a> — value claim ≤15 s: 52 % vs 44 %</li>
+        <li><a href="https://www.prnewswire.com/news-releases/wistias-2025-state-of-video-report-shows-use-of-ai-in-video-production-more-than-doubled-over-last-year-302411243.html" rel="noopener">Wistia State of Video (2025)</a> — 14M videos, engagement por duración</li>
+        <li><a href="https://wistia.com/learn/marketing/how-compelling-copy-can-transform-a-cta" rel="noopener">Wistia</a> — CTAs mid 16.95 % / end 10.98 % (corroborado por <a href="https://www.appsflyer.com/blog/tips-strategy/mid-roll-ads/" rel="noopener">AppsFlyer</a>, pre 3.15 %)</li>
+        <li><a href="https://air.io/en/youtube-hacks/advanced-retention-editing-cutting-patterns-that-keep-viewers-past-minute-8" rel="noopener">AIR Media-Tech</a> — patrones de corte, interrupt 25–35 s</li>
+        <li>Google — framework ABCDs (cualitativo; la cifra "47 % AVD" circulada por ahí no existe y fue corregida)</li>
+      </ul>
+    </div>
+  </div>
+
+  <footer>
+    ScriptLab V1.0.0a · motor combined-2.0.0 · 94/94 tests en Node · <a href="./LICENSE" target="_blank">MIT</a><br>
+    <a href="./index.html">Inicio</a> · <a href="./scriptlab.html">Abrir la app</a> · documentación completa en <code>docs/</code>
+  </footer>
+</div>
+</body>
+</html>

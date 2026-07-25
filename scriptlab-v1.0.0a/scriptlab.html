@@ -4,8 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0d1117">
+  <meta name="engine-version" content="combined-2.0.0">
+  <meta name="app-version" content="1.0.0a">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <title>ScriptLab</title>
-  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./css/styles.css">
 </head>
 <body>
   <header class="h">
@@ -35,11 +38,20 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       </button>
       <div id="export-menu" class="export-menu" hidden>
+        <div class="export-group">Guion</div>
         <button data-export="json">JSON</button>
         <button data-export="html">HTML</button>
         <button data-export="md">Markdown</button>
-        <button data-export="txt">Text (.txt)</button>
+        <button data-export="txt">Texto plano</button>
+        <button data-export="csv">CSV</button>
         <button data-export="pdf">PDF</button>
+        <div class="export-divider"></div>
+        <div class="export-group">Diagnóstico</div>
+        <button data-export-diag="json">JSON</button>
+        <button data-export-diag="txt">TXT</button>
+        <button data-export-diag="csv">CSV</button>
+        <button data-export-diag="html">HTML</button>
+        <button data-export-diag="pdf">PDF</button>
       </div>
     </div>
     <button id="ai" class="icon-btn" title="Configurar IA">⚙</button>
@@ -90,12 +102,6 @@
           <button class="reader-tab" data-rtab="calibration" role="tab">Calibración</button>
         </nav>
         <div class="reader-tabpage on" data-rtabpage="metrics" id="metrics-tabpage">
-        <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:12px;">
-          <button class="btn-micro" data-report-export="txt" title="Exportar Reporte TXT">TXT</button>
-          <button class="btn-micro" data-report-export="json" title="Exportar Reporte JSON">JSON</button>
-          <button class="btn-micro" data-report-export="html" title="Exportar Reporte HTML (Fancy)">HTML</button>
-          <button class="btn-micro" data-report-export="pdf" title="Exportar Reporte PDF (Fancy)">PDF</button>
-        </div>
         <div id="calibration-indicator" class="cal-indicator"></div>
         <div class="hero">
           <div class="ring-card"><div class="ring"><svg width="104" height="104" viewBox="0 0 104 104"><circle cx="52" cy="52" r="44" fill="none" stroke="var(--track)" stroke-width="9"/><circle id="ring-health" cx="52" cy="52" r="44" fill="none" stroke="var(--purple)" stroke-width="9" stroke-linecap="round" stroke-dasharray="276.5" stroke-dashoffset="276.5" transform="rotate(-90 52 52)"/></svg><div class="ring-num"><b id="health-num">—</b><small>/100</small></div></div><div class="ring-name">Salud del guion</div><div class="ring-sub">validado + calculado</div></div>
@@ -116,29 +122,11 @@
           <div id="ia-locked" class="ia-locked">Activá el Modo IA en ⚙ para usar esta pestaña.</div>
           <div id="ia-content" hidden>
             <button id="run-deep" class="deep-btn" title="Corre los análisis semánticos profundos"><span class="deep-label">✦ Analizar a fondo</span><span class="deep-sub">repetición · ideas · ritmo · cobertura</span></button>
-            <div id="deep-status"></div>
             <section class="sec" id="sentiment-section"><div class="sec-h"><span class="sec-t">Arco emocional</span><span class="sec-hint">IA en vivo</span></div><div id="sentiment-arc"></div></section>
             <section class="sec" id="deep-section">
-              <div id="deep-report" class="report-card" hidden>
-                <div class="report-header">
-                  <div class="report-title">REPORTE</div>
-                  <div class="report-count" id="report-issue-count">0 problemas</div>
-                </div>
-                <div class="report-score-box">
-                  <div class="report-score-label">OVERALL SCORE</div>
-                  <div class="report-score-val"><span id="report-overall-score">0</span><small>/100</small></div>
-                  <div class="report-score-status" id="report-overall-status">Calculando...</div>
-                </div>
-                <div class="report-subscores">
-                  <div class="subscore"><div class="sub-label">HOOK</div><div class="sub-val" id="report-hook-score">0</div></div>
-                  <div class="subscore"><div class="sub-label">STRUCTURE</div><div class="sub-val" id="report-struct-score">0</div></div>
-                  <div class="subscore"><div class="sub-label">PACING</div><div class="sub-val" id="report-pacing-score">0</div></div>
-                </div>
-                <div class="issues-list-header">ISSUES FOUND</div>
-                <div class="issues-list" id="report-issues-list">
-                  <!-- Issues injected here -->
-                </div>
-              </div>
+              <div class="sec-h"><span class="sec-t">Diagnóstico semántico</span><span class="sec-hint" id="deep-status"></span></div>
+              <div id="semantic-cards" class="semantic-cards"></div>
+              <div id="semantic-issues"></div>
             </section>
           </div>
         </div>
@@ -163,7 +151,7 @@
           <section class="sec"><div class="sec-h"><span class="sec-t">Historial</span></div><div id="cal-history"></div></section>
         </div>
 
-        <div class="legend">Todo se procesa localmente en tu navegador.<br><a href="./SCRIPT-LAB-METRICAS-Y-FUENTES.md" target="_blank">Ver fórmulas y fuentes completas</a>.</div>
+        <div class="legend">Todo se procesa localmente en tu navegador.<br>ScriptLab V1.0.0a · motor combined-2.0.0 · <a href="./metricas.html" target="_blank">Ver fórmulas y fuentes completas</a></div>
       </div>
     </aside>
   </main>
@@ -186,7 +174,7 @@
     </div>
   </dialog>
 
-  <script src="./diagnostics.js"></script>
-  <script type="module" src="./main.js"></script>
+  <script src="./js/diagnostics.js"></script>
+  <script type="module" src="./js/main.js"></script>
 </body>
 </html>

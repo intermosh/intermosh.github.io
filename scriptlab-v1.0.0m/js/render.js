@@ -8,7 +8,7 @@ import { analysis, quality } from './scoring.js';
 import { wordCount, durationInSeconds } from './ai-shared.js';
 import { all, put } from './db.js';
 import { scheduleAI, scheduleSentiment, scheduleRetention, setRenderCallbacks, workerSend } from './workers.js';
-import { analyzeCognitiveLoad, computeRetentionPrediction } from './retention-engine.js';
+import { analyzeCognitiveLoad } from './retention-engine.js';
 
 const $ = s => document.querySelector(s);
 /* Chart.js eliminado (D16). Curva de retención → SVG inline. */
@@ -20,6 +20,7 @@ const $ = s => document.querySelector(s);
    render() — orquestador principal
    ============================================================ */
 export function render() {
+  try {
   const proj = state.p;
   if (!proj) return;
 
@@ -80,6 +81,11 @@ export function render() {
   updateRetentionPanel();
   scheduleRetention();
   updateDeepStatus();
+
+  } catch (err) {
+    console.error('[ScriptLab] render() error:', err);
+    // No re-throw: la app debe seguir viva aunque un render falle.
+  }
 }
 
 /* ============================================================
@@ -231,6 +237,7 @@ function setRing(id, pct) {
    renderMetrics(a) — anillo salud + desglose + eco mini + riesgos
    ============================================================ */
 export function renderMetrics(a) {
+  try {
   const proj = state.p;
   if (!proj) return;
 
@@ -263,6 +270,10 @@ export function renderMetrics(a) {
   // (Los riesgos de retención se agregan en updateRetentionPanel)
   // Guardamos los heurísticos para combinarlos ahí.
   state._heuristicRisks = baseRisks;
+
+  } catch (err) {
+    console.error('[ScriptLab] renderMetrics() error:', err);
+  }
 }
 
 /* ============================================================
@@ -332,6 +343,11 @@ function updateRetentionPanel() {
     const miniRet = document.querySelector('#mini-retention');
     if (miniRet) miniRet.textContent = '—';
   }
+
+  // Refresh semantic cards when AI results change (alignment from tier 1)
+  if (state.mode === 'ia' && state.aiResult) {
+    refreshSemanticCards();
+  }
 }
 
 /* (Chart.js eliminado — renderRetentionCurveSVG arriba reemplaza esta función) */
@@ -342,6 +358,7 @@ function updateRetentionPanel() {
    verde = POS (+), rojo = NEG (-), gris = NEU (~0).
    ============================================================ */
 export function renderSentimentArc() {
+  try {
   const root = document.querySelector('#sentiment-arc');
   if (!root) return;
   const sent = state.sentimentResult;
@@ -405,7 +422,17 @@ export function renderSentimentArc() {
     '<div class="sentiment-metric"><small>Engagement</small><b class="' + engCls + '">' + engPct + '%</b><div class="sentiment-glossa">Variación emocional del guion</div></div>' +
     '<div class="sentiment-metric"><small>Momentum</small><b class="' + momCls + '">' + momPts + Math.round((sent.emotionalMomentum || 0) * 100) + '</b><div class="sentiment-glossa">Termina más + o − de lo que empezó</div></div>' +
     '<div class="sentiment-metric"><small>Saltos tonales</small><b class="' + jumpCls + '">' + jumps + '</b><div class="sentiment-glossa">Cambios bruscos de tono</div></div>' +
-    '</div>';
+    '</div>' +
+    // Aviso discreto cuando algunos bloques no pudieron analizarse (dato de processing)
+    (sent.processing?.failedBlocks > 0
+      ? '<div style="font-size:11px;color:var(--warn);margin-top:8px;opacity:0.8">⚠ ' +
+        sent.processing.failedBlocks + ' bloque' + (sent.processing.failedBlocks > 1 ? 's' : '') +
+        ' no se pudo analizar</div>'
+      : '');
+
+  } catch (err) {
+    console.error('[ScriptLab] renderSentimentArc() error:', err);
+  }
 }
 
 /* ============================================================
@@ -588,7 +615,7 @@ export function saveDebounced() {
   }, 350);
 }
 
-function _showSaveIndicator(status) {
+function _showSaveIndicator(state) {
   let el = document.querySelector('#autosave-indicator');
   if (!el) {
     el = document.createElement('div');
@@ -596,13 +623,13 @@ function _showSaveIndicator(status) {
     el.style.cssText = 'position:fixed;bottom:12px;right:12px;z-index:999;font-size:11px;padding:4px 10px;border-radius:6px;opacity:0;transition:opacity .3s;pointer-events:none';
     document.body.appendChild(el);
   }
-  if (status === 'saving') {
+  if (state === 'saving') {
     el.textContent = 'Guardando…';
     el.style.background = 'var(--panel2)';
     el.style.color = 'var(--muted)';
     el.style.border = '1px solid var(--border)';
     el.style.opacity = '1';
-  } else if (status === 'saved') {
+  } else if (state === 'saved') {
     el.textContent = '✓ Guardado';
     el.style.background = 'rgba(92,219,135,.12)';
     el.style.color = 'var(--good)';
@@ -638,12 +665,12 @@ export function renderDensityChart() {}
 function updateDeepStatus() {
   const el = $('#deep-status');
   if (!el) return;
-  if (!state.p || state.mode !== 'ia') { el.innerHTML = ''; return; }
+  if (!state.p || state.mode !== 'ia') { el.textContent = ''; return; }
   if (state.deepResult) {
-    el.innerHTML = '✓ Actualizado';
+    el.textContent = '✓ Actualizado';
     el.style.color = 'var(--good)';
   } else {
-    el.innerHTML = '◐ Contenido cambió · volvé a analizar a fondo';
+    el.textContent = 'Pendiente';
     el.style.color = 'var(--warn)';
   }
 }
@@ -768,161 +795,191 @@ function renderRetentionCurveSVG(curve) {
    Movid desde main.js para respetar §13: render.js maneja todo el DOM,
    main.js solo orquesta. main.js las importa y las llama desde runDeep().
    ============================================================ */
-export function renderGapsObj() {
+export function renderExtractive(result) {
+  // Store for unified render
+  state._extractiveResult = result;
+}
+
+export function renderRedundancy(result) {
+  state._redundancyResult = result;
+}
+
+export function renderDensity(result) {
+  state._densityResult = result;
+}
+
+export function renderGaps() {
   const proj = state.p;
-  const structuralTopics = PREDEFINED_TOPICS.filter(t => t.kind === 'structural');
+  if (!proj) return Promise.resolve();
+
   const semanticTopics = PREDEFINED_TOPICS.filter(t => t.kind === 'semantic');
-
-  const structural = structuralTopics.map(t => ({
-    label: t.label,
-    has: proj.blocks.some(b => b.type === t.blockType)
-  }));
-
-  if (state.mode !== 'ia' || !state.worker) {
-    return Promise.resolve({ structural, semantic: null });
-  }
-
   const blocks = proj.blocks.map(b => b.content).filter(t => t && t.trim());
-  if (!blocks.length) {
-    return Promise.resolve({ structural, semantic: null });
+
+  if (state.mode !== 'ia' || !state.worker || !blocks.length) {
+    state._gapsResult = null;
+    renderSemanticCards();
+    return Promise.resolve();
   }
 
   return workerSend('DETECT_GAPS', { blocks, topics: semanticTopics })
-    .then(result => ({ structural, semantic: result }));
+    .then(result => {
+      state._gapsResult = result;
+      renderSemanticCards();
+    })
+    .catch(err => {
+      state._gapsResult = { error: err.message };
+      renderSemanticCards();
+    });
 }
 
-export function renderDeepReport(results) {
-  const root = $('#deep-report');
-  if (!root) return;
-  root.hidden = false;
+/* ============================================================
+   renderSemanticCards — unified card-based diagnostic UI
+   ============================================================ */
+function renderSemanticCards() {
+  const cardsRoot = document.querySelector('#semantic-cards');
+  const issuesRoot = document.querySelector('#semantic-issues');
+  if (!cardsRoot) return;
 
-  const proj = state.p;
+  const ai = state.aiResult;
+  const red = state._redundancyResult;
+  const ext = state._extractiveResult;
+  const den = state._densityResult;
+  const gaps = state._gapsResult;
 
-  // Fix: Sync fallback for retention data if it's not ready
-  let rData = state.retentionResult;
-  if (!rData || !rData.scores) {
-    rData = computeRetentionPrediction({
-      blocks: proj.blocks,
-      wpm: proj.wpm || 150,
-      promise: proj.promise || '',
-      title: proj.title || ''
-    });
+  // --- Cards ---
+  let cards = '';
+
+  // 1. Alineación Hook↔Promesa
+  if (ai) {
+    const alPct = Math.round((ai.alignment || 0) * 100);
+    const alCls = alPct >= 60 ? 'good' : alPct >= 35 ? 'warn' : 'bad';
+    cards += '<div class="semantic-card"><div class="sc-label">Alineación</div>' +
+      '<div class="sc-value ' + alCls + '">' + alPct + '%</div>' +
+      '<div class="sc-desc">Hook ↔ Promesa</div></div>';
   }
-  const scores = rData.scores || {};
 
+  // 2. Repetición
+  if (red && !red.error) {
+    const repCount = red.redundantCount || 0;
+    const repCls = repCount === 0 ? 'good' : repCount <= 2 ? 'warn' : 'bad';
+    const repLabel = repCount === 0 ? 'Sin repetición' : repCount + ' repeticiones';
+    cards += '<div class="semantic-card"><div class="sc-label">Repetición</div>' +
+      '<div class="sc-value ' + repCls + '">' + repCount + '</div>' +
+      '<div class="sc-desc">' + repLabel + '</div></div>';
+  }
+
+  // 3. Ritmo de temas
+  if (den && den.totalSegments) {
+    const tpm = den.topicsPerMinute || 0;
+    const tpmCls = tpm >= 1.5 && tpm <= 3 ? 'good' : tpm >= 1 ? 'warn' : 'bad';
+    cards += '<div class="semantic-card"><div class="sc-label">Ritmo</div>' +
+      '<div class="sc-value ' + tpmCls + '">' + tpm.toFixed(1) + '</div>' +
+      '<div class="sc-desc">temas/min</div></div>';
+  }
+
+  // 4. Cobertura semántica
+  if (gaps && !gaps.error) {
+    const total = (gaps.gaps?.length || 0) + (gaps.covered?.length || 0);
+    const covered = gaps.covered?.length || 0;
+    const covPct = total > 0 ? Math.round(covered / total * 100) : 0;
+    const covCls = covPct >= 70 ? 'good' : covPct >= 40 ? 'warn' : 'bad';
+    cards += '<div class="semantic-card"><div class="sc-label">Cobertura</div>' +
+      '<div class="sc-value ' + covCls + '">' + covPct + '%</div>' +
+      '<div class="sc-desc">temas cubiertos</div></div>';
+  }
+
+  // 5. Contrastes narrativos
+  if (red && !red.error && (red.contrastCount || 0) > 0) {
+    cards += '<div class="semantic-card"><div class="sc-label">Contrastes</div>' +
+      '<div class="sc-value teal">' + red.contrastCount + '</div>' +
+      '<div class="sc-desc">cambios de tono válidos</div></div>';
+  }
+
+  // 6. Ideas centrales
+  if (ext && ext.sentences?.length) {
+    cards += '<div class="semantic-card"><div class="sc-label">Ideas clave</div>' +
+      '<div class="sc-value purple">' + ext.sentences.length + '</div>' +
+      '<div class="sc-desc">oraciones representativas</div></div>';
+  }
+
+  cardsRoot.innerHTML = cards || '<div class="deep-empty">Presioná "Analizar a fondo" para ver el diagnóstico.</div>';
+
+  // --- Issues ---
+  if (!issuesRoot) return;
   const issues = [];
-  let retentionMod = 0;
 
-  // Fix: Partial AI Failure warning
-  if (results.extractiveError || results.redundancyError || results.densityError || results.gapsError) {
-    issues.push({
-      type: 'red',
-      title: 'Fallo Parcial de IA',
-      desc: 'Algunos módulos semánticos fallaron al procesarse. Los resultados podrían estar incompletos.',
-      impact: 'Advertencia del Sistema'
-    });
-  }
-
-  // Fix: Missing Emotional Context warning
-  if (!state.sentimentResult || !state.sentimentResult.sentimentArc || state.sentimentResult.sentimentArc.length === 0) {
-    if (state.mode === 'ia') {
+  // Repetition issues
+  if (red?.redundantPairs?.length) {
+    red.redundantPairs.slice(0, 3).forEach(pair => {
       issues.push({
-        type: 'yellow',
-        title: 'Falta Contexto Emocional',
-        desc: 'Esperando análisis de sentimiento. La detección de redundancia podría producir falsos positivos.',
-        impact: 'Advertencia de Contexto'
+        severity: 'bad',
+        title: 'Contenido repetido',
+        desc: 'Dos bloques dicen cosas similares (' + Math.round(pair.similarity * 100) + '% match)',
+        impact: 'Revisar',
+        blockId: pair.blockIdA || null
       });
-    }
-  }
-  
-  // Hook
-  const hookScore = scores.hook?.score || 0;
-  if (hookScore < 50) {
-    issues.push({
-      type: 'red',
-      title: 'Gancho Débil',
-      desc: 'El inicio no captura la atención ni hace una promesa fuerte.',
-      impact: '+15% retención'
     });
   }
 
-  // Structure / Missing elements
-  if (results.gaps?.structural) {
-    const missingStruct = results.gaps.structural.filter(s => !s.has);
-    if (missingStruct.length > 0) {
+  // Coverage gaps
+  if (gaps?.gaps?.length) {
+    gaps.gaps.slice(0, 3).forEach(g => {
       issues.push({
-        type: 'yellow',
-        title: 'Faltan Elementos Narrativos',
-        desc: 'Considerá agregar: ' + missingStruct.map(s => s.label).join(', '),
-        impact: '+10% retención'
+        severity: 'warn',
+        title: 'Tema poco cubierto: ' + g.topic,
+        desc: 'Mejor match: ' + Math.round(g.maxSimilarity * 100) + '%. El guion podría profundizar más.',
+        impact: 'Completar',
+        blockId: g.bestBlockId || null
       });
-    }
-  }
-
-  // Pacing
-  const pacingScore = scores.pacing?.score || 0;
-  if (pacingScore < 50) {
-    issues.push({
-      type: 'yellow',
-      title: 'Problemas de Ritmo',
-      desc: 'Las oraciones son monótonas o los bloques son muy largos sin pausas cognitivas.',
-      impact: '+12% retención'
     });
   }
 
-  // Redundancy
-  if (results.redundancy && results.redundancy.redundantPairs?.length > 0) {
+  // Alignment issue
+  if (ai && (ai.alignment || 0) < 0.35) {
     issues.push({
-      type: 'yellow',
-      title: 'Contenido Repetitivo',
-      desc: results.redundancy.redundantPairs.length + ' ideas repetidas sin contraste narrativo. Considerá recortarlas.',
-      impact: '+5% pacing'
+      severity: 'warn',
+      title: 'Hook desalineado con la promesa',
+      desc: 'Solo ' + Math.round((ai.alignment || 0) * 100) + '% de coincidencia. El hook no refleja lo que el video ofrece.',
+      impact: 'Alinear',
+      blockId: state.p?.blocks?.find(b => b.type === 'HOOK')?.id || null
     });
   }
 
-  // Density
-  if (results.density && results.density.topicsPerMinute < 1) {
-    issues.push({
-      type: 'red',
-      title: 'Baja Densidad de Contenido',
-      desc: 'Solo ' + results.density.topicsPerMinute.toFixed(1) + ' temas por minuto. La audiencia podría aburrirse.',
-      impact: '+15% retención'
+  if (issues.length) {
+    let html = '<div class="semantic-issues-title">Problemas detectados</div>';
+    issues.forEach(iss => {
+      html += '<div class="semantic-issue ' + iss.severity + '" ' +
+        (iss.blockId ? 'data-issue-block="' + iss.blockId + '" style="cursor:pointer"' : '') + '>',
+      html += '<div class="si-text"><div class="si-title">' + esc(iss.title) + '</div>' +
+        '<div class="si-desc">' + esc(iss.desc) + '</div></div>' +
+        (iss.impact ? '<span class="si-impact">' + esc(iss.impact) + '</span>' : '') +
+        '</div>';
     });
-  }
+    issuesRoot.innerHTML = html;
 
-  // CTA
-  const ctaScore = scores.cta?.score || 0;
-  if (ctaScore < 50 && proj.blocks.some(b => b.type === 'CTA')) {
-    issues.push({
-      type: 'yellow',
-      title: 'CTA Débil',
-      desc: 'El llamado a la acción carece de urgencia o verbos de acción.',
-      impact: '+8% engagement'
+    // Click handler: scroll + highlight block
+    issuesRoot.querySelectorAll('[data-issue-block]').forEach(el => {
+      el.addEventListener('click', () => {
+        const blockId = el.dataset.issueBlock;
+        const blockEl = document.querySelector('[data-id="' + blockId + '"]');
+        if (!blockEl) return;
+        // Remove previous highlights
+        document.querySelectorAll('.flow-block.issue-highlight').forEach(b => b.classList.remove('issue-highlight'));
+        // Scroll into view
+        blockEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Highlight
+        blockEl.classList.add('issue-highlight');
+        setTimeout(() => blockEl.classList.remove('issue-highlight'), 3000);
+      });
     });
-  }
-
-  const overallScore = Math.round(rData.overallRetention || 0);
-  const status = overallScore >= 60 ? 'Bueno' : overallScore >= 40 ? 'Necesita trabajo' : 'Crítico';
-
-  $('#report-overall-score').textContent = overallScore;
-  $('#report-overall-status').textContent = status;
-  $('#report-issue-count').textContent = issues.length + ' problemas encontrados';
-  $('#report-hook-score').textContent = hookScore;
-  $('#report-struct-score').textContent = scores.narrative?.score || 0;
-  $('#report-pacing-score').textContent = pacingScore;
-
-  const issuesList = $('#report-issues-list');
-  if (issues.length === 0) {
-    issuesList.innerHTML = '<div class="issue-item" style="border-left-color: var(--good)"><div class="issue-title">¡Todo excelente!</div><div class="issue-desc">No se encontraron problemas críticos en el guion.</div></div>';
   } else {
-    issuesList.innerHTML = issues.map(i => 
-      '<div class="issue-item ' + i.type + '">' +
-        '<div class="issue-title">' + esc(i.title) + '</div>' +
-        '<div class="issue-desc">' + esc(i.desc) + '</div>' +
-        '<div class="issue-impact">' + esc(i.impact) + '</div>' +
-      '</div>'
-    ).join('');
+    issuesRoot.innerHTML = '';
   }
+}
+
+// Re-render cards when AI results arrive (tier 1)
+export function refreshSemanticCards() {
+  renderSemanticCards();
 }
 
 /* ============================================================

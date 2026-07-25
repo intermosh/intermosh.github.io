@@ -14,6 +14,13 @@ const TRANSFORMERS_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers
 
 let classifier = null;
 
+// robertuito max_position_embeddings=130 → ~90 palabras español (defensa en profundidad).
+// El chunking por oraciones mantiene cada fragmento dentro del límite real del modelo.
+const MAX_SENT_WORDS = 90;
+// Segundo argumento para classifier() — truncation como defensa adicional.
+// max_length=128 deja margen para tokens especiales del tokenizer (CLS, SEP).
+const CLASSIFIER_OPTS = { truncation: true, max_length: 128 };
+
 /* ============================================================
    INIT — carga el modelo, reporta progreso y READY
    ============================================================ */
@@ -55,82 +62,82 @@ function toValence(result) {
 }
 
 /* ============================================================
-   chunkTextForSentiment
+   splitIntoSentChunks — divide texto en fragmentos ≤ MAX_SENT_WORDS
+   palabras, respetando límites de oración. Replica la lógica de
+   splitIntoChunks de ai-worker.js adaptada a palabras en vez de
+   caracteres. Un texto corto devuelve 1 chunk.
    ============================================================ */
-function chunkTextForSentiment(text) {
-  let sentences = text.match(/[^.!?]+[.!?]+/g);
-  if (!sentences) sentences = [text];
-  
-  const finalSentences = [];
-  for (const s of sentences) {
-    const words = s.trim().split(/\s+/);
-    if (words.length > 200) {
-      // Emergency fallback for text blocks with no punctuation at all
-      for (let i = 0; i < words.length; i += 150) {
-        finalSentences.push(words.slice(i, i + 150).join(' '));
-      }
-    } else {
-      finalSentences.push(s);
-    }
-  }
+function splitIntoSentChunks(text) {
+  const wordCount = text.split(/\s+/).length;
+  if (wordCount <= MAX_SENT_WORDS) return [text];
 
+  // Separar por oraciones, preservando el delimitador
+  const sentences = text.match(/[^.!?]+[.!?]+\s*|[^.!?]+$/g) || [text];
   const chunks = [];
-  let currentChunk = '';
+  let current = '';
   let currentWords = 0;
 
-  for (const sentence of finalSentences) {
-    const words = sentence.trim().split(/\s+/).length;
-    if (currentWords + words > 200 && currentChunk) { // smaller chunks for sentiment
-      chunks.push(currentChunk.trim());
-      currentChunk = sentence;
-      currentWords = words;
+  for (const sentence of sentences) {
+    const sentenceWords = sentence.trim().split(/\s+/).length;
+    if (currentWords + sentenceWords <= MAX_SENT_WORDS) {
+      current += sentence;
+      currentWords += sentenceWords;
     } else {
-      currentChunk = currentChunk ? currentChunk + ' ' + sentence : sentence;
-      currentWords += words;
+      if (current.trim()) chunks.push(current.trim());
+      // Si una oración sola excede MAX_SENT_WORDS, partir por palabras
+      if (sentenceWords > MAX_SENT_WORDS) {
+        const words = sentence.split(/(\s+)/);
+        let wordChunk = '';
+        let wc = 0;
+        for (const word of words) {
+          const isSpace = /^\s+$/.test(word);
+          if (!isSpace) wc++;
+          if (wc > MAX_SENT_WORDS && wordChunk.trim()) {
+            chunks.push(wordChunk.trim());
+            wordChunk = word;
+            wc = isSpace ? 0 : 1;
+          } else {
+            wordChunk += word;
+          }
+        }
+        current = wordChunk;
+        currentWords = current.trim().split(/\s+/).filter(Boolean).length;
+      } else {
+        current = sentence;
+        currentWords = sentenceWords;
+      }
     }
   }
-  if (currentChunk.trim()) {
-    chunks.push(currentChunk.trim());
-  }
-  return chunks;
+  if (current.trim()) chunks.push(current.trim());
+  return chunks.length > 0 ? chunks : [text];
 }
 
 /* ============================================================
-   classifyTexts — clasifica en batches con retry uno-por-uno + CHUNKING.
+   classifyTexts — clasifica en batches con retry uno-por-uno +
+   truncation explícito. Defensa contra el bug "Cannot convert
+   undefined to a BigInt" de transformers.js.
+   Devuelve resultados alineados con el input; los que fallan → null.
    ============================================================ */
 async function classifyTexts(texts) {
-  const results = [];
+  const results = new Array(texts.length).fill(null);
   const BATCH = 8;
-  
-  for (let i = 0; i < texts.length; i++) {
-    const chunks = chunkTextForSentiment(texts[i]);
-    const chunkValences = [];
-    
-    for (let c = 0; c < chunks.length; c += BATCH) {
-      const batch = chunks.slice(c, c + BATCH);
-      try {
-        const out = await classifier(batch);
-        const arr = Array.isArray(out) ? out : [out];
-        arr.forEach(r => chunkValences.push(toValence(r)));
-      } catch (_) {
-        for (let j = 0; j < batch.length; j++) {
-          try {
-            const out = await classifier([batch[j]]);
-            const arr = Array.isArray(out) ? out : [out];
-            chunkValences.push(toValence(arr[0]));
-          } catch (__) {
-            // chunk failed
-          }
+  for (let i = 0; i < texts.length; i += BATCH) {
+    const batch = texts.slice(i, i + BATCH);
+    try {
+      const out = await classifier(batch, CLASSIFIER_OPTS);
+      const arr = Array.isArray(out) ? out : [out];
+      arr.forEach((r, j) => { results[i + j] = r; });
+    } catch (_) {
+      // Batch falló — procesar uno por uno para no perder todo.
+      for (let j = 0; j < batch.length; j++) {
+        try {
+          const out = await classifier([batch[j]], CLASSIFIER_OPTS);
+          const arr = Array.isArray(out) ? out : [out];
+          results[i + j] = arr[0];
+        } catch (__) {
+          results[i + j] = null; // este texto no se pudo clasificar
         }
       }
-    }
-    
-    if (chunkValences.length === 0) {
-      results.push(null);
-    } else {
-      // Return the mean valence of the chunks
-      const sum = chunkValences.reduce((a, b) => a + b, 0);
-      results.push(sum / chunkValences.length);
     }
   }
   return results;
@@ -153,32 +160,79 @@ async function sentiment({ requestId, texts, blockIds, blockIndices, blockTypes 
   if (eligible.length === 0) {
     self.postMessage({
       type: 'SENTIMENT_RESULT', requestId,
-      sentimentArc: [], engagementScore: 0, emotionalMomentum: 0, tonalJumps: []
+      sentimentArc: [], engagementScore: 0, emotionalMomentum: 0, tonalJumps: [],
+      processing: { totalBlocks: texts.length, eligibleBlocks: 0, successfulBlocks: 0, failedBlocks: 0 }
     });
     return;
   }
 
-  // Clasificar todos los elegibles (con defensa BigInt: batches + retry).
-  const rawResults = await classifyTexts(eligible.map(e => e.text));
+  // Pre-chunk: expandir textos largos en fragmentos ≤ MAX_SENT_WORDS palabras.
+  // Replica el patrón de ai-worker.js::embedTexts(): chunk → classify → aggregate.
+  const entries = []; // {origIdx, chunkIdx, chunkText, wordWeight}
+  for (let i = 0; i < eligible.length; i++) {
+    const chunks = splitIntoSentChunks(eligible[i].text);
+    for (let c = 0; c < chunks.length; c++) {
+      entries.push({ origIdx: i, chunkIdx: c, chunkText: chunks[c], wordWeight: chunks[c].trim().split(/\s+/).length });
+    }
+  }
+
+  // Clasificar todos los chunks (con defensa BigInt: batches + retry + truncation).
+  const chunkResults = await classifyTexts(entries.map(e => e.chunkText));
+
+  // Agregar: por cada bloque elegible, promediar valencias de sus chunks
+  // ponderado por cantidad de palabras (textos más largos pesan más).
+  const aggregatedValences = new Array(eligible.length).fill(null);
+  const chunkCounts = new Array(eligible.length).fill(0);
+  const successfulChunkCounts = new Array(eligible.length).fill(0);
+
+  for (let i = 0; i < entries.length; i++) {
+    const origIdx = entries[i].origIdx;
+    chunkCounts[origIdx]++;
+    const r = chunkResults[i];
+    if (r) {
+      successfulChunkCounts[origIdx]++;
+      const v = toValence(r);
+      if (aggregatedValences[origIdx] === null) {
+        aggregatedValences[origIdx] = { sum: v * entries[i].wordWeight, totalWeight: entries[i].wordWeight };
+      } else {
+        aggregatedValences[origIdx].sum += v * entries[i].wordWeight;
+        aggregatedValences[origIdx].totalWeight += entries[i].wordWeight;
+      }
+    }
+  }
+
+  // Convertir a valencia final (promedio ponderado o null si todos los chunks fallaron)
+  const rawResults = aggregatedValences.map((agg) => {
+    if (agg === null || agg.totalWeight === 0) return null;
+    return agg.sum / agg.totalWeight;
+  });
 
   const sentimentArc = [];
+  let failedCount = 0;
   eligible.forEach((e, k) => {
-    const valence = rawResults[k];
-    if (valence === null || valence === undefined) return; // este texto falló al clasificar → se omite del arco
+    const valence = rawResults[k] ?? 0;
+    const hadChunks = chunkCounts[k];
+    const hadSuccess = successfulChunkCounts[k];
+    const failed = hadSuccess === 0 && hadChunks > 0;
+    if (failed) failedCount++;
     const label = valence > 0.05 ? 'POS' : valence < -0.05 ? 'NEG' : 'NEU';
     sentimentArc.push({
       blockId: blockIds[e.idx],
       blockIndex: blockIndices[e.idx],
       blockType: blockTypes[e.idx],
       label,
-      valence: Math.round(valence * 1000) / 1000
+      valence: Math.round(valence * 1000) / 1000,
+      chunkCount: hadChunks,
+      successfulChunks: hadSuccess,
+      failed
     });
   });
 
   if (sentimentArc.length === 0) {
     self.postMessage({
       type: 'SENTIMENT_RESULT', requestId,
-      sentimentArc: [], engagementScore: 0, emotionalMomentum: 0, tonalJumps: []
+      sentimentArc: [], engagementScore: 0, emotionalMomentum: 0, tonalJumps: [],
+      processing: { totalBlocks: texts.length, eligibleBlocks: eligible.length, successfulBlocks: 0, failedBlocks: eligible.length }
     });
     return;
   }
@@ -230,7 +284,13 @@ async function sentiment({ requestId, texts, blockIds, blockIndices, blockTypes 
     sentimentArc,
     engagementScore: Math.round(engagementScore * 1000) / 1000,
     emotionalMomentum,
-    tonalJumps
+    tonalJumps,
+    processing: {
+      totalBlocks: texts.length,
+      eligibleBlocks: eligible.length,
+      successfulBlocks: eligible.length - failedCount,
+      failedBlocks: failedCount
+    }
   });
 }
 

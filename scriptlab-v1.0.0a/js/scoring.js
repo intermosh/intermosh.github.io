@@ -6,6 +6,7 @@
 
 import { T, state } from './state.js';
 import { wordCount, durationInSeconds, fernandezHuerta, overlap } from './ai-shared.js';
+import { analyzeCTA } from './retention-engine.js'; // combined-2.0 (E2): CTA escalado
 
 /* Regex de urgencia/curiosidad para detección de hooks. Lista transparente. */
 const URGENCY_RE = /ahora|hoy|descubr[ií]|secreto|nunca|siempre|error|truc[oa]|incre[ií]ble|sorprendente|importante|clave|esencial/i;
@@ -68,9 +69,11 @@ export function computeAnalysis(project = state.p) {
   }
 
   /* --- Claridad (cl) — Fernández-Huerta con penalización bidireccional --- */
+  // COMBINED: fh puede ser null (texto <3 palabras) → neutral 50, no "muy difícil".
   const fh = fernandezHuerta(text);
   let cl;
-  if (fh > 90) cl = Math.max(30, 60 - (fh - 90) * 3);                                   // demasiado simple (infantil)
+  if (fh === null) cl = 50;                                                            // sin datos
+  else if (fh > 90) cl = Math.max(30, 60 - (fh - 90) * 3);                             // demasiado simple (infantil)
   else if (fh >= 60) cl = Math.min(100, 70 + (fh - 60) * 0.5 - Math.max(0, avg - 18) * 2);
   else if (fh >= 40) cl = Math.max(20, 50 - (60 - fh) * 0.8);
   else cl = Math.max(10, 30 - (40 - fh));                                              // muy difícil
@@ -80,14 +83,29 @@ export function computeAnalysis(project = state.p) {
   const sentMean = sentLens.reduce((a, b) => a + b, 0) / Math.max(1, sentLens.length);
   const sentVar = sentLens.reduce((s, l) => s + (l - sentMean) ** 2, 0) / Math.max(1, sentLens.length);
   const sentCV = Math.sqrt(sentVar) / (sentMean || 1);
-  const pa = Math.min(100, 25 + visual * 12 + (sentCV > 0.3 && sentCV < 1 ? 15 : sentCV <= 0.3 ? 0 : 5) + Math.min(20, sentLens.length > 3 ? 10 : 5));
+  // Base reducida 25→10, multiplicador 12→8 para que hook/claridad puedan diferenciar.
+  const pa = Math.min(100, 10 + visual * 8 + (sentCV > 0.3 && sentCV < 1 ? 15 : sentCV <= 0.3 ? 0 : 5) + Math.min(15, sentLens.length > 3 ? 8 : 3));
 
   /* --- Promesa (pr) --- */
   const pr = effectiveHook && project.promise ? (overlap(effectiveHook.content, project.promise) ? 75 : 20) : 20;
 
   /* --- ICN bruto --- */
+  /* combined-2.0.0 (PASO 3-E2): bonus de CTA ESCALADO, no plano.
+     Antes: +8 por la mera existencia de un bloque CTA — la fuente citada
+     (estudio Wistia: mid-roll 16.95% vs post-roll 10.98% vs pre-roll 3.15%
+     conversión) muestra que lo que convierte es PLACEMENT/calidad, no
+     presencia; RetentionRabbit 2025: solo 16% llega al último 10s.
+     Ahora: 8 × (ctaScore/100) con el MISMO analyzeCTA del APV (fuente única
+     de verdad: posición + longitud + verbos). Tope 8 se conserva para CTAs
+     ideales.
+     OJO: analyzeCTA devuelve score 30 "default" cuando NO hay CTA (leniencia
+     heredada de mimo, válida solo para el APV que lo documenta con su línea
+     de riesgo). En ICN, sin CTA real la contribución es 0 — de lo contrario
+     un guion sin CTA robaría +2.4 (bug detectado en PASO 3: malo 18→20). */
+  const _ctaQ = analyzeCTA(project.blocks);
+  const ctaContribution = _ctaQ.position === null ? 0 : 8 * (_ctaQ.score / 100);
   const rawIcn = Math.round(Math.max(0, Math.min(100,
-    hs * 0.31 + cl * 0.22 + pa * 0.22 + pr * 0.17 + (project.blocks.some(b => b.type === 'CTA') ? 8 : 0)
+    hs * 0.31 + cl * 0.22 + pa * 0.22 + pr * 0.17 + ctaContribution
   )));
 
   /* --- Calibración con activeBenchmarks (R1 fix) --- */
@@ -137,7 +155,7 @@ export function quality(block, a) {
 export function splitSentences(text) {
   if (!text) return [];
   const raw = text.split(/(?<=[.!?])\s+/);
-  return raw.map(s => s.trim()).filter(s => s.length > 10);
+  return raw.map(s => s.trim()).filter(s => s.length > 2);
 }
 
 export function splitIntoSegments(text, wpm) {

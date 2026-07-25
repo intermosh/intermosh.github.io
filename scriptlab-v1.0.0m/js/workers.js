@@ -232,20 +232,19 @@ export function initRetentionWorker() {
       console.warn('Retention worker error de carga:', e.message || e);
     };
     state.retentionWorker.onmessage = (e) => {
-      if (e.data.requestId && e.data.requestId !== state.analysisRequestId) return;
-      
-      if (e.data.type === 'RETENTION_RESULT') {
-        state.retentionResult = e.data;
+      const d = e.data;
+      // Bug 8 fix: verificar requestId para ignorar resultados viejos.
+      if (d.requestId && d.requestId !== state.analysisRequestId) return;
+      if (d.type === 'RETENTION_RESULT') {
+        state.retentionResult = d;
         if (state.sentimentResult) state.retentionResult.sentiment = state.sentimentResult;
         if (renderRetentionPanelRef) renderRetentionPanelRef();
         if (renderMetricsRef) renderMetricsRef(analysis());
       }
-      if (e.data.type === 'ERROR') {
-        console.warn('Retention error:', e.data.message);
-        const summary = document.querySelector('#retention-summary');
-        if (summary) {
-          summary.innerHTML = '<span style="font-size:11px;color:var(--bad)">Error: ' + (e.data.message || 'Fallo en motor de retención') + '</span>';
-        }
+      if (d.type === 'ERROR') {
+        // Bug 9 fix: señal visible al usuario, no solo console.warn.
+        console.warn('Retention error:', d.message);
+        setAIActivity('error', '! Retención: error');
       }
     };
   } catch (e) {

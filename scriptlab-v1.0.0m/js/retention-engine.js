@@ -20,10 +20,11 @@ import { wordCount, sentenceCount, syllables, fernandezHuerta, durationInSeconds
    Cada peso con cita inline. Etiqueta epistémica en el comentario.
    ============================================================ */
 export const WEIGHTS = {
-  // Hook 0.25 — PrePublish 2026 (5k scripts: value claim en 15s → 52% vs 44% retención);
-  //              Think with Google 2024 (+47% AVD); Backlinko (1.3M videos, caída 30-45s);
-  //              RetentionRabbit 2025 (+18% retención al min 1).
-  //              [SECUNDARIA convergente — múltiples estudios independientes coinciden]
+  // Hook 0.25 — ✅ PrePublish 2026 (5k scripts: value claim en 15s → 52% vs 44% retención)
+  //              🔶 Think with Google 2024 (+47% AVD) [NO VERIFICABLE]
+  //              ✅ Backlinko (1.3M videos, caída 30-45s)
+  //              🔶 RetentionRabbit 2025 (+18% retención al min 1) [NO VERIFICABLE]
+  //              [SECUNDARIA convergente — PrePublish + Backlinko verificados]
   hookStrength: 0.25,
 
   // Pacing 0.17 — Seidel (2024) Springer "Short, Long, and Segmented Learning Videos"
@@ -32,30 +33,29 @@ export const WEIGHTS = {
   //               [PRIMARIA + SECUNDARIA]
   pacingScore: 0.17,
 
-  // Pattern interrupts 0.14 — Kahneman (1973) "Attention and Effort" orienting response [PRIMARIA teoría];
-  //                           Sokolov (1963) habituación [PRIMARIA teoría];
-  //                           ytshark/longstories 2026 (+23% retención con interrupt en primeros 5s);
-  //                           EdicionVideoPro 2026 (+40-60% con interrupts cada 3-5s, 200+ TikToks).
-  //                           [PRIMARIA teoría + SECUNDARIA cuantitativa]
+  // Pattern interrupts 0.14 — ✅ Kahneman (1973) "Attention and Effort" orienting response [PRIMARIA teoría];
+  //                           ✅ Sokolov (1963) habituación [PRIMARIA teoría];
+  //                           ✅ Rankin et al. (2009) "Habituation revisited" Neurobiology of Learning and Memory 92(2)
+  //                           🔴 ytshark/longstories 2026 (+23%) [NO VERIFICABLE]
+  //                           🔴 EdicionVideoPro 2026 (+40-60%) [NO VERIFICABLE — cifra inflada]
+  //                           [PRIMARIA teoría verificada; cifras cuantitativas NO verificables]
   patternInterrupts: 0.14,
 
-  // Emotional arc 0.11 — Berger, Levermann et al. (2026) Springer "How should content creators
-  //                      narrate their content?" (33.598 YouTube podcasts + 3.381 TED Talks + lab:
-  //                      emotionality flips ↑ engagement, arousal = mecanismo confirmado causal);
-  //                      Song et al. (2023) eNeuro (engagement sigue dramatic arc, predecible por dISC);
-  //                      Knobloch-Westerwick et al. (2015).
-  //                      [PRIMARIA causal — peso subido desde 0.08 en v16 por evidencia nueva]
+  // Emotional arc 0.11 — ✅ Song et al. (2023) eNeuro (engagement sigue dramatic arc, fMRI)
+  //                      🔶 Berger/Levermann (2026) Springer [NO VERIFICABLE]
+  //                      🔶 Knobloch-Westerwick et al. (2015) [NO VERIFICABLE]
+  //                      [Song 2023 verificado (eNeuro, peer-reviewed); fuentes adicionales NO verificables]
   emotionalArc: 0.11,
 
-  // Content density 0.11 — Miller (1956) "Magical Number Seven" (working memory 7±2 chunks);
-  //                        Sweller (1988) Cognitive Load Theory;
-  //                        AERO 2023 / ACER 2022 (chunking ↑ recall y engagement).
-  //                        [PRIMARIA teoría; traducción a temas/min es INFERENCIAL]
+  // Content density 0.11 — ✅ Miller (1956) "Magical Number Seven" (working memory 7±2 chunks)
+  //                        ✅ Sweller (1988) Cognitive Load Theory
+  //                        🔴 AERO 2023 / ACER 2022 [NO VERIFICABLE]
+  //                        [PRIMARIA teoría (Miller + Sweller verificados); mapping a temas/min INFERENCIAL]
   contentDensity: 0.11,
 
-  // Promise delivery 0.09 — RetentionRabbit 2025 (value prop en 15s → +18% retención al min 1, correlacional);
-  //                         PrePublish 2026 (payoff-at-15 test).
-  //                         [SECUNDARIA correlacional — no causal]
+  // Promise delivery 0.09 — 🔶 RetentionRabbit 2025 [NO VERIFICABLE]
+  //                         ✅ PrePublish 2026 (payoff-at-15 test)
+  //                         [SECUNDARIA — PrePublish verificado]
   promiseDelivery: 0.09,
 
   // Readability 0.07 — Fernández-Huerta (1959) "Medidas sencillas de lecturabilidad" Consigna 214
@@ -63,15 +63,16 @@ export const WEIGHTS = {
   //                    [PRIMARIA fórmula; mapeo "FH → retención de video" es INFERENCIAL]
   readability: 0.07,
 
-  // CTA placement 0.03 — ClixieAI 2025 (mid-roll CTAs convierten 16.95% vs end-roll);
-  //                      Wistia (guías de placement por duración); sender.net 2026 (~16% conversión video).
-  //                      [SECUNDARIA indirecta — mide CONVERSIÓN, no retención; por eso peso bajo]
+  // CTA placement 0.03 — 🔴 ClixieAI 2025 (16.95%) [NO VERIFICABLE]
+  //                      🔶 Wistia (guías generales) [NO VERIFICABLE]
+  //                      🔴 sender.net 2026 (~16%) [NO VERIFICABLE]
+  //                      [Peso bajo justificado: fuentes débiles, mide CONVERSIÓN no retención]
   ctaPlacement: 0.03,
 
-  // Narrative completeness 0.03 — Song et al. (2023) eNeuro (engagement sigue dramatic arc);
-  //                              USC study (70% top films siguen framework reconocible);
-  //                              Booker (2004) "Seven Basic Plots".
-  //                              [PRIMARIA estructura; peso bajo: necesaria pero no suficiente]
+  // Narrative completeness 0.03 — ✅ Song et al. (2023) eNeuro
+  //                              🔶 USC study (70% top films) [NO VERIFICABLE]
+  //                              ✅ Booker (2004) "Seven Basic Plots"
+  //                              [Song 2023 + Booker 2004 verificados; USC no verificable]
   narrativeCompleteness: 0.03
 };
 
@@ -121,7 +122,8 @@ export const RETENTION_CURVES = {
 
 /* ============================================================
    8 FUNCIONES analyzeX — cada una devuelve { score:0-100, formula, ... }
-   Umbrales documentados inline. Pesos internos marcados [NO VALIDADO].
+   // Umbrales documentados inline. Pesos internos marcados [HEURÍSTICA INTERNA — no validado].
+   // Ver SCRIPTLAB-VALIDACION-PESOS.md §3 para detalle de cada umbral.
    ============================================================ */
 
 /* --- HOOK (§7.3.1, peso 0.25) --- */
@@ -160,7 +162,7 @@ function analyzeHook(hookBlock, promise, allBlocks) {
     const promiseWords = new Set((promise.toLowerCase().match(/[\p{L}]{4,}/gu) || []));
     const overlapCount = [...hookWords].filter(w => promiseWords.has(w)).length;
     const overlapRatio = overlapCount / Math.max(1, Math.min(hookWords.size, promiseWords.size));
-    // 0.3 / 0.1 umbrales: [NO VALIDADO — heurística de overlap léxico]
+    // 0.3 / 0.1 umbrales: [HEURÍSTICA INTERNA — no validado, sin paper que establezca overlap léxico → alineación]
     if (overlapRatio > 0.3) { score += 25; reasons.push('Fuerte alineación con promesa'); }
     else if (overlapRatio > 0.1) { score += 12; reasons.push('Alineación parcial con promesa'); }
     else { reasons.push('Débil alineación con promesa'); }
@@ -183,7 +185,7 @@ function analyzePacing(blocks, wpm) {
   let score = 0;
   const avgDur = durations.reduce((a, b) => a + b, 0) / durations.length;
 
-  // 15-45s óptimo. [NO VALIDADO — sweet spot interno]
+  // 15-45s óptimo. [HEURÍSTICA INTERNA — extrapolado de Seidel 2024, umbrales exactos no validados]
   if (avgDur >= 15 && avgDur <= 45) { score += 25; details.push('Duración promedio óptima (' + Math.round(avgDur) + 's)'); }
   else if (avgDur >= 10 && avgDur < 15) { score += 15; details.push('Bloques algo cortos'); }
   else if (avgDur > 45 && avgDur <= 70) { score += 12; details.push('Bloques algo largos'); }
@@ -198,7 +200,7 @@ function analyzePacing(blocks, wpm) {
   else if (cv <= 0.15) { score += 5; details.push('Ritmo monótono (CV ≤0.15)'); }
   else { score += 8; details.push('Ritmo errático (CV >0.8)'); }
 
-  // Penalización por bloques >50s. [NO VALIDADO — umbral interno]
+  // Penalización por bloques >50s. [HEURÍSTICA INTERNA — no validado]
   const longBlocks = durations.filter(d => d > 50).length;
   if (longBlocks === 0) { score += 15; details.push('Sin bloques >50s'); }
   else { score += Math.max(0, 15 - longBlocks * 8); details.push(longBlocks + ' bloque(s) >50s'); }
@@ -214,7 +216,7 @@ function analyzePacing(blocks, wpm) {
     else if (sCv <= 0.3) { details.push('Oraciones monótonas'); }
   }
 
-  // Vacíos: -5 c/u. [NO VALIDADO — penalización interna]
+  // Vacíos: -5 c/u. [HEURÍSTICA INTERNA — no validado]
   const emptyBlocks = blocks.filter(b => !b.content?.trim()).length;
   if (emptyBlocks > 0) { score -= emptyBlocks * 5; details.push(emptyBlocks + ' bloque(s) vacíos'); }
 
@@ -232,15 +234,29 @@ function analyzePatternInterrupts(blocks) {
   const interrupts = blocks.filter(b => b.type === 'GIRO' || b.type === 'VISUAL' || b.type === 'CTA').length;
   const ratio = interrupts / total;
 
-  // Sweet spot 15-35%: [NO VALIDADO — extrapolado de práctica de edición cada 3-5s]
+  // Transición suave (sin escalones). Curva polinomial por tramos:
+  // - <0.10: rampa lineal desde 30
+  // - 0.10-0.15: transición a zona óptima
+  // - 0.15-0.35: sweet spot (85-100)
+  // - 0.35-0.50: decaimiento suave
+  // - >0.50: saturación
+  // [Interpolación NO VALIDADA — reemplaza escalones]
   let score;
-  if (ratio >= 0.15 && ratio <= 0.35) score = 85 + Math.round((ratio - 0.15) * 75);
-  else if (ratio >= 0.10 && ratio < 0.15) score = 60;
-  else if (ratio > 0.35 && ratio <= 0.50) score = 70;
-  else if (ratio < 0.10) score = 30 + Math.round(ratio * 200);
-  else score = 50;
+  if (ratio < 0.10) {
+    score = 30 + ratio * 300; // 0→30, 0.10→60
+  } else if (ratio < 0.15) {
+    const t = (ratio - 0.10) / 0.05;
+    score = 60 + t * 25; // 60→85
+  } else if (ratio <= 0.35) {
+    score = 85 + ((ratio - 0.15) / 0.20) * 15; // 85→100
+  } else if (ratio <= 0.50) {
+    const t = (ratio - 0.35) / 0.15;
+    score = 100 - t * 30; // 100→70
+  } else {
+    score = Math.max(50, 70 - (ratio - 0.50) * 40); // 70→50 gradual
+  }
 
-  const s = Math.min(100, score);
+  const s = Math.round(Math.min(100, score));
   const formula = `Interrupts: ${interrupts}/${total} bloques (${(ratio*100).toFixed(0)}%) → ${s}/100 (sweet spot: 15-35%)`;
   return { score: s, ratio, formula };
 }
@@ -252,7 +268,7 @@ function analyzeContentDensity(blocks, wpm) {
   if (totalMinutes < 0.5) return { score: 50, topicsPerMinute: 0, formula: '<0.5 min → 50 (default)' };
 
   // Detección de cambios temáticos por overlap léxico (Miller 1956 / Sweller 1988).
-  // Umbral <15% overlap = tema distinto. [NO VALIDADO — heurística léxica]
+  // Umbral <15% overlap = tema distinto. [HEURÍSTICA INTERNA — inferido de Miller 1956, mapping no validado]
   const topicShifts = blocks.filter((b, i) => {
     if (i === 0) return false;
     const prev = blocks[i - 1].content || '';
@@ -264,15 +280,29 @@ function analyzeContentDensity(blocks, wpm) {
   }).length;
 
   const topicsPerMinute = topicShifts / Math.max(1, totalMinutes);
-  // Sweet spot 1.5-3 temas/min. [NO VALIDADO — extrapolado de Miller 7±2 chunks]
+  // Transición suave (sin escalones). Curva continua:
+  // - <1.0: rampa desde 35
+  // - 1.0-1.5: transición
+  // - 1.5-3.0: sweet spot (85)
+  // - 3.0-4.5: decaimiento suave
+  // - >4.5: saturación baja
+  // [Interpolación NO VALIDADA — reemplaza escalones]
   let score;
-  if (topicsPerMinute >= 1.5 && topicsPerMinute <= 3) score = 85;
-  else if (topicsPerMinute >= 1 && topicsPerMinute < 1.5) score = 65;
-  else if (topicsPerMinute > 3 && topicsPerMinute <= 4.5) score = 60;
-  else if (topicsPerMinute < 1) score = 35;
-  else score = 40;
+  if (topicsPerMinute < 1.0) {
+    score = 35 + topicsPerMinute * 30; // 0→35, 1.0→65
+  } else if (topicsPerMinute < 1.5) {
+    const t = (topicsPerMinute - 1.0) / 0.5;
+    score = 65 + t * 20; // 65→85
+  } else if (topicsPerMinute <= 3.0) {
+    score = 85; // sweet spot
+  } else if (topicsPerMinute <= 4.5) {
+    const t = (topicsPerMinute - 3.0) / 1.5;
+    score = 85 - t * 25; // 85→60
+  } else {
+    score = Math.max(40, 60 - (topicsPerMinute - 4.5) * 10); // 60→40 gradual
+  }
 
-  const s = Math.min(100, score);
+  const s = Math.round(Math.min(100, score));
   const formula = `Densidad: ${topicShifts} shifts / ${totalMinutes.toFixed(1)} min = ${topicsPerMinute.toFixed(1)} temas/min → ${s}/100 (ideal: 1.5-3)`;
   return { score: s, topicsPerMinute: Math.round(topicsPerMinute * 10) / 10, formula };
 }
@@ -297,14 +327,14 @@ function analyzePromiseDelivery(blocks, promise) {
 
   const relativePosition = bestBlock / Math.max(1, blocks.length - 1);
   // Entrega en primer 30% = mejor retención (RetentionRabbit 2025, correlacional).
-  // Umbrales 0.3/0.5 y overlap 0.2/0.15: [NO VALIDADO — recomendación de industria]
+  // Umbrales 0.3/0.5 y overlap 0.2/0.15: [HEURÍSTICA INTERNA — no validado, sin paper que establezca posición de entrega]
   let score;
   if (relativePosition <= 0.3 && bestOverlap > 0.2) score = 90;
   else if (relativePosition <= 0.5 && bestOverlap > 0.15) score = 70;
   else if (bestOverlap > 0.1) score = 50;
   else score = 30;
 
-  const s = Math.min(100, score);
+  const s = Math.round(Math.min(100, score));
   const formula = `Promesa: bloque #${bestBlock + 1} (${(relativePosition*100).toFixed(0)}% video, overlap ${(bestOverlap*100).toFixed(0)}%) → ${s}/100`;
   return { score: s, deliveredAt: bestBlock, relativePosition, formula };
 }
@@ -313,7 +343,7 @@ function analyzePromiseDelivery(blocks, promise) {
 function analyzeReadability(blocks) {
   const fullText = blocks.map(b => b.content).join(' ');
   const fh = fernandezHuerta(fullText);
-  // Rangos FH: 60-80 ideal (lenguaje oral), >90 penaliza infantil. [Mapeo NO VALIDADO]
+  // Rangos FH: 60-80 ideal (lenguaje oral), >90 penaliza infantil. [Rangos FH validados (Fernández-Huerta 1959), mapping a score 0-100 = HEURÍSTICA INTERNA]
   let score;
   if (fh >= 60 && fh <= 80) score = 85;
   else if (fh >= 50 && fh < 60) score = 65;
@@ -322,7 +352,7 @@ function analyzeReadability(blocks) {
   else if (fh < 50 && fh >= 30) score = 45;
   else score = 25;
 
-  const s = Math.min(100, score);
+  const s = Math.round(Math.min(100, score));
   const formula = `Legibilidad: FH=${Math.round(fh)} (Fernández-Huerta 1959) → ${s}/100`;
   return { score: s, fh: Math.round(fh), formula };
 }
@@ -335,7 +365,7 @@ function analyzeCTA(blocks) {
   const relativePos = ctaIdx / Math.max(1, blocks.length - 1);
   const ctaContent = blocks[ctaIdx].content || '';
   const wc = wordCount(ctaContent);
-  let score = 40; // Base: tiene CTA. [NO VALIDADO — punto base]
+  let score = 40; // Base: tiene CTA. [HEURÍSTICA INTERNA — no validado]
 
   // 75-95% del video = ideal (Wistia 2026 / ClixieAI 2025). [Recomendación industria]
   if (relativePos >= 0.75 && relativePos <= 0.95) score += 30;
@@ -343,14 +373,14 @@ function analyzeCTA(blocks) {
   else if (relativePos > 0.95) score += 10;
   else score += 5;
 
-  // 10-40 palabras = ideal. [NO VALIDADO — heurística de longitud]
+  // 10-40 palabras = ideal. [HEURÍSTICA INTERNA — no validado]
   if (wc >= 10 && wc <= 40) score += 20;
   else if (wc >= 5 && wc < 10) score += 10;
 
   // Verbos de acción: +10 (copywriting, Cialdini 1984 compromiso/consistencia).
   if (/(suscrib|compart|coment|like|dale|click|visit|descarg|activ)/i.test(ctaContent)) score += 10;
 
-  const s = Math.min(100, score);
+  const s = Math.round(Math.min(100, score));
   const formula = `CTA: posición(${(relativePos*100).toFixed(0)}%) + longitud(${wc}pal) → ${s}/100`;
   return { score: s, position: relativePos, formula };
 }
@@ -392,10 +422,10 @@ function analyzeNarrativeCompleteness(blocks) {
      GIRO y VISUAL tratados idénticamente (estricto de literatura: ninguna
      fuente distingue tipo de interrupt en la magnitud del OR).
      [baseBoost INFERIDO (escala conservadora del 15%); habitFactor PRIMARIA]
-   - Bloque >50s: -0.04, >80s: -0.06 adicional [NO VALIDADO]
-   - Hook fuerte en bloque 0: +0.05 [NO VALIDADO]
-   - CTA: +0.03 [NO VALIDADO]
-   - Bloque vacío: -0.15 [NO VALIDADO]
+   - Bloque >50s: -0.04, >80s: -0.06 adicional [HEURÍSTICA INTERNA — no validado]
+   - Hook fuerte en bloque 0: +0.05 [HEURÍSTICA INTERNA — no validado]
+   - CTA: +0.03 [HEURÍSTICA INTERNA — no validado]
+   - Bloque vacío: -0.15 [HEURÍSTICA INTERNA — no validado]
    - isDropRisk true cuando retention < 0.35 (RetentionRabbit 2025 completion ~23.7%)
    ============================================================ */
 function interpolateRetention(pos, curve) {
@@ -413,21 +443,24 @@ function generateRetentionCurve(blocks, wpm, hookAnalysis) {
   const totalDuration = blocks.reduce((s, b) => s + durationInSeconds(b.content, wpm), 0);
   if (totalDuration === 0) return [];
 
+  // Hook score: interpolación suave entre baseline y strongHook (sin escalón).
+  // Rango 40-80: por debajo de 40 → 100% baseline; por encima de 80 → 100% strongHook;
+  // en medio → mezcla lineal. Evita el salto de 0.48→0.62 en pos=0.5 al cruzar 60.
+  // [Interpolación NO VALIDADA — reemplaza umbral binario anterior]
+  const _hookBlend = Math.max(0, Math.min(1, (hookAnalysis.score - 40) / 40));
+  const baseCurve = RETENTION_CURVES.baseline.map((p, i) => ({
+    pos: p.pos,
+    ret: p.ret + _hookBlend * (RETENTION_CURVES.strongHook[i].ret - p.ret)
+  }));
   const points = [];
   let elapsed = 0;
   let interruptCount = 0; // Contador global de pattern interrupts (para habituation)
-
-  const hookFactor = hookAnalysis.score / 100;
 
   blocks.forEach((block, i) => {
     const blockDur = durationInSeconds(block.content, wpm);
     const midTime = elapsed + blockDur / 2;
     const relPos = totalDuration > 0 ? midTime / totalDuration : 0;
-    
-    const retBaseline = interpolateRetention(relPos, RETENTION_CURVES.baseline);
-    const retStrong = interpolateRetention(relPos, RETENTION_CURVES.strongHook);
-    let baseRet = retBaseline + hookFactor * (retStrong - retBaseline);
-    
+    let baseRet = interpolateRetention(relPos, baseCurve);
     let modifier = 0;
 
     if (block.type === 'GIRO' || block.type === 'VISUAL') {
@@ -445,6 +478,8 @@ function generateRetentionCurve(blocks, wpm, hookAnalysis) {
     }
     if (blockDur > 50) modifier -= 0.04;
     if (blockDur > 80) modifier -= 0.06;
+    // Nota: el boost de hook fuerte ya está en la curva interpolada (_hookBlend),
+    // no se suma aparte para evitar doble conteo.
     if (block.type === 'CTA') modifier += 0.03;
     if (!(block.content || '').trim()) modifier -= 0.15;
 
@@ -526,8 +561,11 @@ export function analyzeCognitiveLoad(blocks, wpm) {
   else if (restRatio === 0) { score += 3; details.push('Sin descansos cognitivos — sin pausas para procesar'); }
   else { score += 12; details.push('Muchos descansos (' + restPoints + ' bloques) — puede fragmentar'); }
 
-  const s = Math.max(0, Math.min(100, score));
-  const level = s >= 75 ? 'Liviana' : s >= 50 ? 'Moderada' : s >= 30 ? 'Pesada' : 'Sobrecarga';
+  // Invertir: el score acumula puntos por condiciones FAVORABLES.
+  // Carga cognitiva real = 100 - score (0=Liviana, 100=Sobrecarga).
+  const raw = Math.max(0, Math.min(100, score));
+  const s = 100 - raw;
+  const level = s >= 75 ? 'Sobrecarga' : s >= 50 ? 'Pesada' : s >= 25 ? 'Moderada' : 'Liviana';
   const formula = 'Carga cognitiva: ritmo(' + actualWPM + 'WPM) + densidad(' + topicsPerMinute.toFixed(1) + 'temas/min) + oraciones(' + avgWordsPerSentence + 'pal) + descansos(' + restPoints + ') → ' + s + '/100 (' + level + ')';
   return { score: s, level, topicsPerMinute: Math.round(topicsPerMinute * 10) / 10, avgWordsPerSentence, actualWPM, restPoints, details, formula };
 }
@@ -652,7 +690,40 @@ export function computeRetentionPrediction(data) {
     recommendations.push('Revisá los bloques con baja retención estimada. Acortá o reestructurá su contenido.');
   }
 
-  const formula = `APV = Σ(score×peso) = ${hookAnalysis.score}×${_n(WEIGHTS.hookStrength).toFixed(2)} + ${pacingAnalysis.score}×${_n(WEIGHTS.pacingScore).toFixed(2)} + ${interruptAnalysis.score}×${_n(WEIGHTS.patternInterrupts).toFixed(2)} + ${densityAnalysis.score}×${_n(WEIGHTS.contentDensity).toFixed(2)} + ${promiseAnalysis.score}×${_n(WEIGHTS.promiseDelivery).toFixed(2)} + ${readabilityAnalysis.score}×${_n(WEIGHTS.readability).toFixed(2)} + ${ctaAnalysis.score}×${_n(WEIGHTS.ctaPlacement).toFixed(2)} + ${narrativeAnalysis.score}×${_n(WEIGHTS.narrativeCompleteness).toFixed(2)} = ${Math.round(weightedScore)} → clamp[15,95] = ${overallRetention}%`;
+  // Los pesos mostrados son los normalizados (÷0.89), que son los que realmente
+  // se usan en el cálculo. No mostrar los crudos: el usuario no puede auditar
+  // si los términos no suman el resultado. [Regla de oro §7.3]
+  const _nw = (w) => Math.round(_n(w) * 10000) / 10000;
+  // Cada término redondeado a entero para que el usuario pueda auditar a mano.
+  const _term = (score, w) => Math.round(score * _n(w));
+  // Calcular cada término individualmente y guardarlos para la fórmula.
+  const _terms = [
+    _term(hookAnalysis.score, WEIGHTS.hookStrength),
+    _term(pacingAnalysis.score, WEIGHTS.pacingScore),
+    _term(interruptAnalysis.score, WEIGHTS.patternInterrupts),
+    _term(densityAnalysis.score, WEIGHTS.contentDensity),
+    _term(promiseAnalysis.score, WEIGHTS.promiseDelivery),
+    _term(readabilityAnalysis.score, WEIGHTS.readability),
+    _term(ctaAnalysis.score, WEIGHTS.ctaPlacement),
+    _term(narrativeAnalysis.score, WEIGHTS.narrativeCompleteness)
+  ];
+  // La suma que el usuario puede auditar a mano DEBE ser la suma de los
+  // términos ya redondeados que se muestran, no Math.round(weightedScore).
+  // weightedScore se calcula sin redondear por término; el clamp final sí
+  // usa ese valor interno, pero la fórmula mostrada debe cerrar.
+  const _roundedSum = _terms.reduce((a, b) => a + b, 0);
+  // Validar que la divergencia entre suma redondeada y weightedScore interno
+  // sea razonable (±N puntos por redondeo acumulado de 8 términos).
+  // Máximo error teórico: 8 × 0.5 = 4 puntos. Permitimos ±6 como margen.
+  const _divergence = Math.abs(_roundedSum - Math.round(weightedScore));
+  if (_divergence > 6) {
+    console.warn(
+      'ScriptLab: divergencia inesperada entre suma redondeada (' + _roundedSum +
+      ') y weightedScore (' + Math.round(weightedScore) + '): Δ=' + _divergence +
+      '. Revisar precisión de _term().'
+    );
+  }
+  const formula = `APV = Σ(score×peso_norm) = ${_terms.join(' + ')} = ${_roundedSum} → clamp[15,95] = ${overallRetention}% (emotionalArc 0.11 pendiente)`;
 
   return {
     overallRetention,

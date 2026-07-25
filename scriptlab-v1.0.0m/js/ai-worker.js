@@ -21,6 +21,9 @@ import { sanitizeText, dot, cosineSim } from './ai-shared.js';
 // La bare URL deja que jsdelivr resuelva vía el campo "browser" del package.json
 // (build browser-ready con polyfills), no el .mjs crudo de Node.
 const TRANSFORMERS_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.2';
+const MAX_TOKENS = 512;
+const TOKEN_CHARS = 4; // estimación: ~4 chars por token para español/inglés
+const MAX_CHARS = MAX_TOKENS * TOKEN_CHARS;
 
 let extractor = null;
 
@@ -48,111 +51,134 @@ async function loadExtractor() {
 }
 
 /* ============================================================
-   chunkTextForModel — segmenta el texto para no exceder 500 tokens aprox.
+   splitIntoChunks — divide texto en fragmentos ≤ MAX_CHARS,
+   respetando límites de oración. Un texto corto devuelve 1 chunk.
    ============================================================ */
-function chunkTextForModel(text) {
-  // Rough fallback chunking if tokenizer is not directly available to count tokens
-  // 500 tokens is roughly 350-400 words in Spanish.
-  let sentences = text.match(/[^.!?]+[.!?]+/g);
-  if (!sentences) sentences = [text];
-  
-  const finalSentences = [];
-  for (const s of sentences) {
-    const words = s.trim().split(/\s+/);
-    if (words.length > 350) {
-      // Emergency fallback for text blocks with no punctuation at all
-      for (let i = 0; i < words.length; i += 300) {
-        finalSentences.push(words.slice(i, i + 300).join(' '));
-      }
-    } else {
-      finalSentences.push(s);
-    }
-  }
+function splitIntoChunks(text) {
+  if (text.length <= MAX_CHARS) return [text];
 
+  // Separar por oraciones, preservando el delimitador
+  const sentences = text.match(/[^.!?]+[.!?]+\s*|[^.!?]+$/g) || [text];
   const chunks = [];
-  let currentChunk = '';
-  let currentWords = 0;
+  let current = '';
 
-  for (const sentence of finalSentences) {
-    const words = sentence.trim().split(/\s+/).length;
-    if (currentWords + words > 350 && currentChunk) {
-      chunks.push(currentChunk.trim());
-      currentChunk = sentence;
-      currentWords = words;
+  for (const sentence of sentences) {
+    if (current.length + sentence.length <= MAX_CHARS) {
+      current += sentence;
     } else {
-      currentChunk = currentChunk ? currentChunk + ' ' + sentence : sentence;
-      currentWords += words;
+      if (current.trim()) chunks.push(current.trim());
+      // Si una oración sola excede MAX_CHARS, partir por palabras
+      if (sentence.length > MAX_CHARS) {
+        const words = sentence.split(/(\s+)/);
+        let wordChunk = '';
+        for (const word of words) {
+          if (wordChunk.length + word.length <= MAX_CHARS) {
+            wordChunk += word;
+          } else {
+            if (wordChunk.trim()) chunks.push(wordChunk.trim());
+            wordChunk = word;
+          }
+        }
+        current = wordChunk;
+      } else {
+        current = sentence;
+      }
     }
   }
-  if (currentChunk.trim()) {
-    chunks.push(currentChunk.trim());
-  }
-  return chunks;
+  if (current.trim()) chunks.push(current.trim());
+  return chunks.length > 0 ? chunks : [text.slice(0, MAX_CHARS)];
 }
 
 /* ============================================================
-   embedTexts — embedde una lista de {id, text} con batching + retry + CHUNKING.
+   aggregateEmbeddings — promedio ponderado por longitud de texto,
+   con normalización L2 posterior. Devuelve un único vector.
+   ============================================================ */
+function aggregateEmbeddings(embeddings, weights) {
+  if (embeddings.length === 0) return null;
+  if (embeddings.length === 1) return embeddings[0];
+  const dim = embeddings[0].length;
+  const result = new Array(dim).fill(0);
+  let totalWeight = 0;
+  for (let i = 0; i < embeddings.length; i++) {
+    const w = weights ? weights[i] : 1;
+    for (let d = 0; d < dim; d++) result[d] += embeddings[i][d] * w;
+    totalWeight += w;
+  }
+  for (let d = 0; d < dim; d++) result[d] /= (totalWeight || 1);
+  // L2 normalize
+  const norm = Math.sqrt(result.reduce((s, x) => s + x * x, 0)) || 1;
+  return result.map(x => x / norm);
+}
+
+/* ============================================================
+   embedTexts — embedde una lista de {id, text} con chunking +
+   batching + retry. Los textos largos se dividen en fragmentos,
+   se procesan por separado y se agregan con promedio ponderado.
    ============================================================ */
 async function embedTexts(texts) {
   const model = await loadExtractor();
-  const results = [];
-  const BATCH = 8;
-  const OPTS = { pooling: 'mean', normalize: true, truncation: true, max_length: 512 };
+  const OPTS = { pooling: 'mean', normalize: true, truncation: true, max_length: MAX_TOKENS };
 
+  // Pre-chunk: expandir textos largos en fragmentos
+  const entries = []; // {origIdx, chunkIdx, chunkText, charWeight}
   for (let i = 0; i < texts.length; i++) {
-    const t = texts[i];
-    const chunks = chunkTextForModel(t.text);
-    const chunkEmbeddings = [];
+    const chunks = splitIntoChunks(texts[i].text);
+    for (let c = 0; c < chunks.length; c++) {
+      entries.push({ origIdx: i, chunkIdx: c, chunkText: chunks[c], charWeight: chunks[c].length });
+    }
+  }
 
-    for (let c = 0; c < chunks.length; c += BATCH) {
-      const batch = chunks.slice(c, c + BATCH);
-      const safe = batch.map(chunk => 'query: ' + sanitizeText(chunk));
-      try {
-        const output = await model(safe, OPTS);
-        const vectors = output.tolist();
-        vectors.forEach((v, j) => chunkEmbeddings.push({ vec: v, words: batch[j].split(/\s+/).length }));
-      } catch (_) {
-        for (let j = 0; j < batch.length; j++) {
-          try {
-            const output = await model([safe[j]], OPTS);
-            chunkEmbeddings.push({ vec: output.tolist()[0], words: batch[j].split(/\s+/).length });
-          } catch (__) {
-            // chunk failed
-          }
+  // Embed all chunks con batching + retry
+  const chunkEmbeddings = new Array(entries.length).fill(null);
+  const BATCH = 8;
+  for (let i = 0; i < entries.length; i += BATCH) {
+    const batch = entries.slice(i, i + BATCH);
+    const safe = batch.map(t => 'query: ' + sanitizeText(t.chunkText));
+    try {
+      const output = await model(safe, OPTS);
+      const vectors = output.tolist();
+      batch.forEach((t, j) => { chunkEmbeddings[i + j] = vectors[j]; });
+    } catch (_) {
+      for (let j = 0; j < batch.length; j++) {
+        try {
+          const output = await model(['query: ' + sanitizeText(batch[j].chunkText)], OPTS);
+          const vectors = output.tolist();
+          chunkEmbeddings[i + j] = vectors[0];
+        } catch (__) {
+          chunkEmbeddings[i + j] = null;
         }
       }
     }
+  }
 
-    if (chunkEmbeddings.length === 0) {
-      results.push({ id: t.id, embedding: null });
-      continue;
+  // Agregar: por cada texto original, promediar sus chunks
+  const results = [];
+  const grouped = new Map();
+  for (let i = 0; i < entries.length; i++) {
+    const origIdx = entries[i].origIdx;
+    if (!grouped.has(origIdx)) grouped.set(origIdx, { embeddings: [], weights: [], chunkCount: 0, successfulChunks: 0 });
+    const g = grouped.get(origIdx);
+    g.chunkCount++;
+    if (chunkEmbeddings[i]) {
+      g.embeddings.push(chunkEmbeddings[i]);
+      g.weights.push(entries[i].charWeight);
+      g.successfulChunks++;
     }
+  }
 
-    if (chunkEmbeddings.length === 1) {
-      results.push({ id: t.id, embedding: chunkEmbeddings[0].vec });
-      continue;
+  for (let i = 0; i < texts.length; i++) {
+    const g = grouped.get(i);
+    if (!g || g.embeddings.length === 0) {
+      results.push({ id: texts[i].id, embedding: null, chunkCount: g?.chunkCount || 0, successfulChunks: 0, coverage: 0 });
+    } else {
+      results.push({
+        id: texts[i].id,
+        embedding: aggregateEmbeddings(g.embeddings, g.weights),
+        chunkCount: g.chunkCount,
+        successfulChunks: g.successfulChunks,
+        coverage: Math.round((g.successfulChunks / g.chunkCount) * 100) / 100
+      });
     }
-
-    // Aggregate with weighted average and L2 normalize
-    let totalWords = 0;
-    const dim = chunkEmbeddings[0].vec.length;
-    const agg = new Array(dim).fill(0);
-    
-    for (const ce of chunkEmbeddings) {
-      const w = ce.words || 1;
-      totalWords += w;
-      for (let d = 0; d < dim; d++) agg[d] += ce.vec[d] * w;
-    }
-    
-    let normSq = 0;
-    for (let d = 0; d < dim; d++) {
-      agg[d] /= totalWords;
-      normSq += agg[d] * agg[d];
-    }
-    const norm = Math.sqrt(normSq) || 1;
-    for (let d = 0; d < dim; d++) agg[d] /= norm;
-
-    results.push({ id: t.id, embedding: agg });
   }
   return results;
 }
@@ -180,10 +206,17 @@ async function init(revision) {
    ============================================================ */
 async function embed({ requestId, cacheId, texts }) {
   // texts: [{id, text, role: 'title'|'promise'|'block'|'hook'}]
-  const rawTexts = texts.map(t => t.text);
-  const embs = await embedAll(rawTexts);
+  // Usar embedTexts directamente para obtener metadata de chunks
+  const wrapped = texts.map(t => ({ id: t.id, text: t.text }));
+  const embedResults = await embedTexts(wrapped);
   const embMap = {};
-  texts.forEach((t, i) => { embMap[t.id] = embs[i]; });
+  let totalChunks = 0, successfulChunks = 0, failedChunks = 0;
+  embedResults.forEach((e, i) => {
+    embMap[texts[i].id] = e.embedding;
+    totalChunks += e.chunkCount;
+    successfulChunks += e.successfulChunks;
+    if (e.embedding === null) failedChunks++;
+  });
 
   // --- Baseline pairwise sobre los bloques ---
   const blockEntries = texts.filter(t => t.role === 'block');
@@ -231,7 +264,16 @@ async function embed({ requestId, cacheId, texts }) {
     alignment,
     alignmentRaw,
     redundancy,
-    baseline: { avgSim, maxSim, pairCount }
+    baseline: { avgSim, maxSim, pairCount },
+    processing: {
+      totalBlocks: texts.length,
+      totalChunks,
+      successfulChunks,
+      failedChunks,
+      truncatedBlocks: 0, // ya no hay truncado silencioso
+      model: 'Xenova/multilingual-e5-small',
+      modelLimitTokens: MAX_TOKENS
+    }
   });
 }
 

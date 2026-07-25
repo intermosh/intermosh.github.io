@@ -1,0 +1,27 @@
+{
+  "name": "scriptlab",
+  "version": "1.0.0-alpha.0",
+  "description": "Laboratorio de guiones para YouTube: salud (ICN), retención estimada (APV) y arco emocional. 100% en el navegador, en español.",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "test": "node tests/run-tests.mjs",
+    "benchmark": "node tests/run-benchmark-paso2.mjs"
+  },
+  "keywords": [
+    "youtube",
+    "guion",
+    "script",
+    "retencion",
+    "apv",
+    "creator-tools",
+    "espanol",
+    "local-first",
+    "vanilla-js"
+  ],
+  "engines": {
+    "node": ">=18.17"
+  }
+}

@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="ScriptLab: medí la salud, la retención estimada y el arco emocional de tu guion de YouTube antes de grabar. 100% local, gratis y auditado.">
+<meta name="engine-version" content="combined-2.0.0">
+<meta name="app-version" content="1.0.0a">
+<link rel="icon" href="./favicon.svg" type="image/svg+xml">
+<title>ScriptLab — Laboratorio de guiones para YouTube</title>
+<style>
+:root{--bg:#0d1117;--panel:#161b27;--panel2:#1c2333;--border:#26304a;--track:#1f2a40;--text:#e6ebf5;--muted:#8b97ad;--faint:#5c6781;--purple:#7969ff;--teal:#32d2ac;--good:#5cdb87;--warn:#f4b857;--bad:#ff6879;--r:12px;--r-lg:16px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font:14px/1.6 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--purple);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:980px;margin:0 auto;padding:0 18px}
+nav{display:flex;align-items:center;gap:14px;padding:16px 0;flex-wrap:wrap}
+.brand{font-weight:600;font-size:17px}.brand i{color:var(--purple);font-style:normal}
+nav .links{margin-left:auto;display:flex;gap:16px;font-size:13px;align-items:center}
+.btn{display:inline-block;background:var(--purple);color:#fff;font-weight:600;font-size:13px;border-radius:9px;padding:10px 18px;transition:filter .2s,transform .2s}
+.btn:hover{filter:brightness(1.12);transform:translateY(-1px);text-decoration:none}
+.btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+.hero{padding:64px 0 44px;text-align:center}
+.hero h1{font-size:clamp(30px,5vw,46px);letter-spacing:-.03em;line-height:1.1;margin-bottom:14px}
+.hero h1 b{color:var(--purple)}
+.hero p{max-width:640px;margin:0 auto 26px;color:var(--muted);font-size:16px}
+.cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.strip{display:flex;gap:22px;justify-content:center;flex-wrap:wrap;margin:34px auto 0;color:var(--faint);font-size:12px}
+.strip b{color:var(--text)}
+.sec{padding:34px 0}
+.sec h2{font-size:23px;letter-spacing:-.02em;margin-bottom:6px}
+.sec .sub{color:var(--muted);margin-bottom:20px;max-width:640px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px}
+.card h3{font-size:15px;margin-bottom:6px}
+.card p{font-size:13px;color:var(--muted)}
+.card .ico{display:inline-flex;width:34px;height:34px;border-radius:10px;align-items:center;justify-content:center;margin-bottom:10px;font-size:16px;background:var(--panel2);border:1px solid var(--border)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;counter-reset:st}
+.step{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px;position:relative}
+.step:before{counter-increment:st;content:counter(st);display:inline-flex;width:26px;height:26px;border-radius:50%;background:var(--purple);color:#fff;font-weight:700;align-items:center;justify-content:center;font-size:13px;margin-bottom:10px}
+.step h3{font-size:14px;margin-bottom:6px}
+.step p{font-size:13px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px}
+th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);text-align:left;padding:10px;border-bottom:2px solid var(--border)}
+th.app{color:var(--purple)}
+td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--muted)}
+td:first-child{color:var(--text);font-weight:500}
+td.c{text-align:center}.y{color:var(--good);font-weight:700}.p{color:var(--warn);font-weight:700}.n{color:var(--bad)}
+.note{font-size:12px;color:var(--faint);margin-top:8px}
+footer{border-top:1px solid var(--border);margin-top:30px;padding:22px 0 40px;color:var(--faint);font-size:12px;text-align:center;line-height:2}
+.tag{display:inline-block;font-size:10px;font-weight:700;border-radius:99px;padding:3px 10px;background:rgba(50,210,172,.12);color:var(--teal);margin-left:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <span class="brand">Script<b>i</b>Lab</span>
+    <span class="tag">motor combined-2.0.0</span>
+    <div class="links">
+      <a href="./metricas.html">Métricas y fuentes</a>
+      <a href="./docs/CHANGELOG-COMBINED.md">Changelog</a>
+      <a class="btn" href="./scriptlab.html">Abrir la app →</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <h1>Tu guion, diagnosticado<br><b>antes de grabar</b></h1>
+    <p>Medí salud narrativa, retención estimada por bloque y arco emocional con heurística transparente e IA local. Sin cuentas, sin nube: todo se procesa en tu navegador.</p>
+    <div class="cta">
+      <a class="btn" href="./scriptlab.html">Abrir ScriptLab</a>
+      <a class="btn ghost" href="./metricas.html">Ver fórmulas y fuentes</a>
+    </div>
+    <div class="strip">
+      <span><b>94/94</b> tests verdes</span>
+      <span><b>100%</b> procesamiento local</span>
+      <span><b>9</b> factores de retención citados</span>
+      <span><b>0</b> suscripciones</span>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2>Qué hace</h2>
+    <p class="sub">Un panel de diagnóstico para guiones de video, en español, con cada número trazable a su fuente.</p>
+    <div class="grid">
+      <div class="card"><span class="ico">✓</span><h3>Heurística auditable</h3><p>Salud (ICN) y retención estimada (APV) con la fórmula desglosada término a término dentro de la app. Lo no validado está marcado en rojo: nada de humo.</p></div>
+      <div class="card"><span class="ico">▁▂▇</span><h3>Curva de retención por bloque</h3><p>9 factores ponderados (hook, pacing, pattern interrupts, arco emocional, densidad, promesa, legibilidad, CTA, narrativa) con puntos de fuga clickeables que te llevan al bloque.</p></div>
+      <div class="card"><span class="ico">◠◡</span><h3>Arco emocional con IA local</h3><p>Sentimiento por bloque (robertuito), engagement, momentum y saltos tonales. Los modelos (~110 MB) corren en tu dispositivo; nada sale a internet.</p></div>
+      <div class="card"><span class="ico">◎</span><h3>Calibración con tus datos</h3><p>Cargá el APV real de tus videos publicados y el motor recalibra sus predicciones por formato y género.</p></div>
+      <div class="card"><span class="ico">⬇</span><h3>Exportá a todo</h3><p>Guion y diagnóstico en JSON, Markdown, TXT, CSV, PDF y un HTML one-page autocontenido con las mismas gráficas de la app (doble click y se ve).</p></div>
+      <div class="card"><span class="ico">⌂</span><h3>Privacidad total</h3><p>Sin cuentas ni servidores: IndexedDB para tus proyectos, modelos cacheados localmente, cero tracking.</p></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2>Cómo funciona</h2>
+    <div class="steps">
+      <div class="step"><h3>Escribí o importá</h3><p>Armá tu guion en bloques tipados (hook, contexto, evidencia, giro, visual, CTA) o importalo desde Markdown/JSON.</p></div>
+      <div class="step"><h3>Mirá el diagnóstico</h3><p>La heurística responde al instante: salud, APV, curva, factores, carga cognitiva. Activá el Modo IA (⚙) para sumar arco emocional y análisis semántico.</p></div>
+      <div class="step"><h3>Corregí y exportá</h3><p>Cada problema detectado es clickeable y te lleva al bloque exacto. Cuando esté listo, exportalo en el formato que necesites.</p></div>
+    </div>
+  </section>
+
+  <section class="sec" id="comparativa">
+    <h2>Cómo se compara</h2>
+    <p class="sub">Las herramientas de analytics miden lo que ya publicaste; los LLM opínan pero no miden. ScriptLab evalúa el guion <strong>antes de grabar</strong>, con números auditables y sin salir de tu navegador.</p>
+    <table>
+      <tr>
+        <th style="width:34%">Capacidad</th>
+        <th class="app">ScriptLab</th>
+        <th>PrePublish.ai</th>
+        <th>ChatGPT / Claude<br><small>(LLM genérico)</small></th>
+        <th>vidIQ<br><small>(suite YouTube)</small></th>
+      </tr>
+      <tr><td>Analiza el guion antes de grabar</td><td class="c y">✓</td><td class="c y">✓</td><td class="c p">◐ feedback sin métricas</td><td class="c n">✗ analytics post-publicación</td></tr>
+      <tr><td>Curva de retención estimada por bloque</td><td class="c y">✓</td><td class="c y">✓ predicha</td><td class="c n">✗</td><td class="c n">✗ (mide la real, después)</td></tr>
+      <tr><td>Arco emocional con IA (valencia, momentum, saltos)</td><td class="c y">✓ local</td><td class="c n">✗</td><td class="c p">◐ cualitativo, sin arco</td><td class="c n">✗</td></tr>
+      <tr><td>Fórmula y fuentes visibles, auditable a mano</td><td class="c y">✓</td><td class="c p">◐ parcial</td><td class="c n">✗</td><td class="c n">✗ caja negra</td></tr>
+      <tr><td>100% local y privado (nada sale a internet)</td><td class="c y">✓</td><td class="c n">✗ nube</td><td class="c n">✗ nube</td><td class="c n">✗ nube</td></tr>
+      <tr><td>Funciona offline</td><td class="c y">✓ tras descargar modelos</td><td class="c n">✗</td><td class="c n">✗</td><td class="c n">✗</td></tr>
+      <tr><td>Español nativo (sílabas RAE, sentimiento es)</td><td class="c y">✓</td><td class="c n">✗ inglés</td><td class="c p">◐</td><td class="c n">✗</td></tr>
+      <tr><td>Export multi-formato (incl. CSV y HTML one-page)</td><td class="c y">✓</td><td class="c p">◐</td><td class="c p">◐ copy-paste</td><td class="c n">✗</td></tr>
+      <tr><td>Gratis, sin suscripción</td><td class="c y">✓</td><td class="c p">◐ freemium</td><td class="c p">◐ freemium</td><td class="c p">◐ freemium</td></tr>
+    </table>
+    <p class="note">✓ sí · ◐ parcial/limitado · ✗ no. Comparación informativa a julio de 2026 basada en la información pública de cada producto (prepublish.ai, chat.openai.com, vidiq.com); puede quedar desactualizada y no constituye afirmación comercial verificada. Editá esta tabla en <code>index.html</code>.</p>
+  </section>
+
+  <footer>
+    ScriptLab V1.0.0a · motor combined-2.0.0 · 94/94 tests en Node · <a href="./LICENSE" target="_blank">MIT</a><br>
+    <a href="./scriptlab.html">Abrir la app</a> · <a href="./metricas.html">Métricas y fuentes</a> · documentación en <code>docs/</code><br>
+    Build auditada de “arena” + “mimo” · pesos validados en PASO 3 (docs/RESEARCH-PASO3.md)
+  </footer>
+</div>
+</body>
+</html>

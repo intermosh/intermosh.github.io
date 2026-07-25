@@ -12,67 +12,13 @@ import {
   setAIActivity, refreshAIActivityPill, modelsAreReady, resetAIResults
 } from './workers.js';
 import {
-  render, renderMetrics, renderCal, view, addBlock, saveDebounced, undo, redo,
-  renderDeepReport, renderGapsObj
+  render, renderMetrics, renderCal, view, addBlock, saveDebounced,
+  renderExtractive, renderRedundancy, renderDensity, renderGaps, refreshSemanticCards
 } from './render.js';
-import { exportJSON, exportMarkdown, exportHTML, exportTXT, exportPDF, exportReportTXT, exportReportJSON, exportReportHTML, exportReportPDF, importProject } from './export-import.js';
+import { exportJSON, exportMarkdown, exportHTML, exportTXT, exportCSV, exportPDF, exportDiagnostics, importProject } from './export-import.js';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
-
-/* ============================================================
-   _exampleProject — guion de ejemplo para onboarding (primer visita)
-   ============================================================ */
-function _exampleProject() {
-  return {
-    id: 'active',
-    title: 'Cómo empezar con ScriptLab',
-    promise: 'Aprender a usar la herramienta en 2 minutos',
-    targetDuration: 0,
-    aiMode: 'basic',
-    wpm: 150,
-    format: 'long',
-    genre: 'educativo',
-    blocks: [
-      {
-        id: 'ex-hook',
-        type: 'HOOK',
-        label: 'Hook — Tu primer bloque',
-        content: '¿Sabías que podés analizar tu guion de YouTube antes de grabarlo? Hoy te muestro cómo ScriptLab mide la retención, el ritmo y la claridad de cada bloque de tu video.',
-        notes: 'Este es un bloque HOOK. Los hooks efectivos tienen una pregunta, un dato sorprendente o una promesa clara en los primeros 15 segundos.'
-      },
-      {
-        id: 'ex-ctx',
-        type: 'CONTEXTO',
-        label: 'Contexto — Qué es ScriptLab',
-        content: 'ScriptLab es un editor por bloques que analiza tu guion en tiempo real. Cada bloque tiene un tipo: HOOK, CONTEXTO, EVIDENCIA, GIRO, VISUAL o CTA. El motor calcula salud, retención estimada y carga cognitiva.',
-        notes: 'Los bloques CONTEXTO dan información al espectador. Oraciones cortas y claras mejoran la legibilidad (Fernández-Huerta).'
-      },
-      {
-        id: 'ex-evid',
-        type: 'EVIDENCIA',
-        label: 'Evidencia — Los números',
-        content: 'El motor usa 8 factores con citas académicas: hook (25%), ritmo (17%), pattern interrupts (14%), arco emocional (11%), densidad (11%), promesa (9%), legibilidad (7%) y CTA (3%). Cada peso tiene una fuente verificada.',
-        notes: 'Los bloques EVIDENCIA aportan datos, ejemplos o fuentes. Los números concretos aumentan la credibilidad.'
-      },
-      {
-        id: 'ex-giro',
-        type: 'GIRO',
-        label: 'Giro — El truco',
-        content: 'Pero lo mejor no es que mida tu guion. Es que te dice exactamente dónde perdés audiencia. La curva de retención te muestra cada punto de fuga, bloque por bloque.',
-        notes: 'Los bloques GIRO recontextualizan. Son pattern interrupts que resetean la atención del espectador.'
-      },
-      {
-        id: 'ex-cta',
-        type: 'CTA',
-        label: 'CTA — Probalo',
-        content: 'Borrá estos bloques de ejemplo y escribí tu propio guion. Las métricas aparecen en tiempo real. Si querés análisis semántico, activá el Modo IA en el ícono ⚙.',
-        notes: 'Los bloques CTA cierran el video. Posicionarlos en el 75-95% del video mejora la retención.'
-      }
-    ],
-    updatedAt: Date.now()
-  };
-}
 
 /* ============================================================
    boot()
@@ -83,7 +29,7 @@ async function boot() {
 
   // Cargar proyecto + calibraciones
   const stored = await get('projects', 'active');
-  state.p = normalizeProject(stored || _exampleProject());
+  state.p = normalizeProject(stored || {});
   state.modelsReady = await modelsAreReady();
   state.mode = state.p.aiMode === 'embeddings' && state.modelsReady ? 'ia' : 'heuristic';
   state.realScores = await all('realScores');
@@ -186,16 +132,8 @@ function bind() {
     $$('.reader-tabpage').forEach(x => x.classList.toggle('on', x.dataset.rtabpage === b.dataset.rtab));
   });
 
-  /* ===== Vistas y Componentes Principales ===== */
+  /* Vistas */
   $$('.view').forEach(b => b.onclick = () => view(b.dataset.view));
-
-  /* ===== Undo/Redo keyboard shortcuts ===== */
-  document.addEventListener('keydown', e => {
-    if (e.target.matches('input,textarea,select')) return; // don't intercept when typing
-    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
-    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && e.shiftKey) { e.preventDefault(); redo(); }
-    if ((e.ctrlKey || e.metaKey) && e.key === 'y') { e.preventDefault(); redo(); }
-  });
 
   /* AUTO-HIDE de la meta bar al scrollear el canvas hacia abajo.
      Bug 2 fix: el scrollable es #canvas (.panel con overflow-y:auto), no #viewport. */
@@ -250,21 +188,19 @@ function bind() {
     const c = state.realScores || [];
     const kind = btn.dataset.export;
     if (kind === 'md') exportMarkdown(state.p, a);
-    else if (kind === 'html') exportHTML(state.p, a);
+    else if (kind === 'html') exportHTML(state.p, a, state.retentionResult, state.sentimentResult, state.aiResult);
     else if (kind === 'txt') exportTXT(state.p);
-    else if (kind === 'pdf') exportPDF(state.p);
+    else if (kind === 'csv') exportCSV(state.p, state.retentionResult, state.sentimentResult);
+    else if (kind === 'pdf') exportPDF(state.p, a, state.retentionResult, state.sentimentResult, state.aiResult);
     else exportJSON(state.p, a, c);
     $('#export-menu').hidden = true;
   });
 
-  /* Diagnostic Report Export */
-  $$('[data-report-export]').forEach(btn => btn.onclick = async () => {
-    const kind = btn.dataset.reportExport;
-    const results = state.lastDeepResults || {};
-    if (kind === 'txt') exportReportTXT(state, results);
-    else if (kind === 'json') exportReportJSON(state, results);
-    else if (kind === 'html') exportReportHTML(state, results);
-    else if (kind === 'pdf') exportReportPDF(state, results);
+  $$('[data-export-diag]').forEach(btn => btn.onclick = async () => {
+    const a = analysis();
+    const format = btn.dataset.exportDiag;
+    exportDiagnostics(state.p, a, state.retentionResult, state.sentimentResult, state.aiResult, state.deepResult, format);
+    $('#export-menu').hidden = true;
   });
 
   /* Import */
@@ -312,16 +248,23 @@ function bind() {
     render();
   });
   $('#mode-ai')?.addEventListener('click', async () => {
+    // COMBINED: rescate arena — la UI de IA se pinta al instante (feedback),
+    // pero state.mode solo pasa a 'ia' si los modelos existen. Si no, queda
+    // 'heuristic' (evita el "modo IA fantasma" de mimo: modo IA sin workers,
+    // con arco en "Cargando modelo…" hasta recargar). La preferencia
+    // aiMode='embeddings' SÍ se persiste: al boot, si los modelos ya están
+    // cacheados, el modo sube solo.
     state.p.aiMode = 'embeddings';
-    paintMode(); // Muestra la UI del modo IA instantáneamente antes de cargar/verificar
+    paintMode();
     state.modelsReady = await modelsAreReady();
     if (state.modelsReady) {
       state.mode = 'ia';
-      await put('projects', state.p);
       await syncWorkerWithState();
     } else {
       state.mode = 'heuristic';
     }
+    await put('projects', state.p);
+    paintMode();
     refreshAIActivityPill();
     render();
   });
@@ -461,15 +404,13 @@ async function runDeep() {
   // Promesas paralelas
   const promises = [];
 
-  const results = {};
-
   // 1. Extractive
   const sentences = splitSentences(fullText);
   if (sentences.length >= 3) {
     promises.push(
       workerSend('EXTRACT_KEY_SENTENCES', { sentences, fullText, topN: 5 })
-        .then(r => { results.extractive = r; })
-        .catch(err => { results.extractiveError = err.message; })
+        .then(r => renderExtractive(r))
+        .catch(err => { state._extractiveResult = { error: err.message }; })
     );
   }
 
@@ -486,8 +427,8 @@ async function runDeep() {
         blockIds: eligible.map(b => b.id),
         threshold: 0.85,
         valenceMap
-      }).then(r => { results.redundancy = r; })
-        .catch(err => { results.redundancyError = err.message; })
+      }).then(r => renderRedundancy(r))
+        .catch(err => { state._redundancyResult = { error: err.message }; })
     );
   }
 
@@ -496,23 +437,24 @@ async function runDeep() {
     const segments = splitIntoSegments(fullText, proj.wpm);
     promises.push(
       workerSend('COMPUTE_DENSITY', { segments, fullText })
-        .then(r => { results.density = r; })
-        .catch(err => { results.densityError = err.message; })
+        .then(r => renderDensity(r))
+        .catch(err => { state._densityResult = { error: err.message }; })
     );
   }
 
-  // 4. Gaps
+  // 4. Gaps (estructural + semántico) — Bug 1 fix: esperar la promise.
+  // renderGaps retorna Promise (siempre, ver render.js); la envolvemos para
+  // garantizar que runDeep la espere y capture errores.
   promises.push(
-    renderGapsObj() // A modified version returning the data instead of DOM manipulation
-      .then(r => { results.gaps = r; })
-      .catch(err => { results.gapsError = err.message; })
+    Promise.resolve()
+      .then(() => renderGaps())
+      .catch(err => { state._gapsResult = { error: err.message }; })
   );
 
   await Promise.allSettled(promises);
-  state.lastDeepResults = results;
-  renderDeepReport(results);
 
-  state.deepResult = { computedAt: Date.now(), results };
+  state.deepResult = { computedAt: Date.now() };
+  refreshSemanticCards();
   if (btn) { btn.disabled = false; btn.querySelector('.deep-label').textContent = '✦ Analizar a fondo'; }
   if (section) section.classList.remove('pending');
 }

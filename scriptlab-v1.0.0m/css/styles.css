@@ -33,12 +33,12 @@ button{cursor:pointer;background:none;border:0}
 
 /* ===== HEADER SLIM — 2 filas (navegación + meta bar auto-hide) ===== */
 .h{
-  display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:8px 14px 0 14px;
+  display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:8px 14px 0;
   border-bottom:1px solid var(--border); background:var(--panel); flex-shrink:0;
   transition:padding .2s;
 }
 .h > .brand, .h > .seg, .h > .spacer, .h > .mini, .h > #ai-activity, .h > .icon-btn,
-.h > .export-wrap, .h > .new-btn { height:52px; display:flex; align-items:center; }
+.h > .export-wrap, .h > .new-btn { height:42px; display:flex; align-items:center; }
 .brand{font-weight:600;font-size:15px;letter-spacing:-.01em;white-space:nowrap}
 .brand i{color:var(--purple);font-style:normal}
 .seg{display:flex;background:var(--panel2);border-radius:9px;padding:2px}
@@ -75,6 +75,8 @@ button{cursor:pointer;background:none;border:0}
 }
 .export-menu button{display:block;width:100%;text-align:left;padding:9px 14px;font-size:13px;color:var(--muted)}
 .export-menu button:hover{background:var(--panel2);color:var(--text)}
+.export-menu .export-divider{height:1px;background:var(--border);margin:4px 0}
+.export-menu .export-section-label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:700;padding:6px 14px 2px;pointer-events:none}
 .new-btn{
   background:var(--purple);color:#fff;padding:6px 14px;border-radius:8px;
   font-size:12px;font-weight:500;transition:var(--tr);
@@ -254,33 +256,39 @@ button{cursor:pointer;background:none;border:0}
 /* Diagnóstico semántico (grisado) */
 .sec.pending{opacity:.45}
 .sec.pending .deep-empty{font-size:12px;color:var(--faint);padding:10px 0;text-align:center}
-.redundancy-pair{font-size:11px;background:var(--panel2);border-radius:var(--r-sm);padding:8px;margin-bottom:6px}
-.redundancy-pair blockquote{font-size:11px;color:var(--muted);border-left:2px solid var(--border);padding-left:8px;margin:4px 0}
-.redundancy-pair.contrast blockquote{border-left-color:var(--teal)}
-.sim-tag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;display:inline-block;margin-bottom:4px}
-.sim-tag.high{background:rgba(255,104,121,.15);color:var(--bad)}
-.sim-tag.contrast{background:rgba(50,210,172,.15);color:var(--teal)}
-.key-sentence{font-size:12px;background:var(--panel2);border-radius:var(--r-sm);padding:8px 10px;margin-bottom:6px}
-.score-badge{font-size:10px;color:var(--muted);display:block;margin-top:3px}
-.density-card{padding:10px 12px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px}
-.density-card-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
-.density-value{font-size:24px;font-weight:700;color:var(--purple);font-variant-numeric:tabular-nums}
-.density-unit{font-size:11px;color:var(--muted);margin-left:6px}
-.density-info{font-size:10px;color:var(--teal);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
-.density-explainer{font-size:11px;color:var(--muted);line-height:1.4;margin-top:4px}
-.density-meta{font-size:10px;color:var(--faint);margin-top:7px}
-.density-change{font-size:11px;color:var(--muted);padding:5px 8px;background:var(--panel2);border-radius:var(--r-sm);margin-bottom:4px}
-.density-none{color:var(--faint);font-style:italic}
-.gaps-list .gap-item{font-size:12px;padding:8px 10px;background:var(--panel2);border-radius:var(--r-sm);margin-bottom:5px;border-left:3px solid var(--bad)}
-.gaps-list .gap-item.covered{border-left-color:var(--good)}
-.gap-topic{font-weight:600}
-.gap-item small{color:var(--faint);display:block;margin-top:2px}
+
+
+
+
+
+/* === Semantic Diagnostic Cards (ref: Script Check / Report) === */
+.semantic-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.semantic-card{background:var(--panel2);border:1px solid var(--border);border-radius:var(--r);padding:10px 8px;text-align:center}
+.semantic-card .sc-label{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:4px}
+.semantic-card .sc-value{font-size:28px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.semantic-card .sc-desc{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.3}
+.semantic-card.wide{grid-column:1/-1}
+.sc-value.good{color:var(--good)}.sc-value.warn{color:var(--warn)}.sc-value.bad{color:var(--bad)}.sc-value.purple{color:var(--purple)}.sc-value.teal{color:var(--teal)}
+
+/* Issues list */
+.semantic-issues-title{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:6px}
+.semantic-issue{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--panel2);border-radius:var(--r-sm);margin-bottom:5px;border-left:3px solid var(--bad);font-size:12px;line-height:1.4}
+.semantic-issue.warn{border-left-color:var(--warn)}
+.semantic-issue .si-text{flex:1}
+.semantic-issue .si-title{font-weight:600;color:var(--text)}
+.semantic-issue .si-desc{color:var(--muted);font-size:11px;margin-top:2px}
+.semantic-issue .si-impact{font-size:10px;font-weight:600;color:var(--good);white-space:nowrap;padding:2px 6px;background:rgba(92,219,135,.1);border-radius:var(--r-sm);align-self:center}
+.semantic-issue[data-issue-block]{cursor:pointer;transition:background .2s}
+.semantic-issue[data-issue-block]:hover{background:rgba(121,105,255,.08)}
+.flow-block.issue-highlight{box-shadow:0 0 0 2px var(--warn),0 0 20px rgba(244,184,87,.15);transition:box-shadow .3s ease}
 
 /* Arco emocional — estilo Apple Health/ECG (sin emojis) */
 .sentiment-empty{font-size:12px;color:var(--faint);padding:8px 0;text-align:center}
 .sentiment-ecg{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:10px 8px;margin-bottom:8px;overflow:hidden}
 .sentiment-ecg svg{display:block}
 .sentiment-legend{display:flex;gap:14px;font-size:10px;color:var(--muted);margin-bottom:8px;padding:0 2px}
+.sentiment-legend span{display:flex;align-items:center;gap:5px}
+.lg-dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .sentiment-summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .sentiment-metric{background:var(--panel2);border-radius:var(--r-sm);padding:8px;text-align:center}
 .sentiment-metric small{font-size:10px;color:var(--faint);display:block;margin-bottom:2px}
@@ -337,9 +345,7 @@ button{cursor:pointer;background:none;border:0}
 /* Deep status + curve legend + deep details */
 #deep-status{font-size:11px;color:var(--faint);text-align:center;padding:6px 0}
 .curve-legend{display:flex;gap:14px;font-size:10px;color:var(--muted);margin-top:4px;padding:0 2px}
-#deep-details{margin-top:4px}
-#deep-details summary{font-size:12px;color:var(--faint);cursor:pointer;padding:6px 0;font-weight:500}
-#deep-details[open] summary{margin-bottom:8px}
+
 
 /* Calibración expandida */
 .cal-copy{font-size:11px;color:var(--faint);margin:8px 0}
@@ -483,31 +489,17 @@ input:focus,textarea:focus,select:focus{outline:none}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
 ::-webkit-scrollbar-thumb:hover{background:var(--faint)}
 
-/* Report Card (Deep Analysis) */
-.report-card { border: 1px solid var(--border); border-radius: var(--r-md); background: var(--bg); padding: 16px; margin-top: 16px; }
-.report-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
-.report-title { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 1px; }
-.report-count { font-size: 11px; color: var(--faint); }
-
-.report-score-box { border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 16px; }
-.report-score-label { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 1px; margin-bottom: 8px; }
-.report-score-val { font-size: 36px; font-weight: 600; color: var(--fg); line-height: 1; margin-bottom: 4px; }
-.report-score-val small { font-size: 16px; color: var(--muted); font-weight: 400; }
-.report-score-status { font-size: 13px; color: var(--bad); }
-
-.report-subscores { display: flex; gap: 16px; border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 16px; }
-.subscore { flex: 1; }
-.sub-label { font-size: 10px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
-.sub-val { font-size: 16px; font-weight: 600; color: var(--bad); }
-
-.issues-list-header { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 1px; margin-bottom: 12px; }
-.issues-list { display: flex; flex-direction: column; gap: 12px; }
-.issue-item { background: var(--bg-hover); border-radius: var(--r-sm); padding: 12px; border-left: 2px solid transparent; }
-.issue-item.red { border-left-color: var(--bad); }
-.issue-item.yellow { border-left-color: var(--warn); }
-.issue-title { font-size: 13px; font-weight: 600; color: var(--fg); margin-bottom: 4px; }
-.issue-desc { font-size: 12px; color: var(--faint); margin-bottom: 8px; line-height: 1.4; }
-.issue-impact { font-size: 11px; font-weight: 500; color: var(--good); }
-
-.btn-micro { background: var(--bg-hover); border: 1px solid var(--border); color: var(--fg); font-size: 9px; padding: 2px 6px; border-radius: 4px; cursor: pointer; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
-.btn-micro:hover { background: var(--border); }
+/* === A11Y: Focus visible for keyboard navigation === */
+*:focus-visible{
+  outline:2px solid var(--purple);
+  outline-offset:2px;
+  border-radius:4px;
+}
+button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{
+  outline:2px solid var(--purple);
+  outline-offset:2px;
+}
+.flow-block:focus-visible{
+  outline:2px solid var(--purple);
+  outline-offset:2px;
+}
