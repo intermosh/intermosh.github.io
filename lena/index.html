@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lena Volkova — Persona autoral y proceso creativo simulado en fotografía generativa con IA</title>
+<meta name="description" content="Lena Volkova: sistema de persona autoral implementado como contrato técnico para un modelo de lenguaje que dirige modelos de imagen. Proceso creativo simulado basado en Geneplore, rúbrica anti-cliché falsable y bloqueo modular de estilo.">
+<style>
+  :root{ --bg:#0a0a0a; --ink:#e8e6e1; --dim:#8a8880; --line:#2a2a28; --accent:#d8d4c8; --glow:rgba(216,212,200,.18); }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:Georgia,'Times New Roman',serif;line-height:1.65}
+  .mono{font-family:'Courier New',monospace}
+  header{display:flex;flex-direction:column;padding:4rem 8vw 5rem;border-bottom:1px solid var(--line);position:relative;overflow:hidden}
+  header::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 60% 45% at 50% 42%,rgba(255,255,255,.07),transparent 70%);pointer-events:none}
+  /* Figura inicial: 1664x928, sin recorte */
+  .hero-figure{position:relative;z-index:1;margin:0 0 2.4rem;width:100%;max-width:min(100%,440px)}
+  .hero-figure img{display:block;width:100%;height:auto;aspect-ratio:1664/928;background:#111;border:1px solid var(--line)}
+  h1{font-size:clamp(2.1rem,4.8vw,3.7rem);font-weight:400;line-height:1.12;max-width:24ch}
+  h1 em{font-style:italic;color:var(--accent)}
+  .lede{margin-top:2rem;max-width:64ch;color:var(--dim);font-size:1.02rem}
+  section{padding:6rem 8vw;border-bottom:1px solid var(--line)}
+  h2{font-size:clamp(1.7rem,3.4vw,2.4rem);font-weight:400;margin-bottom:2.2rem}
+  h2 span{color:var(--dim);font-family:'Courier New',monospace;font-size:.8rem;letter-spacing:.25em;display:block;margin-bottom:.8rem;text-transform:uppercase}
+  p{max-width:64ch;margin-bottom:1.1rem;color:#c9c6bd}
+  .grid{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);margin-top:2.5rem}
+  .cell{background:var(--bg);padding:1.6rem}
+  .cell h3{font-size:1.02rem;font-weight:400;margin-bottom:.5rem}
+  .cell p{font-size:.92rem;color:var(--dim);margin:0}
+  .num{font-family:'Courier New',monospace;color:var(--dim);font-size:.72rem;letter-spacing:.2em;display:block;margin-bottom:.9rem}
+
+  /* === Workflow interactivo === */
+  .workflow{margin-top:3rem;border:1px solid var(--line);padding:2rem 2rem 1.6rem;background:#070707}
+  .workflow .tag{font-family:'Courier New',monospace;font-size:.7rem;letter-spacing:.25em;color:var(--dim);text-transform:uppercase;display:block;margin-bottom:1.8rem}
+  .stepper{--pad:.4rem;--r:27px;--frac:0;position:relative;display:flex;justify-content:space-between;align-items:center;margin:1.5rem 0 2.2rem;padding:0 var(--pad)}
+  .stepper::before{content:"";position:absolute;top:50%;left:calc(var(--pad) + var(--r));right:calc(var(--pad) + var(--r));height:1px;background:var(--line);transform:translateY(-50%);z-index:0}
+  .stepper .progress{position:absolute;top:50%;left:calc(var(--pad) + var(--r));height:1px;background:var(--accent);transform:translateY(-50%);z-index:1;transition:width .55s cubic-bezier(.5,.1,.3,1);width:calc((100% - 2 * (var(--pad) + var(--r))) * var(--frac))}
+  .node{position:relative;z-index:2;width:54px;height:54px;border-radius:50%;border:1px solid var(--line);background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .35s,background .35s,box-shadow .35s,transform .25s}
+  .node svg{width:24px;height:24px;stroke:var(--dim);fill:none;stroke-width:1.4;transition:stroke .35s}
+  .node:hover{transform:scale(1.06)}
+  .node.done{border-color:#3d3d38}
+  .node.done svg{stroke:#777}
+  .node.active{border-color:var(--accent);background:#161614;box-shadow:0 0 0 4px var(--glow),0 0 22px rgba(216,212,200,.22)}
+  .node.active svg{stroke:var(--accent)}
+  .node .stepnum{position:absolute;top:-1.2rem;font-family:'Courier New',monospace;font-size:.62rem;letter-spacing:.2em;color:var(--dim)}
+  .node.active .stepnum{color:var(--accent)}
+
+  .stage-panel{position:relative;min-height:230px;border-top:1px solid var(--line);padding-top:1.6rem}
+  .stage-content{opacity:0;transform:translateY(8px);transition:opacity .4s ease,transform .4s ease;position:absolute;inset:1.6rem 0 0 0}
+  .stage-content.visible{opacity:1;transform:translateY(0);position:relative}
+  .stage-content .stg-head{display:flex;align-items:baseline;gap:1rem;flex-wrap:wrap;margin-bottom:.8rem}
+  .stage-content .stg-head h3{font-size:1.15rem;font-weight:400;color:var(--ink)}
+  .stage-content .stg-head .stg-tag{font-family:'Courier New',monospace;font-size:.68rem;letter-spacing:.22em;color:var(--dim);text-transform:uppercase}
+  .stage-content .stg-body{font-size:.94rem;color:#a8a699;max-width:62ch;margin-bottom:1rem}
+  .stage-content .stg-example{border-left:2px solid var(--accent);padding:.4rem 0 .4rem 1rem;margin-top:.4rem;font-family:'Courier New',monospace;font-size:.82rem;color:var(--accent);line-height:1.55}
+  .stage-content .stg-example .ex-label{display:block;font-size:.66rem;letter-spacing:.25em;color:var(--dim);margin-bottom:.4rem;text-transform:uppercase}
+  .stage-content .stg-example .ex-line{display:block;color:#bdbbb0}
+  .stage-content .stg-example .ex-line.sel{color:var(--accent)}
+  .stage-content .stg-example .ex-line.rej{color:#6b6862;text-decoration:line-through;text-decoration-color:#6b6862}
+
+  .controls{display:flex;align-items:center;gap:.7rem;margin-top:1.4rem;padding-top:1.2rem;border-top:1px solid var(--line)}
+  .ctrl{font-family:'Courier New',monospace;font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);background:transparent;border:1px solid var(--line);padding:.55rem .9rem;cursor:pointer;transition:border-color .25s,color .25s}
+  .ctrl:hover{border-color:var(--dim);color:var(--ink)}
+  .ctrl.play{color:var(--accent);border-color:#3d3d38}
+  .progress-text{margin-left:auto;font-family:'Courier New',monospace;font-size:.7rem;color:var(--dim);letter-spacing:.18em}
+
+  .settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;margin-top:2.5rem}
+  .setting{border:1px solid var(--line);padding:1.8rem}
+  .setting .stag{font-family:'Courier New',monospace;font-size:.78rem;letter-spacing:.25em;border:1px solid var(--dim);display:inline-block;padding:.3rem .8rem;margin-bottom:1.2rem}
+  .setting ul{list-style:none;margin-top:1rem}
+  .setting li{font-size:.86rem;color:var(--dim);padding:.35rem 0;border-top:1px solid var(--line)}
+  .setting li::before{content:"— ";color:var(--ink)}
+  .quote{font-size:clamp(1.25rem,2.6vw,1.7rem);font-style:italic;max-width:30ch;line-height:1.5;margin:3rem 0 1rem;color:var(--ink)}
+  .quote-by{font-family:'Courier New',monospace;font-size:.75rem;color:var(--dim);letter-spacing:.2em}
+
+  /* === Bibliografía desplegable === */
+  .refs-dropdown{margin-top:2.5rem;border-top:1px solid var(--line)}
+  .ref-item{border-bottom:1px solid var(--line)}
+  .ref-head{display:flex;align-items:flex-start;gap:1rem;padding:1.1rem .2rem;cursor:pointer;transition:background .2s}
+  .ref-head:hover{background:#0f0f0e}
+  .ref-head .ref-num{font-family:'Courier New',monospace;font-size:.7rem;letter-spacing:.2em;color:var(--dim);min-width:2.4rem;padding-top:.18rem}
+  .ref-head .ref-cite{flex:1;font-size:.94rem;color:#bdbbb0;line-height:1.55}
+  .ref-head .ref-cite i{color:var(--ink)}
+  .ref-head .ref-toggle{font-family:'Courier New',monospace;font-size:.7rem;color:var(--dim);letter-spacing:.18em;padding-top:.25rem;white-space:nowrap;transition:color .25s,transform .25s}
+  .ref-head .ref-toggle::before{content:"▸"}
+  .ref-item.open .ref-toggle{color:var(--accent)}
+  .ref-item.open .ref-toggle::before{content:"▾"}
+  .ref-body{display:none;padding:.4rem 0 1.6rem 3.4rem;border-top:1px dashed var(--line);margin-top:-1px}
+  .ref-item.open .ref-body{display:block;animation:fadein .35s ease}
+  @keyframes fadein{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+  .ref-body .applies{font-family:'Courier New',monospace;font-size:.68rem;letter-spacing:.22em;color:var(--dim);text-transform:uppercase;margin-bottom:.6rem;display:block}
+  .ref-body .applies strong{color:var(--accent);font-weight:400}
+  .ref-body p{font-size:.88rem;color:#a8a699;margin-bottom:.7rem}
+  .ref-body .where{display:inline-block;font-family:'Courier New',monospace;font-size:.68rem;letter-spacing:.18em;color:var(--ink);border:1px solid var(--line);padding:.25rem .6rem;margin-top:.4rem}
+
+  footer{padding:3rem 8vw;display:flex;justify-content:space-between;flex-wrap:wrap;gap:1rem;font-family:'Courier New',monospace;font-size:.72rem;color:var(--dim);letter-spacing:.15em}
+  @media(max-width:700px){
+    section{padding:4rem 6vw}
+    .workflow{padding:1.5rem 1rem 1.2rem}
+    .node{width:42px;height:42px}
+    .node svg{width:18px;height:18px}
+    .node .stepnum{font-size:.55rem;top:-1rem}
+    .stage-panel{min-height:280px}
+    .ref-body{padding-left:1.4rem}
+    .ref-head .ref-num{min-width:1.8rem;font-size:.62rem}
+    .stepper{--r:21px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <figure class="hero-figure">
+    <img src="/lena.png" width="1664" height="928" alt="Fotografía en blanco y negro de Lena Volkova: una mujer de cabello rubio a la altura de los hombros, de perfil y con la mirada desviada, asoma detrás de un muro blanco en un interior doméstico con jarras sobre una repisa.">
+  </figure>
+  <h1>Lena Volkova: persona autoral y <em>proceso creativo simulado</em> en fotografía generativa con IA</h1>
+  <p class="lede">Sistema de persona autoral implementado como contrato técnico para un modelo de lenguaje que dirige modelos de imagen. La autoría se codifica como procedimiento: perfil invariante, proceso creativo simulado, rúbrica anti-cliché falsable, settings modulares de estilo y un loop final de dirección humana.</p>
+</header>
+
+<section id="que">
+  <h2><span>01 — Descripción del sistema</span>Persona autoral como contrato técnico</h2>
+  <p>Un modelo generativo sin dirección produce resultados competentes y anónimos: el promedio estadístico de sus datos (Manovich, 2018). El proyecto indaga si puede construirse expresión propia en ese medio. Frente a la creatividad entendida como desviación del estilo aprendido (Elgammal et al., 2017), aquí la desviación estadística no es expresión: se busca decidir contra el promedio.</p>
+  <p>Un modelo de lenguaje asume el rol de una fotógrafa ficticia y dirige a los modelos de imagen mediante un procedimiento explícito, basado en el modelo Geneplore (Finke, Ward &amp; Smith, 1992). El usuario puede aportar un disparador; la persona decide el desarrollo creativo (iniciativa mixta limitada). Como el primer instanciado rara vez es el definitivo, una etapa final de dirección humana refina la composición. El sistema se organiza en cuatro capas:</p>
+  <div class="grid">
+    <div class="cell"><span class="num">CAPA A</span><h3>Perfil invariante</h3><p>Identidad ficticia, psicología, ideología, voz, casting y límites duros. Sus lentes teóricas (Debord, Fisher, Gramsci, Lacan) operan como criterios de selección.</p></div>
+    <div class="cell"><span class="num">CAPA B</span><h3>Proceso creativo simulado</h3><p>Preparación, divergencia de tres a cinco candidatas, selección auditada, verificación de límites, traducción técnica y loop final de dirección humana.</p></div>
+    <div class="cell"><span class="num">CAPA C</span><h3>Rúbrica anti-cliché</h3><p>Cinco criterios numerados y falsables, como especificidad, tensión interna o anclaje en una lente teórica. Cada descarte cita el criterio violado.</p></div>
+    <div class="cell"><span class="num">CAPA D</span><h3>Settings modulares (style lock)</h3><p>Archivos auto-descubribles que insertan un bloque estético fijo en el prompt final. Se escala agregando archivos.</p></div>
+  </div>
+</section>
+
+<section id="proceso">
+  <h2><span>02 — El proceso</span>Flujo de una sesión: del disparador a la imagen final</h2>
+  <p>Cada sesión recorre seis etapas y cada una deja registro. Las cinco primeras las ejecuta la persona; la sexta es un loop en el que un operador humano dirige el generador de imágenes, porque el primer instanciado rara vez es la imagen definitiva. Los comandos <span class="mono">retorcer</span>, <span class="mono">más lejos</span> y <span class="mono">cruzar</span> ramifican el proceso sin borrar el historial.</p>
+  <p>La demostración recorre un caso a partir del disparador <em>"una escena doméstica que incomode sin ser obvia"</em>.</p>
+
+  <div class="workflow" id="workflow">
+    <span class="tag">Demostración interactiva — caso: cola de lavarropas en patio interior</span>
+
+    <div class="stepper" id="stepper">
+      <div class="progress" id="progress"></div>
+      <div class="node" data-step="0">
+        <span class="stepnum">01</span>
+        <svg viewBox="0 0 24 24"><path d="M12 2 L13.5 10 L21 11 L13.5 12.5 L12 22 L10.5 12.5 L3 11 L10.5 10 Z"/></svg>
+      </div>
+      <div class="node" data-step="1">
+        <span class="stepnum">02</span>
+        <svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="12" r="2"/><path d="M8 6 L16 11 M8 18 L16 13"/></svg>
+      </div>
+      <div class="node" data-step="2">
+        <span class="stepnum">03</span>
+        <svg viewBox="0 0 24 24"><path d="M3 4 L21 4 L15 12 L15 20 L9 17 L9 12 Z"/></svg>
+      </div>
+      <div class="node" data-step="3">
+        <span class="stepnum">04</span>
+        <svg viewBox="0 0 24 24"><path d="M12 2 L20 5 L20 12 C20 17 16 21 12 22 C8 21 4 17 4 12 L4 5 Z"/><path d="M9 12 L11 14 L15 10"/></svg>
+      </div>
+      <div class="node" data-step="4">
+        <span class="stepnum">05</span>
+        <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="1"/><circle cx="12" cy="12.5" r="3.5"/><rect x="9" y="3" width="6" height="3"/><circle cx="17" cy="9" r=".7" fill="currentColor"/></svg>
+      </div>
+      <div class="node" data-step="5">
+        <span class="stepnum">06</span>
+        <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+      </div>
+    </div>
+
+    <div class="stage-panel" id="stage-panel">
+      <!-- stages filled by JS -->
+    </div>
+
+    <div class="controls">
+      <button class="ctrl" id="prev-btn">◀ Anterior</button>
+      <button class="ctrl play" id="play-btn">⏸ Pausar</button>
+      <button class="ctrl" id="next-btn">Siguiente ▶</button>
+      <span class="progress-text" id="progress-text">01 / 06</span>
+    </div>
+  </div>
+</section>
+
+<section id="settings">
+  <h2><span>03 — Coherencia estética</span>Bloqueo modular de estilo (style lock)</h2>
+  <p>En flujos basados en lenguaje natural, cada prompt renegocia el estilo y la serie tiende a derivar; la memoria de contexto del modelo es una base frágil. El sistema fija la gramática técnica de cada look en archivos de setting externos, que descubre automáticamente e inserta como bloque fijo en el prompt final.</p>
+  <p>Siguiendo la separación entre contenido y estilo de Gatys, Ecker &amp; Bethge (2015), el contenido lo determina la selección y el estilo lo determina el setting; solo se componen al final.</p>
+  <div class="settings">
+    <div class="setting">
+      <span class="stag">NOCTURNO</span>
+      <p>Exterior nocturno con flash aislado; la figura se separa de un fondo oscuro sin horizonte.</p>
+      <ul>
+        <li>Plano general aislado</li>
+        <li>Fragmento de cuerpo</li>
+        <li>Doble figura: silueta y foco</li>
+      </ul>
+    </div>
+    <div class="setting">
+      <span class="stag">DOMÉSTICO</span>
+      <p>Interior con flash frontal y composición simétrica de retrato familiar antiguo, con amplio espacio negativo.</p>
+      <ul>
+        <li>Frontal simétrico distanciado</li>
+        <li>Detalle de objeto</li>
+        <li>Reflejo o encuadre partido</li>
+      </ul>
+    </div>
+    <div class="setting">
+      <span class="stag">_PLANTILLA</span>
+      <p>Un nuevo setting equivale a un nuevo archivo, que el sistema descubre sin modificar el resto.</p>
+      <ul>
+        <li>Cabecera: tag, uso y planos</li>
+        <li>Bloque técnico en inglés</li>
+        <li>Prohibiciones explícitas</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="biblio">
+  <h2><span>04 — Bibliografía esencial</span>Fundamentos teóricos</h2>
+  <p>Cada entrada puede desplegarse para ver en qué parte del sistema se aplica.</p>
+  <div class="refs-dropdown" id="refs"></div>
+</section>
+
+<footer>
+  <span>LENA VOLKOVA — PERSONA AUTORAL EN FOTOGRAFÍA GENERATIVA</span>
+  <span>CIRO MENDOZA · KIMI (MOONSHOT AI) · SEPTIEMBRE 2026</span>
+</footer>
+
+<script>
+/* === Datos del workflow === */
+var STAGES = [
+  {
+    tag: "Preparación",
+    title: "Disparador + contexto de sesión",
+    body: "Lena recibe un disparador del usuario o, en su ausencia, elige uno propio. Carga el perfil invariante, las lentes activas y los settings disponibles.",
+    example: {
+      label: "Caso de ejemplo",
+      lines: [
+        { text: "DISPARADOR: «una escena doméstica que incomode sin ser obvia»" },
+        { text: "PERFIL ACTIVO: Lena · URSS 1981 · nocturna · flash" },
+        { text: "LENTE PRIMARIA: Gramsci (grietas del sentido común)" }
+      ]
+    }
+  },
+  {
+    tag: "Generación divergente",
+    title: "3 a 5 candidatas con lente asignada",
+    body: "Se materializan de tres a cinco candidatas en tarjetas, cada una con una lente teórica del perfil. Esto contrarresta la convergencia prematura típica de los sistemas conversacionales.",
+    example: {
+      label: "Candidatas generadas",
+      lines: [
+        { text: "LENTE · FISHER → «Una silla vacía junto a una ventana, luz de tarde.»" },
+        { text: "LENTE · GRAMSCI → «Una cola de lavarropas en un patio interior, de noche, iluminada por un flash.»" },
+        { text: "LENTE · LACAN → «Un rostro frontal, iluminado, mirando a cámara.»" }
+      ]
+    }
+  },
+  {
+    tag: "Selección convergente auditada",
+    title: "Cada descarte cita el criterio violado",
+    body: "La rúbrica anti-cliché se aplica a cada candidata. Cada descarte cita el criterio numerado que viola y la justificación queda registrada.",
+    example: {
+      label: "Veredicto de selección",
+      lines: [
+        { text: "DESCARTADA — silla vacía: metáfora gastada (criterio 3)", cls: "rej" },
+        { text: "DESCARTADA — rostro frontal: límite duro de encuadre genérico", cls: "rej" },
+        { text: "SELECCIONADA — cola de lavarropas: objeto puntual, tensión doméstico/ritual", cls: "sel" }
+      ]
+    }
+  },
+  {
+    tag: "Verificación contra límites duros",
+    title: "¿Viola algo del perfil invariante?",
+    body: "La candidata seleccionada se verifica contra los límites absolutos del perfil. Si viola alguno, vuelve a la fase divergente con el problema documentado; si pasa, sigue a traducción técnica.",
+    example: {
+      label: "Checklist de límites duros",
+      lines: [
+        { text: "¿Rostro pleno frontal? NO — ok" },
+        { text: "¿Encuadre genérico? NO — ok" },
+        { text: "¿Metáfora gastada? NO — ok" },
+        { text: "¿Compatible con ideología de Lena? SÍ — VERIFICA" }
+      ]
+    }
+  },
+  {
+    tag: "Traducción técnica",
+    title: "Setting + plano + casting → prompt final",
+    body: "El sistema elige el setting aplicable (NOCTURNO, DOMÉSTICO u otro), inserta el plano y resuelve el casting. El prompt final compone un bloque estético fijo con el contenido seleccionado.",
+    example: {
+      label: "Salida del flujo",
+      lines: [
+        { text: "SETTING: NOCTURNO (flash aislado, plano general aislado)" },
+        { text: "CONTENIDO: cola de lavarropas · patio interior · noche · flash" },
+        { text: "PROHIBICIONES: sin figura humana, sin horizonte, sin caption" },
+        { text: "→ PROMPT FINAL COMPUESTO Y EJECUTABLE" }
+      ]
+    }
+  },
+  {
+    tag: "Dirección iterativa",
+    title: "Loop de dirección humana sobre el generador",
+    body: "El primer instanciado rara vez coincide con la composición buscada: es el punto de partida. El operador humano dirige el generador con ediciones sucesivas de composición hasta aceptar la imagen final.",
+    example: {
+      label: "Registro de iteraciones",
+      lines: [
+        { text: "V1 — primer instanciado: sujeto centrado, el patio pierde profundidad", cls: "rej" },
+        { text: "V2 — edición: alejar el punto de vista para mostrar el patio completo", cls: "rej" },
+        { text: "V3 — edición: desplazar la cola de lavarropas al tercio inferior y ampliar el espacio negativo", cls: "sel" },
+        { text: "→ COMPOSICIÓN ACEPTADA · IMAGEN FINAL" }
+      ]
+    }
+  }
+];
+
+/* === Render del workflow === */
+var currentStep = 0;
+var playing = true;
+var timer = null;
+var STEP_MS = 4200;
+
+var panel = document.getElementById('stage-panel');
+var progress = document.getElementById('progress');
+var progressText = document.getElementById('progress-text');
+var nodes = document.querySelectorAll('.node');
+
+function renderPanel(step){
+  var s = STAGES[step];
+  var exLines = s.example.lines.map(function(l){
+    var cls = l.cls ? ' ' + l.cls : '';
+    return '<span class="ex-line'+cls+'">'+l.text+'</span>';
+  }).join('');
+  var html = '<div class="stage-content visible">'
+    + '<div class="stg-head"><span class="stg-tag">ETAPA 0'+(step+1)+' · '+s.tag.toUpperCase()+'</span></div>'
+    + '<h3>'+s.title+'</h3>'
+    + '<p class="stg-body">'+s.body+'</p>'
+    + '<div class="stg-example"><span class="ex-label">'+s.example.label+'</span>'+exLines+'</div>'
+    + '</div>';
+  panel.innerHTML = html;
+}
+
+function updateUI(){
+  nodes.forEach(function(n,i){
+    n.classList.remove('active','done');
+    if(i < currentStep) n.classList.add('done');
+    if(i === currentStep) n.classList.add('active');
+  });
+  // progress line: fraction of the span between first and last node centers
+  progress.style.setProperty('--frac', currentStep / (nodes.length - 1));
+  progressText.textContent = '0'+(currentStep+1)+' / 0'+nodes.length;
+  renderPanel(currentStep);
+}
+
+function nextStep(){
+  currentStep = (currentStep + 1) % STAGES.length;
+  updateUI();
+}
+function prevStep(){
+  currentStep = (currentStep - 1 + STAGES.length) % STAGES.length;
+  updateUI();
+}
+function playPause(){
+  playing = !playing;
+  var btn = document.getElementById('play-btn');
+  if(playing){
+    btn.textContent = '⏸ Pausar';
+    btn.classList.add('play');
+    startTimer();
+  } else {
+    btn.textContent = '▶ Reproducir';
+    btn.classList.remove('play');
+    stopTimer();
+  }
+}
+function startTimer(){
+  stopTimer();
+  timer = setInterval(nextStep, STEP_MS);
+}
+function stopTimer(){
+  if(timer){ clearInterval(timer); timer = null; }
+}
+
+document.getElementById('next-btn').addEventListener('click', function(){ nextStep(); if(playing) startTimer(); });
+document.getElementById('prev-btn').addEventListener('click', function(){ prevStep(); if(playing) startTimer(); });
+document.getElementById('play-btn').addEventListener('click', playPause);
+nodes.forEach(function(n){
+  n.addEventListener('click', function(){
+    currentStep = parseInt(n.getAttribute('data-step'),10);
+    updateUI();
+    if(playing) startTimer();
+  });
+});
+
+updateUI();
+startTimer();
+
+/* === Bibliografía desplegable === */
+var REFS = [
+  {
+    cite: 'Finke, R., Ward, T. & Smith, S. (1992). <i>Creative Cognition: Theory, Research, and Applications</i>. MIT Press.',
+    applies: 'Marco Geneplore',
+    where: 'CAPA B · Proceso creativo simulado',
+    body: 'Separa una fase generativa de una exploratoria: la divergencia produce candidatas con lente y la convergencia las explora e interpreta. Sustituye el modelo de Wallas, inaplicable a un agente sin subconsciente.'
+  },
+  {
+    cite: 'McCormack, J., Bown, O., Dorin, A., McCabe, J., Monro, G. & Whitelaw, M. (2014). Ten Questions Concerning Generative Computer Art. <i>Leonardo</i>, 47(2), 135–141.',
+    applies: 'Proceso como locus de intención',
+    where: 'CAPA C · Rúbrica anti-cliché + auditoría de descartes',
+    body: 'Diagnostican el genericismo algorítmico y sitúan la intención artística en el proceso. De ahí que cada descarte sea auditable: si la intención está en el proceso, debe poder leerse.'
+  },
+  {
+    cite: 'McCormack, J., Gifford, T. & Hutchings, P. (2019). Autonomy, Authenticity, Authorship and Intention in Computer Generated Art. <i>EvoMUSART</i> / arXiv:1903.02166.',
+    applies: 'Marco de autonomía/autenticidad',
+    where: 'DESCRIPCIÓN DEL SISTEMA · Autoría de la persona virtual',
+    body: 'Examinan autonomía, autenticidad, autoría e intención en el arte computacional. Permiten designar a Lena como "autora" sin antropomorfismo: autonomía procedural, autenticidad como coherencia con el perfil invariante y autoría como selección justificada.'
+  },
+  {
+    cite: 'Zylinska, J. (2020). <i>AI Art: Machine Visions and Warped Dreams</i>. Open Humanities Press.',
+    applies: 'Crítica del espectáculo de novedad',
+    where: 'PAPER · Tesis de cierre',
+    body: 'Critica el AI art como espectáculo de novedad y recuerda que las expectativas de autoría pueden rediseñarse. Su tesis cierra el paper: la creatividad humana siempre fue técnica; lo nuevo es que la técnica puede discutir sus propias reglas.'
+  },
+  {
+    cite: 'Audry, S. (2021). <i>Art in the Age of Machine Learning</i>. MIT Press.',
+    applies: 'Dispositivos culturales del ML',
+    where: 'DESCRIPCIÓN DEL SISTEMA · Lena como dispositivo',
+    body: 'Analiza los dispositivos culturales del aprendizaje automático en el arte. Lena se entiende como uno de ellos: ni herramienta neutra ni autor pleno, sino un aparato que estructura la práctica fotográfica.'
+  },
+  {
+    cite: 'Manovich, L. (2018). <i>AI Aesthetics</i>. Strelka Press.',
+    applies: 'Estética por defecto = promedio',
+    where: 'DESCRIPCIÓN DEL SISTEMA · Diagnóstico del medio',
+    body: 'Describe la estética por defecto de los modelos como promedio de sus datasets. Es el diagnóstico que motiva el proyecto: la expresión propia debe provenir de las restricciones y la selección.'
+  },
+  {
+    cite: 'Gatys, L., Ecker, A. & Bethge, M. (2015). A Neural Algorithm of Artistic Style. arXiv:1508.06576.',
+    applies: 'Separación contenido/estilo',
+    where: 'CAPA D · Settings modulares (style lock)',
+    body: 'Precedente técnico de la separación entre contenido y estilo. El style lock la traduce a procedimiento: contenido y setting viajan por separado y solo se componen al final.'
+  },
+  {
+    cite: 'Elgammal, A., Liu, B., Elhoseiny, M. & Mazzone, M. (2017). CAN: Creative Adversarial Networks. ICCC.',
+    applies: 'Contramodelo explícito',
+    where: 'DESCRIPCIÓN DEL SISTEMA · Contramodelo',
+    body: 'Proponen la creatividad como desviación del estilo aprendido, sin autor. Es el contramodelo que el proyecto evita: distingue un sistema que se desvía del promedio (CAN) de uno que decide contra él (Lena).'
+  },
+  {
+    cite: 'Debord, G. (1967). <i>La sociedad del espectáculo</i>. Buchet-Chastel.',
+    applies: 'Lente teórica de Lena',
+    where: 'CAPA A · Perfil invariante (lente)',
+    body: 'La distancia entre el hecho y su puesta en escena. Lena prefiere escenas donde el espectáculo se rompe, como objetos cotidianos fuera de su guion.'
+  },
+  {
+    cite: 'Fisher, M. (2009). <i>Capitalist Realism: Is There No Alternative?</i> Zero Books.',
+    applies: 'Lente teórica de Lena',
+    where: 'CAPA A · Perfil invariante (lente)',
+    body: 'La clausura del futuro. Lena evita imágenes que confirmen el realismo capitalista (consumo exitoso, paisajes aspiracionales) y busca la grieta. En la demo, esta lente genera la silla vacía junto a una ventana, descartada por cliché.'
+  },
+  {
+    cite: 'Gramsci, A. (1975). <i>Cuadernos de la cárcel</i>. Era.',
+    applies: 'Lente teórica de Lena',
+    where: 'CAPA A · Perfil invariante (lente) + demo',
+    body: 'Las grietas del sentido común. En la demo, esta lente produce la candidata seleccionada: la cola de lavarropas en un patio interior, de noche, con flash.'
+  },
+  {
+    cite: 'Lacan, J. (1966). El estadio del espejo. En <i>Escritos</i>. Siglo XXI.',
+    applies: 'Lente teórica de Lena',
+    where: 'CAPA A · Perfil invariante (lente) + demo',
+    body: 'El sujeto que no se deja fijar. Lena rechaza el rostro pleno frontal y el retrato simétrico identitario; en la demo, esa candidata cae por límite duro.'
+  },
+  {
+    cite: 'HAICo: A Framework for Human-AI Co-Creativity (2025). arXiv.',
+    applies: 'Convergencia prematura en LLMs',
+    where: 'CAPA B · 3–5 candidatas + comandos de ramificación',
+    body: 'Muestra que los sistemas conversacionales tienden a la convergencia prematura y que materializar alternativas y el prompting asociativo aumentan la diversidad medida. De ahí las tres a cinco candidatas y los comandos retorcer, más lejos y cruzar.'
+  }
+];
+
+var refsContainer = document.getElementById('refs');
+REFS.forEach(function(r, i){
+  var item = document.createElement('div');
+  item.className = 'ref-item';
+  item.innerHTML = ''
+    + '<div class="ref-head">'
+    + '  <span class="ref-num">'+String(i+1).padStart(2,'0')+'</span>'
+    + '  <span class="ref-cite">'+r.cite+'</span>'
+    + '  <span class="ref-toggle"></span>'
+    + '</div>'
+    + '<div class="ref-body">'
+    + '  <span class="applies"><strong>Aplica en:</strong> '+r.applies+'</span>'
+    + '  <p>'+r.body+'</p>'
+    + '  <span class="where">'+r.where+'</span>'
+    + '</div>';
+  item.querySelector('.ref-head').addEventListener('click', function(){
+    item.classList.toggle('open');
+  });
+  refsContainer.appendChild(item);
+});
+</script>
+</body>
+</html>
