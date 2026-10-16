@@ -1,0 +1,1269 @@
+{
+  "meta": {
+    "name": "catálogo de efectos vesper128",
+    "version": "0.0.1",
+    "note": "Lista externa de efectos conectables al grafo. Para agregar un efecto nuevo: o bien se compone como 'macro' con primitivas existentes (sin tocar código), o bien se agrega una primitiva en js/game/effects.js con define(id, fn) y se declara aquí. El motor ignora con aviso cualquier id ausente en este catálogo o sin implementación."
+  },
+  "paramTypes": {
+    "number": "número decimal",
+    "int": "número entero",
+    "string": "texto",
+    "text": "texto largo (varias líneas)",
+    "bool": "sí / no",
+    "select": "lista cerrada de opciones",
+    "list": "lista de textos",
+    "node": "ruta del sistema de archivos (fs.nodes)",
+    "icon": "nombre de icono registrado",
+    "flag": "nombre de bandera",
+    "event": "nombre de evento del bus",
+    "branches": "ramas condicionales de diálogo",
+    "json": "objeto libre"
+  },
+  "categories": [
+    {
+      "id": "story",
+      "name": "Historia",
+      "desc": "tensión, banderas, bitácora, final"
+    },
+    {
+      "id": "ui",
+      "name": "Interfaz",
+      "desc": "diálogos, ventanas, menús, reloj, cursor"
+    },
+    {
+      "id": "fs",
+      "name": "Archivos",
+      "desc": "revelar, ocultar, abrir, bloquear, papelera"
+    },
+    {
+      "id": "display",
+      "name": "Pantalla",
+      "desc": "parpadeo, glitch, campo uniforme, pareidolia, destellos"
+    },
+    {
+      "id": "audio",
+      "name": "Audio",
+      "desc": "golpes, respiración, señal, ganancias de capa"
+    },
+    {
+      "id": "macro",
+      "name": "Macros",
+      "desc": "secuencias compuestas, sin código nuevo"
+    }
+  ],
+  "effects": [
+    {
+      "id": "tension",
+      "name": "Sumar tensión",
+      "category": "story",
+      "impl": "tension",
+      "description": "Desplaza el objetivo de tensión global. La tensión converge suavemente y gobierna paleta, ruido, flicker, glitch, audio y habilitación de anomalías.",
+      "params": [
+        {
+          "key": "amount",
+          "label": "cantidad",
+          "type": "number",
+          "min": -1,
+          "max": 1,
+          "step": 0.01,
+          "default": 0.05
+        },
+        {
+          "key": "why",
+          "label": "motivo (bitácora)",
+          "type": "string",
+          "default": ""
+        }
+      ]
+    },
+    {
+      "id": "flag",
+      "name": "Activar bandera",
+      "category": "story",
+      "impl": "flag",
+      "description": "Marca una bandera. Las banderas habilitan ramas, menús y condiciones del grafo.",
+      "params": [
+        {
+          "key": "name",
+          "label": "nombre",
+          "type": "flag",
+          "default": ""
+        }
+      ]
+    },
+    {
+      "id": "log",
+      "name": "Escribir en bitácora",
+      "category": "story",
+      "impl": "log",
+      "description": "Agrega una línea a la bitácora diegética (visible en el registro del visitante).",
+      "params": [
+        {
+          "key": "text",
+          "label": "texto",
+          "type": "string",
+          "default": ""
+        }
+      ]
+    },
+    {
+      "id": "dialog",
+      "name": "Diálogo",
+      "category": "ui",
+      "impl": "dialog",
+      "description": "Abre un diálogo modal. Puede pedir texto (campo) y ramificar según el botón elegido o el valor escrito.",
+      "params": [
+        {
+          "key": "title",
+          "label": "título",
+          "type": "string",
+          "default": ""
+        },
+        {
+          "key": "text",
+          "label": "texto",
+          "type": "text",
+          "default": ""
+        },
+        {
+          "key": "buttons",
+          "label": "botones",
+          "type": "list",
+          "default": [
+            "Aceptar"
+          ]
+        },
+        {
+          "key": "width",
+          "label": "ancho",
+          "type": "int",
+          "min": 160,
+          "max": 480,
+          "default": 0
+        },
+        {
+          "key": "x",
+          "label": "x",
+          "type": "int",
+          "default": null
+        },
+        {
+          "key": "y",
+          "label": "y",
+          "type": "int",
+          "default": null
+        },
+        {
+          "key": "delay",
+          "label": "retardo (ms)",
+          "type": "int",
+          "min": 0,
+          "max": 60000,
+          "default": 0
+        },
+        {
+          "key": "field",
+          "label": "campo de texto",
+          "type": "json",
+          "default": null,
+          "help": "{ ph, secret, path }"
+        },
+        {
+          "key": "onButton",
+          "label": "ramas",
+          "type": "branches",
+          "default": [],
+          "help": "[{ if:{index,value,notValue}, effect, params }]"
+        },
+        {
+          "key": "stayOpen",
+          "label": "no cerrar al elegir",
+          "type": "bool",
+          "default": false
+        }
+      ]
+    },
+    {
+      "id": "reveal",
+      "name": "Revelar nodo",
+      "category": "fs",
+      "impl": "reveal",
+      "description": "Hace visible un nodo del sistema de archivos; opcionalmente lo agrega como icono del escritorio.",
+      "params": [
+        {
+          "key": "node",
+          "label": "nodo",
+          "type": "node",
+          "default": ""
+        },
+        {
+          "key": "asIcon",
+          "label": "como icono",
+          "type": "bool",
+          "default": true
+        }
+      ]
+    },
+    {
+      "id": "hide",
+      "name": "Ocultar nodo",
+      "category": "fs",
+      "impl": "hide",
+      "description": "Marca un nodo como oculto (no aparece en listados).",
+      "params": [
+        {
+          "key": "node",
+          "label": "nodo",
+          "type": "node",
+          "default": ""
+        }
+      ]
+    },
+    {
+      "id": "unlock",
+      "name": "Desbloquear nodo",
+      "category": "fs",
+      "impl": "unlock",
+      "description": "Quita el bloqueo de un nodo (carpeta con clave, sonido inaccesible).",
+      "params": [
+        {
+          "key": "node",
+          "label": "nodo",
+          "type": "node",
+          "default": ""
+        }
+      ]
+    },
+    {
+      "id": "lock",
+      "name": "Bloquear nodo",
+      "category": "fs",
+      "impl": "lock",
+      "description": "Vuelve a bloquear un nodo.",
+      "params": [
+        {
+          "key": "node",
+          "label": "nodo",
+          "type": "node",
+          "default": ""
+        }
+      ]
+    },
+    {
+      "id": "icon_add",
+      "name": "Agregar icono al escritorio",
+      "category": "fs",
+      "impl": "icon_add",
+      "description": "Revela el nodo como icono del escritorio (columna derecha).",
+      "params": [
+        {
+          "key": "node",
+          "label": "nodo",
+          "type": "node",
+          "default": ""
+        }
+      ]
+    },
+    {
+      "id": "icon_remove",
+      "name": "Quitar icono",
+      "category": "fs",
+      "impl": "icon_remove",
+      "description": "Elimina un icono del escritorio por su id.",
+      "params": [
+        {
+          "key": "id",
+          "label": "id de icono",
+          "type": "string",
+          "default": ""
+        }
+      ]
+    },
+    {
+      "id": "visitor_icon",
+      "name": "Icono del visitante",
+      "category": "fs",
+      "impl": "visitor_icon",
+      "description": "Crea un icono con el nombre de la ciudad del visitante (huso horario real) apuntando a un nodo.",
+      "params": [
+        {
+          "key": "id",
+          "label": "id",
+          "type": "string",
+          "default": "visitor"
+        },
+        {
+          "key": "node",
+          "label": "nodo destino",
+          "type": "node",
+          "default": ""
+        },
+        {
+          "key": "icon",
+          "label": "icono",
+          "type": "icon",
+          "default": "folder"
+        }
+      ]
+    },
+    {
+      "id": "icon_shift",
+      "name": "Desplazar iconos",
+      "category": "display",
+      "impl": "icon_shift",
+      "description": "Mueve un icono durante una perturbación breve que enmascara el cambio. Base: ceguera al cambio (Rensink, O'Regan & Clark 1997; Simons & Chabris 1999).",
+      "params": [
+        {
+          "key": "blinkMs",
+          "label": "duración de la perturbación (ms)",
+          "type": "int",
+          "min": 40,
+          "max": 1200,
+          "default": 140
+        },
+        {
+          "key": "dx",
+          "label": "desplazamiento x",
+          "type": "int",
+          "min": -60,
+          "max": 60,
+          "default": 8
+        },
+        {
+          "key": "dy",
+          "label": "desplazamiento y",
+          "type": "int",
+          "min": -60,
+          "max": 60,
+          "default": 0
+        }
+      ]
+    },
+    {
+      "id": "troxler",
+      "name": "Desvanecimiento Troxler",
+      "category": "display",
+      "impl": "troxler",
+      "description": "Los iconos lejanos al cursor pierden contraste y se recuperan al acercarse. Base: fading de Troxler (1804); Riggs & Ratliff; Hsieh & Tse.",
+      "params": [
+        {
+          "key": "distance",
+          "label": "distancia umbral (px)",
+          "type": "int",
+          "min": 20,
+          "max": 400,
+          "default": 130
+        }
+      ]
+    },
+    {
+      "id": "pareidolia",
+      "name": "Racimo de pareidolia",
+      "category": "display",
+      "impl": "pareidolia",
+      "description": "La trama del escritorio se agrupa hasta sugerir una forma que se desvanece. Base: pareidolia y percepción de agencia (Ullman et al. 2017); campo de Ganzfeld.",
+      "params": [
+        {
+          "key": "x",
+          "label": "x",
+          "type": "int",
+          "default": null
+        },
+        {
+          "key": "y",
+          "label": "y",
+          "type": "int",
+          "default": null
+        },
+        {
+          "key": "radius",
+          "label": "radio",
+          "type": "int",
+          "min": 8,
+          "max": 140,
+          "default": 40
+        },
+        {
+          "key": "life",
+          "label": "vida (ms)",
+          "type": "int",
+          "min": 1000,
+          "max": 120000,
+          "default": 26000
+        }
+      ]
+    },
+    {
+      "id": "subliminal",
+      "name": "Destello supraliminal",
+      "category": "display",
+      "impl": "subliminal",
+      "description": "Palabra o glifo de 1-3 fotogramas a contraste bajo: por encima del umbral fisiológico, por debajo de la identificación consciente. Base: priming sin awareness (Marcel 1983); Greenwald 1991 (sin efectos duraderos si es indetectable): se usa apenas detectable, no truly subliminal.",
+      "params": [
+        {
+          "key": "frames",
+          "label": "fotogramas",
+          "type": "int",
+          "min": 1,
+          "max": 6,
+          "default": 2
+        },
+        {
+          "key": "kind",
+          "label": "tipo",
+          "type": "select",
+          "options": [
+            "word",
+            "glyph"
+          ],
+          "default": "word"
+        },
+        {
+          "key": "words",
+          "label": "palabras (vacío = lista global)",
+          "type": "list",
+          "default": []
+        },
+        {
+          "key": "contrast",
+          "label": "contraste",
+          "type": "number",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "default": 0.44
+        },
+        {
+          "key": "x",
+          "label": "x",
+          "type": "int",
+          "default": null
+        },
+        {
+          "key": "y",
+          "label": "y",
+          "type": "int",
+          "default": null
+        }
+      ]
+    },
+    {
+      "id": "latency",
+      "name": "Latencia de interfaz",
+      "category": "ui",
+      "impl": "latency",
+      "description": "La interfaz deja de responder al instante: el cursor se atrasa y los clics se demoran. Produce arousal sin causa atribuible (Schachter & Singer 1962; Marshall & Zimbardo 1979).",
+      "params": [
+        {
+          "key": "min",
+          "label": "mínimo (ms)",
+          "type": "int",
+          "min": 0,
+          "max": 600,
+          "default": 70
+        },
+        {
+          "key": "max",
+          "label": "máximo (ms)",
+          "type": "int",
+          "min": 0,
+          "max": 900,
+          "default": 160
+        },
+        {
+          "key": "duration",
+          "label": "duración (ms)",
+          "type": "int",
+          "min": 500,
+          "max": 120000,
+          "default": 9000
+        }
+      ]
+    },
+    {
+      "id": "hitdrift",
+      "name": "Deriva de punteo",
+      "category": "ui",
+      "impl": "hitdrift",
+      "description": "Las zonas clicables oscilan unos píxeles: los botones fallan sin causa visible (indefensión aprendida, Seligman 1975).",
+      "params": [
+        {
+          "key": "amount",
+          "label": "amplitud (px)",
+          "type": "number",
+          "min": 0,
+          "max": 12,
+          "step": 0.5,
+          "default": 3
+        },
+        {
+          "key": "duration",
+          "label": "duración (ms)",
+          "type": "int",
+          "min": 0,
+          "max": 120000,
+          "default": 0
+        }
+      ]
+    },
+    {
+      "id": "menu_disable",
+      "name": "Menú inhabilitado",
+      "category": "ui",
+      "impl": "menu_disable",
+      "description": "Un menú queda gris durante un rato, elegido al azar.",
+      "params": [
+        {
+          "key": "duration",
+          "label": "duración (ms)",
+          "type": "int",
+          "min": 1000,
+          "max": 120000,
+          "default": 15000
+        }
+      ]
+    },
+    {
+      "id": "menu_add",
+      "name": "Agregar menú",
+      "category": "ui",
+      "impl": "menu_add",
+      "description": "Hace visible un menú extra definido en menus.extra por su clave.",
+      "params": [
+        {
+          "key": "key",
+          "label": "clave de menú",
+          "type": "string",
+          "default": ""
+        }
+      ]
+    },
+    {
+      "id": "menu_remove",
+      "name": "Quitar menú",
+      "category": "ui",
+      "impl": "menu_remove",
+      "description": "Oculta un menú extra por su clave.",
+      "params": [
+        {
+          "key": "key",
+          "label": "clave de menú",
+          "type": "string",
+          "default": ""
+        }
+      ]
+    },
+    {
+      "id": "clock",
+      "name": "Reloj",
+      "category": "ui",
+      "impl": "clock",
+      "description": "Congela, adelanta o pasa a hora real el reloj de la barra de menú.",
+      "params": [
+        {
+          "key": "mode",
+          "label": "modo",
+          "type": "select",
+          "options": [
+            "owner",
+            "real"
+          ],
+          "default": null
+        },
+        {
+          "key": "frozen",
+          "label": "congelado",
+          "type": "bool",
+          "default": null
+        },
+        {
+          "key": "drift",
+          "label": "deriva (ms, se suma)",
+          "type": "int",
+          "default": 0
+        }
+      ]
+    },
+    {
+      "id": "ghost_window",
+      "name": "Ventana fantasma",
+      "category": "ui",
+      "impl": "ghost_window",
+      "description": "Reabre sola una ventana ya visitada y la cierra después. Base: retorno de lo reprimido / doble (Freud, Das Unheimliche 1919).",
+      "params": [
+        {
+          "key": "path",
+          "label": "ruta",
+          "type": "node",
+          "default": ""
+        },
+        {
+          "key": "duration",
+          "label": "visible (ms)",
+          "type": "int",
+          "min": 400,
+          "max": 30000,
+          "default": 3000
+        }
+      ]
+    },
+    {
+      "id": "ghost_cursor",
+      "name": "Cursor fantasma",
+      "category": "ui",
+      "impl": "ghost_cursor",
+      "description": "El cursor se va solo hacia un icono y vuelve. Atribución de agencia a la máquina (Epley et al. 2007; Heider & Simmel 1944).",
+      "params": [
+        {
+          "key": "targetIcon",
+          "label": "id de icono (vacío = al azar)",
+          "type": "string",
+          "default": ""
+        },
+        {
+          "key": "duration",
+          "label": "duración (ms)",
+          "type": "int",
+          "min": 400,
+          "max": 20000,
+          "default": 2600
+        }
+      ]
+    },
+    {
+      "id": "flicker",
+      "name": "Parpadeo breve",
+      "category": "display",
+      "impl": "flicker",
+      "description": "Sube la modulación de brillo un instante. Se mantiene lejos de 12-30 Hz sostenidos (Harding & Harding 1999) y respeta el modo reducido.",
+      "params": [
+        {
+          "key": "amount",
+          "label": "amplitud",
+          "type": "number",
+          "min": 0,
+          "max": 0.3,
+          "step": 0.005,
+          "default": 0.05
+        },
+        {
+          "key": "duration",
+          "label": "duración (ms)",
+          "type": "int",
+          "min": 50,
+          "max": 8000,
+          "default": 900
+        }
+      ]
+    },
+    {
+      "id": "glitch",
+      "name": "Glitch de cuadro",
+      "category": "display",
+      "impl": "glitch",
+      "description": "Desplaza bandas horizontales del framebuffer durante unos fotogramas.",
+      "params": [
+        {
+          "key": "amount",
+          "label": "probabilidad por cuadro",
+          "type": "number",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "default": 0.4
+        },
+        {
+          "key": "duration",
+          "label": "duración (ms)",
+          "type": "int",
+          "min": 50,
+          "max": 8000,
+          "default": 700
+        }
+      ]
+    },
+    {
+      "id": "blank",
+      "name": "Campo uniforme (Ganzfeld)",
+      "category": "display",
+      "impl": "blank",
+      "description": "La pantalla queda un instante en campo uniforme: sin estructura que fijar, el sistema visual completa con lo propio. Base: Metzger 1930; Hebb; Neuroscience of Consciousness 2025.",
+      "params": [
+        {
+          "key": "duration",
+          "label": "duración (ms)",
+          "type": "int",
+          "min": 100,
+          "max": 20000,
+          "default": 1200
+        }
+      ]
+    },
+    {
+      "id": "knock",
+      "name": "Golpe en la unidad",
+      "category": "audio",
+      "impl": "knock",
+      "description": "Golpe físico grave en el gabinete: fuente atribuida a la máquina y no al edificio.",
+      "params": [
+        {
+          "key": "freq",
+          "label": "frecuencia (Hz)",
+          "type": "number",
+          "min": 40,
+          "max": 400,
+          "step": 1,
+          "default": 160
+        },
+        {
+          "key": "dur",
+          "label": "duración (s)",
+          "type": "number",
+          "min": 0.05,
+          "max": 4,
+          "step": 0.05,
+          "default": 0.5
+        },
+        {
+          "key": "vol",
+          "label": "volumen",
+          "type": "number",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "default": 0.2
+        }
+      ]
+    },
+    {
+      "id": "breath",
+      "name": "Respiración de la máquina",
+      "category": "audio",
+      "impl": "breath",
+      "description": "Ruido filtrado con envolvente respiratoria lenta: presencia sin cuerpo (lo eerie de Fisher: presencia fallida).",
+      "params": [
+        {
+          "key": "dur",
+          "label": "duración (s)",
+          "type": "number",
+          "min": 1,
+          "max": 20,
+          "step": 0.5,
+          "default": 7
+        },
+        {
+          "key": "vol",
+          "label": "volumen",
+          "type": "number",
+          "min": 0,
+          "max": 0.3,
+          "step": 0.005,
+          "default": 0.045
+        }
+      ]
+    },
+    {
+      "id": "sound",
+      "name": "Sonido de unidad",
+      "category": "audio",
+      "impl": "sound",
+      "description": "Lectura / escritura / molienda del disquete.",
+      "params": [
+        {
+          "key": "kind",
+          "label": "tipo",
+          "type": "select",
+          "options": [
+            "read",
+            "write",
+            "grind"
+          ],
+          "default": "read"
+        },
+        {
+          "key": "dur",
+          "label": "duración (s)",
+          "type": "number",
+          "min": 0.1,
+          "max": 6,
+          "step": 0.1,
+          "default": 1
+        }
+      ]
+    },
+    {
+      "id": "play",
+      "name": "Reproducir señal 18,97 Hz",
+      "category": "audio",
+      "impl": "play",
+      "description": "Dos sinusoides en batido (18,97 / 19,40 Hz) por debajo del umbral audible con componente de infrasonido. Base: Tandy & Lawrence 1998 (18,98 Hz, resonancia ocular ~18 Hz); Wiseman 2003 (17 Hz: 22 % de 700 personas con ansiedad/escalofríos/presencia).",
+      "params": [
+        {
+          "key": "seconds",
+          "label": "segundos",
+          "type": "number",
+          "min": 1,
+          "max": 60,
+          "step": 1,
+          "default": 9
+        },
+        {
+          "key": "freqs",
+          "label": "frecuencias",
+          "type": "list",
+          "default": [
+            18.97,
+            19.4
+          ]
+        },
+        {
+          "key": "flag",
+          "label": "bandera al reproducir",
+          "type": "flag",
+          "default": ""
+        }
+      ]
+    },
+    {
+      "id": "audio_gain",
+      "name": "Ganancia de capa",
+      "category": "audio",
+      "impl": "audio_gain",
+      "description": "Fija la ganancia absoluta de una capa de audio (sub, subH, mains, fly, bed, cluster, tin, whisp).",
+      "params": [
+        {
+          "key": "layer",
+          "label": "capa",
+          "type": "select",
+          "options": [
+            "sub",
+            "subH",
+            "mains",
+            "fly",
+            "bed",
+            "cluster",
+            "tin",
+            "whisp"
+          ],
+          "default": "sub"
+        },
+        {
+          "key": "gain",
+          "label": "ganancia",
+          "type": "number",
+          "min": 0,
+          "max": 1,
+          "step": 0.001,
+          "default": 0.05
+        }
+      ]
+    },
+    {
+      "id": "trash_add",
+      "name": "Ítems en la papelera",
+      "category": "fs",
+      "impl": "trash_add",
+      "description": "Agrega ítems que el usuario no borró (el objeto se niega a desaparecer: Carroll 1990, impureza de categoría).",
+      "params": [
+        {
+          "key": "items",
+          "label": "ítems",
+          "type": "list",
+          "default": []
+        }
+      ]
+    },
+    {
+      "id": "trash_clear",
+      "name": "Vaciar papelera",
+      "category": "fs",
+      "impl": "trash_clear",
+      "description": "Vacía la papelera sin diálogo.",
+      "params": []
+    },
+    {
+      "id": "trash_return",
+      "name": "La papelera devuelve",
+      "category": "fs",
+      "impl": "trash_return",
+      "description": "Muele el disco, vacía y muestra que los ítems volvieron. Repetición involuntaria (Freud 1919).",
+      "params": [
+        {
+          "key": "delay",
+          "label": "retardo del diálogo (ms)",
+          "type": "int",
+          "min": 0,
+          "max": 20000,
+          "default": 1900
+        },
+        {
+          "key": "items",
+          "label": "ítems que vuelven",
+          "type": "list",
+          "default": [
+            "COPIA.TXT"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "selfwrite",
+      "name": "Autoescritura en registro",
+      "category": "fs",
+      "impl": "selfwrite",
+      "description": "Aparece un archivo nuevo en la carpeta de registro, escrito por el sistema.",
+      "params": [
+        {
+          "key": "prefix",
+          "label": "prefijo del nombre",
+          "type": "string",
+          "default": "SESIÓN"
+        }
+      ]
+    },
+    {
+      "id": "doc_open",
+      "name": "Abrir documento",
+      "category": "fs",
+      "impl": "doc_open",
+      "description": "Abre una ruta del sistema de archivos (carpeta, documento, sonido o app).",
+      "params": [
+        {
+          "key": "path",
+          "label": "ruta",
+          "type": "node",
+          "default": ""
+        },
+        {
+          "key": "force",
+          "label": "forzar nueva ventana",
+          "type": "bool",
+          "default": false
+        }
+      ]
+    },
+    {
+      "id": "ending",
+      "name": "Disparar final",
+      "category": "story",
+      "impl": "ending",
+      "description": "Inicia la secuencia de cierre: ventanas, copia, fundido, segundo arranque y apagado del tubo.",
+      "params": []
+    },
+    {
+      "id": "list",
+      "name": "Ventana de lista",
+      "category": "ui",
+      "impl": "list",
+      "description": "Abre una ventana de lista con filas y una nota al pie. Admite sustituciones %SEC%, %OPS%, %MIN%, %CITY%, %VISITOR%, %SESSION%, %NOW%.",
+      "params": [
+        {
+          "key": "title",
+          "label": "título",
+          "type": "string",
+          "default": ""
+        },
+        {
+          "key": "rows",
+          "label": "filas",
+          "type": "json",
+          "default": [],
+          "help": "[{ name, size }]"
+        },
+        {
+          "key": "note",
+          "label": "nota al pie",
+          "type": "string",
+          "default": ""
+        },
+        {
+          "key": "width",
+          "label": "ancho",
+          "type": "int",
+          "default": null
+        },
+        {
+          "key": "height",
+          "label": "alto",
+          "type": "int",
+          "default": null
+        }
+      ]
+    },
+    {
+      "id": "unprompted",
+      "name": "Diálogo no solicitado",
+      "category": "ui",
+      "impl": "unprompted",
+      "description": "Elige al azar un diálogo de dialogs.invitados cuya condición se cumpla y lo muestra sin que el usuario lo pida. Las respuestas pueden ramificar efectos.",
+      "params": []
+    },
+    {
+      "id": "macro_presencia",
+      "name": "Macro: confirmar presencia",
+      "category": "macro",
+      "impl": null,
+      "description": "Ejemplo de macro: diálogo + tensión + destello, compuesto con primitivas. No requiere código nuevo.",
+      "macro": [
+        {
+          "effect": "dialog",
+          "params": {
+            "title": "",
+            "text": "¿Sigue ahí?",
+            "buttons": [
+              "Sí"
+            ],
+            "onButton": [
+              {
+                "effect": "tension",
+                "params": {
+                  "amount": 0.04,
+                  "why": "presencia"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "effect": "subliminal",
+          "params": {
+            "kind": "word",
+            "frames": 2
+          }
+        }
+      ],
+      "params": []
+    },
+    {
+      "id": "macro_intrusion",
+      "name": "Macro: intrusión de la máquina",
+      "category": "macro",
+      "impl": null,
+      "description": "Latencia + deriva de punteo + golpe: la interfaz deja de obedecer.",
+      "macro": [
+        {
+          "effect": "latency",
+          "params": {
+            "min": 90,
+            "max": 190,
+            "duration": 12000
+          }
+        },
+        {
+          "effect": "hitdrift",
+          "params": {
+            "amount": 4,
+            "duration": 12000
+          }
+        },
+        {
+          "effect": "knock",
+          "params": {
+            "freq": 140,
+            "dur": 0.5,
+            "vol": 0.2
+          }
+        }
+      ],
+      "params": []
+    }
+  ],
+  "triggers": [
+    {
+      "id": "start",
+      "name": "Al entrar al escritorio",
+      "desc": "Se activa una vez, cuando el escritorio aparece."
+    },
+    {
+      "id": "auto",
+      "name": "Automático (por condiciones)",
+      "desc": "Se evalúa cada cuadro; se activa cuando sus condiciones se cumplen."
+    },
+    {
+      "id": "idle",
+      "name": "Inacción",
+      "desc": "Se activa cuando el usuario lleva ms sin mover el cursor.",
+      "params": [
+        {
+          "key": "ms",
+          "label": "ms de inacción",
+          "type": "int",
+          "default": 26000
+        }
+      ]
+    },
+    {
+      "id": "event",
+      "name": "Evento del sistema",
+      "desc": "Se activa cuando el bus emite el evento y el filtro coincide.",
+      "params": [
+        {
+          "key": "event",
+          "label": "evento",
+          "type": "event"
+        },
+        {
+          "key": "match",
+          "label": "filtro",
+          "type": "json"
+        }
+      ]
+    }
+  ],
+  "events": [
+    {
+      "id": "open",
+      "payload": "{ path, kind }",
+      "desc": "Se abrió un nodo (carpeta, documento, sonido, app, papelera)."
+    },
+    {
+      "id": "open:locked",
+      "payload": "{ path, node }",
+      "desc": "Se intentó abrir un nodo bloqueado."
+    },
+    {
+      "id": "open:hidden",
+      "payload": "{ path }",
+      "desc": "Se abrió un nodo oculto."
+    },
+    {
+      "id": "open:unknown",
+      "payload": "{ path }",
+      "desc": "Ruta inexistente."
+    },
+    {
+      "id": "open:generated",
+      "payload": "{ path, name }",
+      "desc": "Ítem sin nodo (auto-generado)."
+    },
+    {
+      "id": "read",
+      "payload": "{ path, doc } o { app, soporte }",
+      "desc": "Se leyó un documento o se usó una app."
+    },
+    {
+      "id": "doc:grow",
+      "payload": "{ path, shown, total }",
+      "desc": "Un documento progresivo reveló una entrada más."
+    },
+    {
+      "id": "play",
+      "payload": "{ id, path }",
+      "desc": "Se reprodujo un sonido."
+    },
+    {
+      "id": "play:empty",
+      "payload": "{ id }",
+      "desc": "Se reprodujo un sonido sin componente."
+    },
+    {
+      "id": "app",
+      "payload": "{ app, button, path }",
+      "desc": "Botón de una app diegética."
+    },
+    {
+      "id": "close",
+      "payload": "{ path, kind }",
+      "desc": "Se cerró una ventana."
+    },
+    {
+      "id": "close:refused",
+      "payload": "{ path }",
+      "desc": "El cierre fue rechazado."
+    },
+    {
+      "id": "menu",
+      "payload": "{ action, label }",
+      "desc": "Se eligió un ítem de menú."
+    },
+    {
+      "id": "menu:emptyTrash",
+      "payload": "{ count }",
+      "desc": "Se pidió vaciar la papelera."
+    },
+    {
+      "id": "drop:trash",
+      "payload": "{ icon, name }",
+      "desc": "Se arrastró un icono a la papelera."
+    },
+    {
+      "id": "password",
+      "payload": "{ value, path }",
+      "desc": "Se envió una clave."
+    },
+    {
+      "id": "scrollend",
+      "payload": "{ path, kind, scrollY }",
+      "desc": "Se llegó al final de un desplazamiento."
+    },
+    {
+      "id": "click",
+      "payload": "{ where, x, y }",
+      "desc": "Clic en el escritorio."
+    },
+    {
+      "id": "key",
+      "payload": "{ key }",
+      "desc": "Tecla no consumida por la interfaz."
+    },
+    {
+      "id": "resize",
+      "payload": "{ path }",
+      "desc": "Se maximizó o restauró una ventana."
+    },
+    {
+      "id": "desktop",
+      "payload": "{}",
+      "desc": "El escritorio terminó de aparecer."
+    },
+    {
+      "id": "discover",
+      "payload": "{ id, node }",
+      "desc": "El grafo descubrió un nodo."
+    }
+  ],
+  "conditions": [
+    {
+      "kind": "flag",
+      "fields": [
+        "name",
+        "negate"
+      ],
+      "desc": "Bandera activa (o no)."
+    },
+    {
+      "kind": "tension",
+      "fields": [
+        "op",
+        "value"
+      ],
+      "desc": "Tensión comparada (>, >=, <, <=, ==)."
+    },
+    {
+      "kind": "time",
+      "fields": [
+        "op",
+        "value"
+      ],
+      "desc": "Milisegundos desde el arranque."
+    },
+    {
+      "kind": "node",
+      "fields": [
+        "node",
+        "negate"
+      ],
+      "desc": "Nodo del grafo ya descubierto."
+    },
+    {
+      "kind": "always",
+      "fields": [],
+      "desc": "Siempre verdadero."
+    },
+    {
+      "kind": "never",
+      "fields": [],
+      "desc": "Siempre falso (desactiva un nodo sin borrarlo)."
+    }
+  ]
+}

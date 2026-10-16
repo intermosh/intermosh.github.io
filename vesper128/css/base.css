@@ -1,0 +1,63 @@
+/* vesper128 · css/base — reset y layout. Sin marco de monitor: la salida ocupa
+   todo el espacio disponible. Compartido por index.html y editor.html. */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #060606;
+  color: #cfcabd;
+  overflow: hidden;
+  font-family: "DejaVu Sans Mono", "Liberation Mono", Menlo, Consolas, "Courier New", monospace;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---- escenario: contiene el framebuffer y las capas de tubo ---- */
+#stage {
+  position: relative;
+  line-height: 0;
+  background: #000;
+  --glow: #e2dece;
+  --scan-period: 3px;
+  --scan-dark: 0.08;
+  overflow: hidden;
+}
+
+#view {
+  display: block;
+  position: relative;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  cursor: none;
+}
+
+/* capas superpuestas (bloom, barrido, viñeta, vidrio) */
+.layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* ---- mensaje de error fatal ---- */
+#fatal {
+  display: none;
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 80vw;
+  padding: 14px 18px;
+  border: 1px solid #6b6558;
+  background: #101010;
+  color: #e7e1d3;
+  font-size: 13px;
+  line-height: 1.5;
+  z-index: 50;
+}

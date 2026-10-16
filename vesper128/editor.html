@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>vesper128 · editor</title>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/game.css">
+<link rel="stylesheet" href="css/editor.css">
+</head>
+<body class="editor">
+
+  <header id="topbar">
+    <div class="brand">vesper128 <b>editor</b> <span id="ver" class="hint"></span></div>
+    <nav id="tabs">
+      <button data-tab="grafo" class="on">Grafo</button>
+      <button data-tab="catalogo">Catálogo</button>
+      <button data-tab="pantalla">Pantalla</button>
+      <button data-tab="audio">Audio</button>
+      <button data-tab="datos">Datos</button>
+    </nav>
+    <div class="actions">
+      <button id="b-node" class="btn" title="N">＋ nodo</button>
+      <button id="b-layout" class="btn" title="orden por capas">auto-ordenar</button>
+      <button id="b-fit" class="btn" title="F">encuadrar</button>
+      <span class="sep"></span>
+      <input type="file" id="file" accept=".json,application/json" hidden>
+      <button id="b-load" class="btn" title="Ctrl+O">cargar…</button>
+      <button id="b-save" class="btn primary" title="Ctrl+S">guardar</button>
+      <button id="b-validate" class="btn">validar</button>
+      <button id="b-play" class="btn">probar juego ↗</button>
+      <span id="state" class="state">—</span>
+    </div>
+  </header>
+
+  <main id="main">
+    <section id="tab-grafo" class="tab on">
+      <div id="graph-host"><canvas id="graph" tabindex="0"></canvas></div>
+      <aside id="inspector"></aside>
+    </section>
+    <section id="tab-catalogo" class="tab"></section>
+    <section id="tab-pantalla" class="tab"></section>
+    <section id="tab-audio" class="tab"></section>
+    <section id="tab-datos" class="tab"></section>
+  </main>
+
+  <footer id="status">
+    <span id="status-msg">cargando…</span>
+    <span id="status-issues" class="good"></span>
+  </footer>
+
+  <div id="issues-drawer">
+    <div class="iwrap">
+      <div id="issues"></div>
+      <button id="issues-close" class="btn">cerrar</button>
+    </div>
+  </div>
+
+  <div id="datalists"></div>
+
+  <script type="module" src="js/editor/editor.js"></script>
+</body>
+</html>

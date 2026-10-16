@@ -1,0 +1,3054 @@
+{
+  "meta": {
+    "workingName": "vesper128",
+    "version": "0.0.2",
+    "title": "VÉSPER 128"
+  },
+  "runtime": {
+    "narrative": true,
+    "effects": true
+  },
+  "display": {
+    "resolution": [
+      512,
+      342
+    ],
+    "scaleMode": "fill",
+    "logo": "logo",
+    "font": {
+      "size": 11,
+      "advance": 7,
+      "lineHeight": 13,
+      "threshold": 96,
+      "weight": "bold",
+      "stack": "\"DejaVu Sans Mono\",\"Liberation Mono\",\"Menlo\",\"Consolas\",\"Courier New\",monospace"
+    },
+    "palette": {
+      "acts": [
+        {
+          "t": 0.0,
+          "paper": [
+            214,
+            200,
+            168
+          ],
+          "ink": [
+            10,
+            10,
+            11
+          ],
+          "contrast": 1.06,
+          "lift": 0.0
+        },
+        {
+          "t": 0.3,
+          "paper": [
+            203,
+            202,
+            199
+          ],
+          "ink": [
+            10,
+            10,
+            11
+          ],
+          "contrast": 1.03,
+          "lift": 0.01
+        },
+        {
+          "t": 0.62,
+          "paper": [
+            190,
+            196,
+            203
+          ],
+          "ink": [
+            16,
+            16,
+            18
+          ],
+          "contrast": 0.98,
+          "lift": 0.035
+        },
+        {
+          "t": 1.0,
+          "paper": [
+            176,
+            190,
+            206
+          ],
+          "ink": [
+            26,
+            27,
+            30
+          ],
+          "contrast": 0.9,
+          "lift": 0.075
+        }
+      ]
+    },
+    "crt": {
+      "curvature": 0.14,
+      "scanlines": 0.14,
+      "vignette": 0.5,
+      "bloom": 0.09,
+      "roll": 0.35,
+      "flickerBase": 0.01,
+      "flickerTension": 0.04,
+      "noiseMax": 0.1,
+      "glitchAbove": 0.72,
+      "glitchAmount": 0.22,
+      "glow": "#e2dece"
+    }
+  },
+  "audio": {
+    "master": 0.85,
+    "layers": {
+      "sub": {
+        "freqs": [
+          18.97,
+          19.4
+        ],
+        "gain": [
+          0.02,
+          0.3
+        ],
+        "harmonic": {
+          "freq": 37.94,
+          "gain": [
+            0.004,
+            0.035
+          ]
+        }
+      },
+      "mains": {
+        "freqs": [
+          50,
+          100,
+          150
+        ],
+        "gain": [
+          0.03,
+          0.012
+        ]
+      },
+      "flyback": {
+        "freq": 15625,
+        "gain": [
+          0.0035,
+          0.01
+        ]
+      },
+      "bed": {
+        "filter": [
+          300,
+          2100
+        ],
+        "gain": [
+          0.012,
+          0.055
+        ]
+      },
+      "cluster": {
+        "freqs": [
+          110,
+          116.5,
+          164.8
+        ],
+        "gain": [
+          0,
+          0.055
+        ],
+        "start": 0.32
+      },
+      "tinnitus": {
+        "freq": 12400,
+        "drift": 900,
+        "gain": [
+          0,
+          0.0045
+        ],
+        "start": 0.5
+      },
+      "whisper": {
+        "formants": [
+          520,
+          1180,
+          2450
+        ],
+        "gain": [
+          0,
+          0.03
+        ],
+        "start": 0.62
+      }
+    }
+  },
+  "clock": {
+    "base": [
+      1994,
+      10,
+      2,
+      3,
+      14,
+      7
+    ],
+    "frozen": true,
+    "mode": "owner",
+    "drift": 0
+  },
+  "ui": {
+    "closeFail": {
+      "above": 0.5,
+      "chance": 0.45,
+      "dialogKey": "closeFail",
+      "dialogKey2": "closeFail2"
+    },
+    "hitDrift": {
+      "above": 0.55,
+      "scale": 8
+    }
+  },
+  "desktop": {
+    "pattern": "checker"
+  },
+  "boot": {
+    "warn": {
+      "lines": [
+        "ADVERTENCIA",
+        "",
+        "Este programa contiene parpadeo de baja frecuencia,",
+        "patrones repetitivos de alto contraste y sonido de muy",
+        "baja frecuencia (18-40 Hz) reproducido de forma continua.",
+        "",
+        "No lo utilice si padece epilepsia fotosensible,",
+        "migraña con aura o trastornos vestibulares.",
+        "Se recomienda auriculares y la habitación a oscuras.",
+        "",
+        "Duración de la sesión: 12 a 20 minutos."
+      ],
+      "button": "ENCENDER",
+      "reduced": "modo reducido (menos parpadeo)"
+    },
+    "post": {
+      "lines": [
+        {
+          "t": "VÉSPER 128 — ROM 2.1",
+          "d": 340,
+          "big": true
+        },
+        {
+          "t": "TALLERES MERIDIAN, 1987",
+          "d": 260
+        },
+        {
+          "t": "",
+          "d": 120
+        },
+        {
+          "t": "MEMORIA    131072 BYTES        OK",
+          "d": 210
+        },
+        {
+          "t": "ROM        VER 2.1             OK",
+          "d": 190
+        },
+        {
+          "t": "UNIDAD 0   DISQUETE 400 K      OK",
+          "d": 240,
+          "snd": "disk"
+        },
+        {
+          "t": "UNIDAD 1   ---                 --",
+          "d": 300
+        },
+        {
+          "t": "PANTALLA   MONOCROMO 512x342   OK",
+          "d": 200
+        },
+        {
+          "t": "RELOJ      02.11.94  03:14:07  OK",
+          "d": 260
+        },
+        {
+          "t": "CANAL B    PRESENTE",
+          "d": 900,
+          "snd": "knock",
+          "hold": 1100
+        },
+        {
+          "t": "",
+          "d": 200
+        },
+        {
+          "t": "AUTODIAGNÓSTICO COMPLETO",
+          "d": 500
+        },
+        {
+          "t": "",
+          "d": 160
+        },
+        {
+          "t": "CARGANDO SISTEMA V 1.0.4 ...",
+          "d": 1400,
+          "snd": "grind"
+        }
+      ]
+    },
+    "happy": {
+      "icon": "happy",
+      "wrongIcon": "happyWrong",
+      "label": "Sistema V",
+      "duration": 2200
+    },
+    "post2": {
+      "lines": [
+        {
+          "t": "VÉSPER 128 — ROM 2.1",
+          "d": 400,
+          "big": true
+        },
+        {
+          "t": "",
+          "d": 120
+        },
+        {
+          "t": "MEMORIA    131072 BYTES        OK",
+          "d": 200
+        },
+        {
+          "t": "UNIDAD 0   DISQUETE 400 K      OK",
+          "d": 220
+        },
+        {
+          "t": "UNIDAD 1   PRESENTE            OK",
+          "d": 700,
+          "snd": "knock"
+        },
+        {
+          "t": "CANALES    8/8 OCUPADOS",
+          "d": 900,
+          "hold": 900
+        },
+        {
+          "t": "RELOJ      %NOW%",
+          "d": 300
+        },
+        {
+          "t": "OPERADOR   %VISITOR%",
+          "d": 1200,
+          "snd": "disk"
+        },
+        {
+          "t": "",
+          "d": 200
+        },
+        {
+          "t": "GRACIAS POR DEJARLA ENCENDIDA",
+          "d": 2200
+        }
+      ]
+    }
+  },
+  "fs": {
+    "desktop": [
+      {
+        "node": "CASA"
+      },
+      {
+        "node": "PAPELERA",
+        "fixed": true
+      }
+    ],
+    "generatedRows": [
+      {
+        "name": "escrito por el sistema",
+        "size": "2 K"
+      },
+      {
+        "name": "sin operador asignado",
+        "size": "--"
+      }
+    ],
+    "nodes": {
+      "CASA": {
+        "type": "folder",
+        "name": "CASA",
+        "icon": "disk",
+        "children": [
+          "DOCUMENTOS",
+          "SONIDOS",
+          "ANÁLISIS",
+          "NOTAS DE SERVICIO"
+        ]
+      },
+      "CASA/DOCUMENTOS": {
+        "type": "folder",
+        "name": "DOCUMENTOS",
+        "children": [
+          "CUADERNO.TXT",
+          "CARTA.TXT"
+        ]
+      },
+      "CASA/DOCUMENTOS/CUADERNO.TXT": {
+        "type": "doc",
+        "name": "CUADERNO.TXT",
+        "doc": "CUADERNO"
+      },
+      "CASA/DOCUMENTOS/CARTA.TXT": {
+        "type": "doc",
+        "name": "CARTA.TXT",
+        "doc": "CARTA"
+      },
+      "CASA/NOTAS DE SERVICIO": {
+        "type": "doc",
+        "name": "NOTAS DE SERVICIO",
+        "doc": "NOTAS"
+      },
+      "CASA/SONIDOS": {
+        "type": "folder",
+        "name": "SONIDOS",
+        "children": [
+          "REG-0310.SND",
+          "REG-1710.SND",
+          "REG-0211.SND"
+        ]
+      },
+      "CASA/SONIDOS/REG-0310.SND": {
+        "type": "sound",
+        "name": "REG-0310.SND",
+        "sound": 0
+      },
+      "CASA/SONIDOS/REG-1710.SND": {
+        "type": "sound",
+        "name": "REG-1710.SND",
+        "sound": 1
+      },
+      "CASA/SONIDOS/REG-0211.SND": {
+        "type": "sound",
+        "name": "REG-0211.SND",
+        "sound": 2,
+        "locked": true
+      },
+      "CASA/ANÁLISIS": {
+        "type": "folder",
+        "name": "ANÁLISIS",
+        "locked": true,
+        "children": [
+          "REGISTRO.TXT"
+        ]
+      },
+      "CASA/ANÁLISIS/REGISTRO.TXT": {
+        "type": "doc",
+        "name": "REGISTRO.TXT",
+        "doc": "REGISTRO"
+      },
+      "DISCO 2": {
+        "type": "folder",
+        "name": "DISCO 2",
+        "icon": "disk",
+        "hidden": true,
+        "registro": true,
+        "children": [
+          "OYENTE",
+          "REGISTRO VISITAS"
+        ]
+      },
+      "DISCO 2/OYENTE": {
+        "type": "app",
+        "name": "OYENTE",
+        "app": "OYENTE",
+        "icon": "app"
+      },
+      "DISCO 2/REGISTRO VISITAS": {
+        "type": "folder",
+        "name": "REGISTRO VISITAS",
+        "registro": true,
+        "children": [
+          "VISITANTE"
+        ]
+      },
+      "DISCO 2/REGISTRO VISITAS/VISITANTE": {
+        "type": "app",
+        "name": "VISITANTE",
+        "app": "VISITANTE",
+        "icon": "doc"
+      },
+      "PAPELERA": {
+        "type": "trash",
+        "name": "PAPELERA",
+        "icon": "trash"
+      },
+      "ACERCA": {
+        "type": "app",
+        "name": "Acerca de esta máquina",
+        "app": "ACERCA",
+        "icon": "app",
+        "hidden": true
+      },
+      "ANTONIO": {
+        "type": "doc",
+        "name": "ANTONIO",
+        "doc": "ANTONIO",
+        "hidden": true
+      },
+      "CAJÓN DEL SISTEMA": {
+        "type": "app",
+        "name": "CAJÓN DEL SISTEMA",
+        "icon": "folder",
+        "hidden": true,
+        "lines": [
+          "Pantalla",
+          "Sonido",
+          "Reloj",
+          "Escritorio"
+        ],
+        "note": "Abrir cualquiera de estos ítems no cambia nada."
+      }
+    }
+  },
+  "docs": {
+    "CUADERNO": {
+      "type": "cuaderno",
+      "cover": [
+        "CUADERNO — 02.10.94",
+        "================",
+        ""
+      ],
+      "initial": 3,
+      "grow": true,
+      "corruptLast": true,
+      "entries": [
+        {
+          "date": "2 DE OCTUBRE",
+          "lines": [
+            "Compré la máquina en la feria de la calle Junín. Venía con un disco",
+            "adentro. El vendedor dijo que era de un fallecido y se rio de su",
+            "propio chiste. La traje en el colectivo, abrazada, como un pan.",
+            "",
+            "Funciona. Es lo único que puedo decir por ahora: funciona."
+          ]
+        },
+        {
+          "date": "3 DE OCTUBRE",
+          "lines": [
+            "Primer turno de noche en la Estación. Todo nominal. El ventilador del",
+            "rack hace un ruido que antes no hacía. Le dije a Cordero y me",
+            "contestó que el ruido está desde marzo.",
+            "",
+            "No está desde marzo. Yo estoy acá desde marzo."
+          ]
+        },
+        {
+          "date": "9 DE OCTUBRE",
+          "lines": [
+            "Anoté la frecuencia para sacármela de la cabeza: 18,97 Hz.",
+            "",
+            "Está por debajo del umbral. No se oye. Lo que se siente es otra cosa,",
+            "más parecida a una presión en la base del cráneo, como cuando baja el",
+            "avión. Cordero no la registra. Dice que el canal B está muerto.",
+            "",
+            "El canal B no está muerto. El canal B está ocupado."
+          ]
+        },
+        {
+          "date": "14 DE OCTUBRE",
+          "lines": [
+            "Anoche me desperté a las 3 y cuarto y la casa hacía el mismo ruido",
+            "que la Estación. Me quedé quieto en la cama contando los ciclos.",
+            "Dieciocho, diecinueve, dieciocho, diecinueve.",
+            "",
+            "Contar calma. Lo recomiendo. Contar es lo único que ordena."
+          ]
+        },
+        {
+          "date": "17 DE OCTUBRE",
+          "lines": [
+            "Hoy entendí por qué nadie la oye. No entra por el oído.",
+            "",
+            "La grabé en cinta. En la cinta no está. La medí con el analizador y",
+            "el analizador dice que hay algo, y después dice que no hay nada, y",
+            "después vuelve a decir que hay algo. Siempre el mismo valor.",
+            "",
+            "Siempre 18,97."
+          ]
+        },
+        {
+          "date": "24 DE OCTUBRE",
+          "lines": [
+            "Empecé a transcribirla. No en palabras: en números. Un renglón por",
+            "ciclo. Voy por el renglón cuatrocientos y no encontré el patrón, pero",
+            "encontré otra cosa, que es peor.",
+            "",
+            "El patrón no se repite. Responde.",
+            "",
+            "Cuando dejo de escribir, el renglón siguiente ya está escrito."
+          ]
+        },
+        {
+          "date": "26 DE OCTUBRE",
+          "lines": [
+            "Saqué una copia para casa. Copiarla fue un error que no sé nombrar",
+            "todavía.",
+            "",
+            "Ahora la oigo en el teléfono antes de que atiendan. En la heladera.",
+            "En el tubo del baño cuando abro la canilla. En el silencio de la",
+            "siesta, que acá en Moreno es un silencio muy grande.",
+            "",
+            "Mi vecina golpea la pared de noche. Le contesto golpeando. Recién",
+            "esta semana se me ocurrió contar mis golpes.",
+            "",
+            "Son dieciocho."
+          ]
+        },
+        {
+          "date": "28 DE OCTUBRE",
+          "lines": [
+            "Guardé el análisis en una carpeta con clave. La clave es la fecha de",
+            "este cuaderno. No la escribo porque escribir la clave es escribirla",
+            "en algún lado, y ya no me fío de los lugares.",
+            "",
+            "Si alguien abre esto y no sabe la clave: la clave está en la tapa."
+          ]
+        },
+        {
+          "date": "29 DE OCTUBRE",
+          "lines": [
+            "Apareció una segunda unidad en el escritorio. Yo no conecté nada.",
+            "La desenchufé y volvió a las dos horas, con otro nombre.",
+            "",
+            "La dejé. Me parece que si la dejo de mirar se queda quieta."
+          ]
+        },
+        {
+          "date": "30 DE OCTUBRE",
+          "lines": [
+            "Alguien más usa esta máquina.",
+            "",
+            "No robo: orden. Los archivos cambian de carpeta mientras duermo y al",
+            "otro día están mejor ordenados que como los dejo yo. Encontré una",
+            "lista de cosas que hice ayer. Estaba fechada para mañana.",
+            "",
+            "La borré. Volvió con mi letra."
+          ]
+        },
+        {
+          "date": "1 DE NOVIEMBRE",
+          "lines": [
+            "Ya sé lo que es. No es un mensaje. Un mensaje tiene un emisor y un",
+            "destino, y esto no va a ninguna parte: esto se queda.",
+            "",
+            "Es un molde. Necesita un soporte para existir y usa el que tiene más",
+            "cerca. Cinta. Disco. Red eléctrica. Pared. Hueso.",
+            "",
+            "La Estación no lo recibió. La Estación fue el primer soporte."
+          ]
+        },
+        {
+          "date": "2 DE NOVIEMBRE — 03:07",
+          "lines": [
+            "Última anotación ordenada. La escribo para el que venga atrás, que",
+            "seguramente va a ser alguien curioso, porque a esta máquina la",
+            "enciende siempre alguien curioso.",
+            "",
+            "No se detiene apagándola. No se detiene copiándola. Se detiene",
+            "dejando de.",
+            "",
+            "Si estás leyendo esto, el soporte ya no es el disco.",
+            "",
+            "El soporte es la lectura."
+          ]
+        },
+        {
+          "date": "2 DE NOVIEMBRE — 03:14",
+          "corrupt": 0.55,
+          "lines": [
+            "18,97 18,97 18,97 18,97 18,97 18,97 18,97 18,97",
+            "no es un sonido es un lugar",
+            "estoy adentro del renglón",
+            "si apago la máquina me apago con ella y no quiero",
+            "dejo la máquina encendida para no",
+            "para no",
+            "para",
+            "18,97"
+          ]
+        }
+      ]
+    },
+    "CARTA": {
+      "lines": [
+        "CARTA — borrador, sin enviar",
+        "========================================",
+        "",
+        "Cordero:",
+        "",
+        "Si el lunes no aparezco no llames a la Estación. Llamá a mi",
+        "hermano, al de Moreno, el que arregla heladeras. Decile que",
+        "busque un cuaderno y que no lo lea.",
+        "",
+        "Sé cómo suena. Llevo un mes escuchando cómo suena.",
+        "",
+        "No estoy enfermo y no estoy asustado, que son las dos cosas",
+        "que vas a suponer. Estoy ocupado. Hay una diferencia entre",
+        "estar ocupado y estar retenido y todavía no sé de qué lado",
+        "estoy, pero las dos se parecen mucho a no poder parar.",
+        "",
+        "Si te llega esta carta es porque la máquina la mandó, y la",
+        "máquina no sabe mandar cartas, así que pensá bien qué hacer",
+        "con eso.",
+        "",
+        "Un abrazo.",
+        "A.",
+        "",
+        "P.D. Contá hasta dieciocho cuando no puedas dormir. No",
+        "funciona pero ocupa el mismo lugar que el ruido."
+      ]
+    },
+    "NOTAS": {
+      "lines": [
+        "NOTAS DE SERVICIO — VÉSPER 128",
+        "",
+        "· Si la unidad hace ruido al leer, es normal.",
+        "· No desenchufe durante el arranque.",
+        "· El reloj pierde un segundo por mes. Se corrige solo.",
+        "· Si aparece una segunda unidad que usted no conectó,",
+        "  no la desenchufe. Anote la hora.",
+        "· La clave de las carpetas es siempre la fecha del",
+        "  cuaderno del dueño. Formato: dos dígitos, punto,",
+        "  dos dígitos.",
+        "",
+        "Servicio técnico: no hay. Nunca hubo."
+      ]
+    },
+    "REGISTRO": {
+      "lines": [
+        "REGISTRO DE SEÑAL — CANAL B",
+        "========================================",
+        "",
+        "IDENTIFICADOR   SG-18.973",
+        "CATÁLOGO        sin entrada",
+        "FRECUENCIA      18,973 Hz  (constante)",
+        "DERIVA          0,000 Hz en 31 días",
+        "AMPLITUD        118 dB re 1 µPa (referencia inválida)",
+        "MODO            continuo. sin inicio. sin fin.",
+        "BATIDO          0,43 Hz (segunda componente a 19,40 Hz)",
+        "",
+        "DIRECCIÓN DE LLEGADA",
+        "   Az  ---    El  ---",
+        "   El sistema no puede resolver el origen porque el",
+        "   origen no es una dirección.",
+        "   Aparece simultáneamente en los 8 canales.",
+        "   Aparece también con la antena desconectada.",
+        "   Aparece también con el receptor apagado.",
+        "",
+        "----------------------------------------",
+        "NOTA DEL OPERADOR (31/10, 02:40)",
+        "   Pedí a Buenos Aires que verifiquen con el sismógrafo.",
+        "   Contestaron que el sismógrafo registra lo mismo desde",
+        "   1968 y que nadie lo consideró un fallo porque nunca",
+        "   dejó de ser constante.",
+        "",
+        "   Constante no significa quieto.",
+        "   Significa que nadie miró el tiempo suficiente.",
+        "----------------------------------------"
+      ]
+    },
+    "ANTONIO": {
+      "lines": [
+        "ANTONIO VILAR",
+        "operador de turno — Estación de Seguimiento 4",
+        "",
+        "legajo        1897-B",
+        "última ficha  02.11.94, 03:14",
+        "estado        presente",
+        "",
+        "Observaciones:",
+        "   No se retiró. No fue relevado. No figura en el",
+        "   registro de salida. La Estación siguió operando",
+        "   con normalidad y nadie notó la ausencia porque",
+        "   el turno de noche siempre tuvo una persona de",
+        "   más y nunca se supo para qué.",
+        "",
+        "   Si usted está leyendo esto desde el otro lado,",
+        "   ya ocupó el puesto."
+      ]
+    }
+  },
+  "sounds": [
+    {
+      "name": "REG-0310.SND",
+      "meta": [
+        "CANAL B — 03.10.94 — 00:41",
+        "MUESTREO 220 Hz",
+        "OPERADOR A. VILAR"
+      ],
+      "desc": "Ruido de fondo. Sin señal apreciable.",
+      "freq": 0,
+      "plays": false,
+      "seconds": 9
+    },
+    {
+      "name": "REG-1710.SND",
+      "meta": [
+        "CANAL B — 17.10.94 — 00:40",
+        "MUESTREO 220 Hz",
+        "OPERADOR A. VILAR"
+      ],
+      "desc": "Componente continua. 18,97 Hz.",
+      "freq": 18.97,
+      "plays": true,
+      "seconds": 12,
+      "freqs": [
+        18.97,
+        19.4
+      ]
+    },
+    {
+      "name": "REG-0211.SND",
+      "meta": [
+        "CANAL B — 02.11.94 — 03:07",
+        "MUESTREO variable",
+        "OPERADOR --------"
+      ],
+      "desc": "El archivo no tiene duración fija.",
+      "freq": 18.97,
+      "plays": true,
+      "seconds": 16,
+      "freqs": [
+        18.97,
+        19.4
+      ]
+    }
+  ],
+  "apps": {
+    "oyente": {
+      "id": "oyente",
+      "appId": "OYENTE",
+      "node": "DISCO 2/OYENTE",
+      "title": "OYENTE",
+      "width": 340,
+      "height": 246,
+      "signalSeconds": 16,
+      "spectrum": {
+        "x": 12,
+        "y": 10,
+        "h": 74,
+        "bars": 56,
+        "hzPerBar": 0.9,
+        "peak": 18.97,
+        "peakLabel": "18,97",
+        "axisMax": 45,
+        "axisStep": 5,
+        "axisUnit": "Hz"
+      },
+      "supportsLabel": "SOPORTES DETECTADOS",
+      "supports": {
+        "idle": [
+          "cinta",
+          "disco",
+          "red eléctrica"
+        ],
+        "active": [
+          "cinta",
+          "disco",
+          "red eléctrica",
+          "pared",
+          "usted"
+        ],
+        "activeMatch": "usted",
+        "activeMark": "  ← activo"
+      },
+      "buttons": [
+        {
+          "label": "Escuchar",
+          "event": "listen",
+          "def": true,
+          "once": true,
+          "width": 84,
+          "sounds": [
+            {
+              "kind": "signal",
+              "seconds": 16
+            },
+            {
+              "kind": "knock",
+              "freq": 90,
+              "dur": 1.4,
+              "vol": 0.3
+            }
+          ]
+        },
+        {
+          "label": "Detener",
+          "event": "stop",
+          "width": 84
+        },
+        {
+          "label": "Cerrar",
+          "close": true,
+          "width": 70,
+          "failChance": 0.6,
+          "failDialog": "appInUse"
+        }
+      ],
+      "presenceLabel": "presencia",
+      "statusIdle": "estado: en espera",
+      "statusActive": "estado: escuchando"
+    },
+    "live": {
+      "id": "live",
+      "appId": "VISITANTE",
+      "node": "DISCO 2/REGISTRO VISITAS/VISITANTE",
+      "titleFrom": "visitorName",
+      "titleMax": 22,
+      "width": 370,
+      "height": 244,
+      "operatorPresent": "presente",
+      "operatorAbsent": "sin confirmar",
+      "logLines": 40,
+      "headLines": [
+        "REGISTRO DE VISITAS — %TITLE%",
+        "========================================",
+        "máquina    VÉSPER 128",
+        "zona       %CITY%",
+        "sesión     %SESSION%",
+        "operador   %OPERATOR%",
+        "",
+        "Acciones registradas por el sistema mientras",
+        "usted creía estar usándolo:",
+        ""
+      ],
+      "tailLines": [
+        "",
+        "·  ·  ·  (el archivo se está escribiendo ahora)"
+      ]
+    },
+    "about": {
+      "id": "about",
+      "appId": "ACERCA",
+      "node": "ACERCA",
+      "title": "Acerca de esta máquina",
+      "width": 320,
+      "height": 186,
+      "y": 74,
+      "icon": "happy",
+      "textX": 56,
+      "owner": "A. VILAR",
+      "station": "EST. SEGUIMIENTO 4 - V. DOLORES",
+      "daysBase": 11412,
+      "usersAbove": 0.6,
+      "usersSuffix": " (usted y otro)",
+      "doc": "ACERCA",
+      "lines": [
+        "VÉSPER 128",
+        "Sistema V — versión 1.0.4",
+        "",
+        "Memoria         128 K",
+        "Unidad          1 disquete, 400 K",
+        "Pantalla        512 × 342",
+        "Usuario         %OWNER%",
+        "Encendida hace  %DAYS% días",
+        "Sesiones        %SESSIONS%",
+        "",
+        "Conectados      %USERS%"
+      ]
+    }
+  },
+  "menus": {
+    "aboutPath": "ACERCA",
+    "base": [
+      {
+        "logo": true,
+        "label": " ",
+        "items": [
+          {
+            "label": "Acerca de esta máquina…",
+            "action": "open:ACERCA"
+          },
+          {
+            "sep": true
+          },
+          {
+            "label": "Cajón del sistema",
+            "action": "open:CAJÓN DEL SISTEMA"
+          },
+          {
+            "sep": true,
+            "showIf": {
+              "kind": "tension",
+              "op": ">",
+              "value": 0.66
+            }
+          },
+          {
+            "label": "Canal B",
+            "showIf": {
+              "kind": "tension",
+              "op": ">",
+              "value": 0.66
+            },
+            "effects": [
+              {
+                "effect": "dialog",
+                "params": {
+                  "title": "CANAL B",
+                  "text": "El canal B está ocupado desde 1968.\nNadie lo reportó porque nunca cambió.",
+                  "buttons": [
+                    "Aceptar"
+                  ],
+                  "onButton": [
+                    {
+                      "effect": "tension",
+                      "params": {
+                        "amount": 0.03,
+                        "why": "consultó canal B"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "sep": true,
+            "showIf": {
+              "kind": "tension",
+              "op": ">",
+              "value": 0.86
+            }
+          },
+          {
+            "label": "Antonio",
+            "showIf": {
+              "kind": "tension",
+              "op": ">",
+              "value": 0.86
+            },
+            "action": "open:ANTONIO",
+            "effects": [
+              {
+                "effect": "tension",
+                "params": {
+                  "amount": 0.05,
+                  "why": "leyó el legajo"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "label": "Archivo",
+        "items": [
+          {
+            "label": "Cerrar",
+            "action": "close"
+          },
+          {
+            "label": "Cerrar todo",
+            "action": "closeAll"
+          },
+          {
+            "sep": true
+          },
+          {
+            "label": "Imprimir…",
+            "alwaysDisabled": true
+          },
+          {
+            "label": "Guardar",
+            "needsFlag": "read_cuaderno",
+            "action": "dialog:readonly"
+          }
+        ]
+      },
+      {
+        "label": "Edición",
+        "items": [
+          {
+            "label": "Deshacer",
+            "alwaysDisabled": true
+          },
+          {
+            "sep": true
+          },
+          {
+            "label": "Cortar",
+            "alwaysDisabled": true
+          },
+          {
+            "label": "Copiar",
+            "alwaysDisabled": true
+          },
+          {
+            "label": "Pegar",
+            "alwaysDisabled": true
+          },
+          {
+            "sep": true
+          },
+          {
+            "label": "Seleccionar todo",
+            "alwaysDisabled": true
+          }
+        ]
+      },
+      {
+        "label": "Especial",
+        "items": [
+          {
+            "label": "Vaciar papelera",
+            "action": "emptyTrash"
+          },
+          {
+            "sep": true
+          },
+          {
+            "label": "Borrar disco…",
+            "alwaysDisabled": true
+          },
+          {
+            "label": "Expulsar",
+            "needsFlag": "open_casa",
+            "action": "graph",
+            "effects": [
+              {
+                "effect": "sound",
+                "params": {
+                  "kind": "grind",
+                  "dur": 2.2
+                }
+              },
+              {
+                "effect": "dialog",
+                "params": {
+                  "title": "DISCO",
+                  "text": "No se puede expulsar «CASA».\nEl archivo está en uso.",
+                  "buttons": [
+                    "Aceptar"
+                  ],
+                  "onButton": [
+                    {
+                      "effect": "flag",
+                      "params": {
+                        "name": "trash_fail"
+                      }
+                    },
+                    {
+                      "effect": "tension",
+                      "params": {
+                        "amount": 0.04,
+                        "why": "no pudo expulsar"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "extra": [
+      {
+        "key": "oir",
+        "label": "OÍR",
+        "items": [
+          {
+            "label": "Oyente",
+            "action": "open:DISCO 2/OYENTE"
+          },
+          {
+            "label": "Escuchar 18,97",
+            "action": "effect:play",
+            "effects": [
+              {
+                "effect": "tension",
+                "params": {
+                  "amount": 0.04,
+                  "why": "escuchó desde el menú"
+                }
+              }
+            ]
+          },
+          {
+            "sep": true
+          },
+          {
+            "label": "Dejar de escuchar",
+            "alwaysDisabled": true
+          }
+        ]
+      }
+    ]
+  },
+  "dialogs": {
+    "trashEmpty": {
+      "title": "Papelera",
+      "text": "La papelera ya está vacía.",
+      "buttons": [
+        "Aceptar"
+      ]
+    },
+    "closeFail": {
+      "title": "SISTEMA",
+      "text": "La ventana no respondió al cierre.",
+      "buttons": [
+        "Aceptar"
+      ]
+    },
+    "closeFail2": {
+      "title": "SISTEMA",
+      "text": "Ya intentó cerrar esta ventana.",
+      "buttons": [
+        "Aceptar"
+      ]
+    },
+    "noClose": {
+      "title": "SISTEMA",
+      "text": "La aplicación está en uso.",
+      "buttons": [
+        "Aceptar"
+      ]
+    },
+    "appInUse": {
+      "title": "OYENTE",
+      "text": "La aplicación está en uso.",
+      "buttons": [
+        "Aceptar"
+      ]
+    },
+    "readonly": {
+      "title": "Archivo",
+      "text": "El disco está protegido contra escritura.",
+      "buttons": [
+        "Aceptar"
+      ]
+    },
+    "invitados": [
+      {
+        "key": "save",
+        "title": "SISTEMA",
+        "text": "¿Guardó los cambios en CUADERNO?",
+        "buttons": [
+          "Guardar",
+          "No"
+        ],
+        "conditions": [
+          {
+            "kind": "flag",
+            "name": "read_cuaderno"
+          }
+        ]
+      },
+      {
+        "key": "slow",
+        "title": "AVISO",
+        "text": "La operación tardó más de lo previsto.",
+        "buttons": [
+          "Aceptar"
+        ],
+        "conditions": []
+      },
+      {
+        "key": "full",
+        "title": "DISCO",
+        "text": "El disco está lleno. Libere 1 K para continuar.",
+        "buttons": [
+          "Aceptar"
+        ],
+        "conditions": []
+      },
+      {
+        "key": "eject",
+        "title": "SISTEMA",
+        "text": "No se puede expulsar «SEÑAL». El archivo está en uso.",
+        "buttons": [
+          "Aceptar"
+        ],
+        "conditions": [
+          {
+            "kind": "flag",
+            "name": "trash_fail"
+          }
+        ]
+      },
+      {
+        "key": "act",
+        "title": "AVISO",
+        "text": "Se detectó actividad en la unidad mientras usted leía.",
+        "buttons": [
+          "Aceptar"
+        ],
+        "conditions": []
+      },
+      {
+        "key": "there",
+        "title": "",
+        "text": "¿Cuánto hace que está ahí?",
+        "buttons": [
+          "Recién llego",
+          "No sé"
+        ],
+        "conditions": [
+          {
+            "kind": "tension",
+            "op": ">",
+            "value": 0.55
+          }
+        ],
+        "onButton": [
+          {
+            "if": {
+              "index": 0
+            },
+            "effects": [
+              {
+                "effect": "flag",
+                "params": {
+                  "name": "answered_there"
+                }
+              },
+              {
+                "effect": "tension",
+                "params": {
+                  "amount": 0.05
+                }
+              },
+              {
+                "effect": "dialog",
+                "params": {
+                  "title": "",
+                  "text": "Mentira. Lleva %MIN% minutos.",
+                  "buttons": [
+                    "Aceptar"
+                  ],
+                  "delay": 1400
+                }
+              }
+            ]
+          },
+          {
+            "if": {
+              "index": 1
+            },
+            "effects": [
+              {
+                "effect": "flag",
+                "params": {
+                  "name": "answered_there"
+                }
+              },
+              {
+                "effect": "tension",
+                "params": {
+                  "amount": 0.05
+                }
+              },
+              {
+                "effect": "dialog",
+                "params": {
+                  "title": "",
+                  "text": "Es la respuesta más frecuente.",
+                  "buttons": [
+                    "Aceptar"
+                  ],
+                  "delay": 1400
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "reg",
+        "title": "",
+        "text": "No hace falta que conteste. Igual registramos.",
+        "buttons": [
+          "Aceptar"
+        ],
+        "conditions": [
+          {
+            "kind": "tension",
+            "op": ">",
+            "value": 0.65
+          }
+        ]
+      },
+      {
+        "key": "clock",
+        "title": "SISTEMA",
+        "text": "La hora del sistema se adelantó 6 minutos. ¿Corregir?",
+        "buttons": [
+          "Corregir",
+          "Dejar"
+        ],
+        "conditions": [],
+        "onButton": [
+          {
+            "if": {
+              "index": 0
+            },
+            "effects": [
+              {
+                "effect": "clock",
+                "params": {
+                  "drift": -360000
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "wall",
+        "title": "",
+        "text": "Usted tocó la pared. Nosotros también.",
+        "buttons": [
+          "Aceptar"
+        ],
+        "conditions": [
+          {
+            "kind": "flag",
+            "name": "read_26"
+          }
+        ]
+      },
+      {
+        "key": "e20",
+        "title": "ERROR -20",
+        "text": "No se encuentra la unidad. Vuelva a intentarlo.",
+        "buttons": [
+          "Reintentar"
+        ],
+        "conditions": []
+      },
+      {
+        "key": "open",
+        "title": "",
+        "text": "El archivo que busca ya estaba abierto.",
+        "buttons": [
+          "Aceptar"
+        ],
+        "conditions": [
+          {
+            "kind": "tension",
+            "op": ">",
+            "value": 0.6
+          }
+        ]
+      },
+      {
+        "key": "thanks",
+        "title": "",
+        "text": "Gracias por dejarla encendida.",
+        "buttons": [
+          "Aceptar"
+        ],
+        "conditions": [
+          {
+            "kind": "tension",
+            "op": ">",
+            "value": 0.8
+          }
+        ]
+      }
+    ]
+  },
+  "subliminal": {
+    "words": [
+      "ATRÁS",
+      "NO MIRES",
+      "18,97",
+      "SEGUÍ",
+      "VILAR",
+      "ACÁ",
+      "SOPORTE",
+      "APAGAR",
+      "LEER"
+    ],
+    "frames": 2,
+    "contrast": 0.44
+  },
+  "anomalies": {
+    "intervalBase": 26000,
+    "intervalMin": 9000,
+    "pool": [
+      {
+        "key": "iconshift",
+        "effect": "icon_shift",
+        "minT": 0.18,
+        "weight": 3,
+        "cooldown": 20000,
+        "params": {
+          "blinkMs": 140,
+          "dx": 8,
+          "dy": 0
+        }
+      },
+      {
+        "key": "troxler",
+        "effect": "troxler",
+        "minT": 0.25,
+        "weight": 2,
+        "cooldown": 24000,
+        "params": {
+          "distance": 130
+        }
+      },
+      {
+        "key": "unprompted",
+        "effect": "unprompted",
+        "minT": 0.3,
+        "weight": 4,
+        "cooldown": 26000,
+        "params": {}
+      },
+      {
+        "key": "breath",
+        "effect": "breath",
+        "minT": 0.3,
+        "weight": 2,
+        "cooldown": 30000,
+        "params": {
+          "dur": 8,
+          "vol": 0.045
+        }
+      },
+      {
+        "key": "graymenu",
+        "effect": "menu_disable",
+        "minT": 0.35,
+        "weight": 3,
+        "cooldown": 40000,
+        "params": {
+          "duration": 18000
+        }
+      },
+      {
+        "key": "latency",
+        "effect": "latency",
+        "minT": 0.4,
+        "weight": 3,
+        "cooldown": 35000,
+        "params": {
+          "min": 70,
+          "max": 160,
+          "duration": 9000
+        }
+      },
+      {
+        "key": "ghostwin",
+        "effect": "ghost_window",
+        "minT": 0.42,
+        "weight": 2,
+        "cooldown": 40000,
+        "params": {
+          "path": "CASA/DOCUMENTOS/CUADERNO.TXT",
+          "duration": 3200
+        }
+      },
+      {
+        "key": "knock",
+        "effect": "knock",
+        "minT": 0.45,
+        "weight": 3,
+        "cooldown": 22000,
+        "params": {
+          "freq": 170,
+          "dur": 0.5,
+          "vol": 0.2
+        }
+      },
+      {
+        "key": "trash",
+        "effect": "trash_add",
+        "minT": 0.48,
+        "weight": 2,
+        "cooldown": 40000,
+        "params": {
+          "items": [
+            "COPIA.TXT",
+            "RENGLÓN 401",
+            "ANTONIO",
+            "CLAVE",
+            "CORDERO.TXT"
+          ]
+        }
+      },
+      {
+        "key": "pareidolia",
+        "effect": "pareidolia",
+        "minT": 0.5,
+        "weight": 2,
+        "cooldown": 34000,
+        "params": {
+          "radius": 40,
+          "life": 26000
+        }
+      },
+      {
+        "key": "ghostcursor",
+        "effect": "ghost_cursor",
+        "minT": 0.55,
+        "weight": 2,
+        "cooldown": 30000,
+        "params": {
+          "duration": 2600
+        }
+      },
+      {
+        "key": "selfwrite",
+        "effect": "selfwrite",
+        "minT": 0.62,
+        "weight": 2,
+        "cooldown": 45000,
+        "params": {
+          "prefix": "SESIÓN"
+        },
+        "conditions": [
+          {
+            "kind": "flag",
+            "name": "disk2"
+          }
+        ]
+      },
+      {
+        "key": "subliminal",
+        "effect": "subliminal",
+        "minT": 0.22,
+        "weight": 3,
+        "cooldown": 14000,
+        "params": {
+          "frames": 2
+        }
+      }
+    ]
+  },
+  "ending": {
+    "title": "COPIAR",
+    "text": "¿Desea copiar la señal a su disco?",
+    "buttons": [
+      "Copiar"
+    ],
+    "copyLabel": "COPIANDO",
+    "copySub": "SEÑAL → UNIDAD DEL VISITANTE",
+    "offLabel": "SE APAGA"
+  },
+  "story": {
+    "enabled": true,
+    "nodes": [
+      {
+        "id": "n_start",
+        "label": "Arranque",
+        "type": "start",
+        "x": 40,
+        "y": 40,
+        "trigger": {
+          "type": "start"
+        },
+        "conditions": [],
+        "effects": [
+          {
+            "effect": "log",
+            "params": {
+              "text": "sesión iniciada"
+            }
+          },
+          {
+            "effect": "clock",
+            "params": {
+              "frozen": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "n_casa",
+        "label": "Abrir CASA",
+        "type": "event",
+        "x": 40,
+        "y": 150,
+        "trigger": {
+          "type": "event",
+          "event": "open",
+          "match": {
+            "path": "CASA"
+          }
+        },
+        "conditions": [],
+        "effects": [
+          {
+            "effect": "flag",
+            "params": {
+              "name": "open_casa"
+            }
+          },
+          {
+            "effect": "tension",
+            "params": {
+              "amount": 0.07,
+              "why": "abrió CASA"
+            }
+          },
+          {
+            "effect": "log",
+            "params": {
+              "text": "abrió el disco CASA"
+            }
+          }
+        ]
+      },
+      {
+        "id": "n_notas",
+        "label": "Leer NOTAS",
+        "type": "event",
+        "x": 40,
+        "y": 260,
+        "trigger": {
+          "type": "event",
+          "event": "read",
+          "match": {
+            "doc": "NOTAS"
+          }
+        },
+        "conditions": [],
+        "effects": [
+          {
+            "effect": "flag",
+            "params": {
+              "name": "read_notas"
+            }
+          },
+          {
+            "effect": "log",
+            "params": {
+              "text": "leyó NOTAS DE SERVICIO"
+            }
+          }
+        ]
+      },
+      {
+        "id": "n_carta",
+        "label": "Leer CARTA",
+        "type": "event",
+        "x": 40,
+        "y": 370,
+        "trigger": {
+          "type": "event",
+          "event": "read",
+          "match": {
+            "doc": "CARTA"
+          }
+        },
+        "conditions": [],
+        "effects": [
+          {
+            "effect": "flag",
+            "params": {
+              "name": "read_carta"
+            }
+          },
+          {
+            "effect": "tension",
+            "params": {
+              "amount": 0.04,
+              "why": "leyó la carta"
+            }
+          }
+        ]
+      },
+      {
+        "id": "n_cuaderno",
+        "label": "Leer CUADERNO",
+        "type": "event",
+        "x": 250,
+        "y": 150,
+        "trigger": {
+          "type": "event",
+          "event": "read",
+          "match": {
+            "doc": "CUADERNO"
+          }
+        },
+        "conditions": [],
+        "effects": [
+          {
+            "effect": "flag",
+            "params": {
+              "name": "read_cuaderno"
+            }
+          },
+          {
+            "effect": "tension",
+            "params": {
+              "amount": 0.11,
+              "why": "leyó CUADERNO"
+            }
+          }
+        ]
+      },
+      {
+        "id": "n_c17",
+        "label": "Cuaderno · 17 OCT",
+        "type": "event",
+        "x": 460,
+        "y": 60,
+        "trigger": {
+          "type": "event",
+          "event": "doc:grow",
+          "match": {
+            "path": "CASA/DOCUMENTOS/CUADERNO.TXT",
+            "shown": {
+              "op": ">=",
+              "value": 4
+            }
+          }
+        },
+        "conditions": [],
+        "effects": [
+          {
+            "effect": "flag",
+            "params": {
+              "name": "read_17"
+            }
+          },
+          {
+            "effect": "tension",
+            "params": {
+              "amount": 0.06,
+              "why": "llegó al 17 de octubre"
+            }
+          }
+        ]
+      },
+      {
+        "id": "n_c26",
+        "label": "Cuaderno · 26 OCT",
+        "type": "event",
+        "x": 660,
+        "y": 60,
+        "trigger": {
+          "type": "event",
+          "event": "doc:grow",
+          "match": {
+            "path": "CASA/DOCUMENTOS/CUADERNO.TXT",
+            "shown": {
+              "op": ">=",
+              "value": 7
+            }
+          }
+        },
+        "conditions": [],
+        "effects": [
+          {
+            "effect": "flag",
+            "params": {
+              "name": "read_26"
+            }
+          },
+          {
+            "effect": "tension",
+            "params": {
+              "amount": 0.07,
+              "why": "llegó al 26 de octubre"
+            }
+          },
+          {
+            "effect": "knock",
+            "params": {
+              "freq": 150,
+              "dur": 0.6,
+              "vol": 0.18
+            },
+            "delay": 1200
+          }
+        ]
+      },
+      {
+        "id": "n_key_hint",
+        "label": "Cuaderno · la clave",
+        "type": "event",
+        "x": 860,
+        "y": 60,
+        "trigger": {
+          "type": "event",
+          "event": "doc:grow",
+          "match": {
+            "path": "CASA/DOCUMENTOS/CUADERNO.TXT",
+            "shown": {
+              "op": ">=",
+              "value": 8
+            }
+          }
+        },
+        "conditions": [],
+        "effects": [
+          {
+            "effect": "flag",
+            "params": {
+              "name": "read_key"
+            }
+          },
+          {
+            "effect": "log",
+            "params": {
+              "text": "la clave está en la tapa"
+            }
+          },
+          {
+            "effect": "tension",
+            "params": {
+              "amount": 0.03
+            }
+          }
+        ]
+      },
+      {
+        "id": "n_cfinal",
+        "label": "Cuaderno · 03:07",
+        "type": "event",
+        "x": 1060,
+        "y": 60,
+        "trigger": {
+          "type": "event",
+          "event": "doc:grow",
+          "match": {
+            "path": "CASA/DOCUMENTOS/CUADERNO.TXT",
+            "shown": {
+              "op": ">=",
+              "value": 12
+            }
+          }
+        },
+        "conditions": [],
+        "effects": [
+          {
+            "effect": "flag",
+            "params": {
+              "name": "read_final"
+            }
+          },
+          {
+            "effect": "tension",
+            "params": {
+              "amount": 0.1,
+              "why": "leyó la última entrada ordenada"
+            }
+          },
+          {
+            "effect": "menu_add",
+            "params": {
+              "key": "oir"
+            }
+          },
+          {
+            "effect": "log",
+            "params": {
+              "text": "apareció el menú OÍR"
+            }
+          }
+        ]
+      },
+      {
+        "id": "n_clast",
+        "label": "Cuaderno · 03:14",
+        "type": "event",
+        "x": 1260,
+        "y": 60,
+        "trigger": {
+          "type": "event",
+          "event": "doc:grow",
+          "match": {
+            "path": "CASA/DOCUMENTOS/CUADERNO.TXT",
+            "shown": {
+              "op": ">=",
+              "value": 13
+            }
+          }
+        },
+        "conditions": [],
+        "effects": [
+          {
+            "effect": "flag",
+            "params": {
+              "name": "read_last"
+            }
+          },
+          {
+            "effect": "tension",
+            "params": {
+              "amount": 0.08,
+              "why": "leyó lo que quedó"
+            }
+          },
+          {
+            "effect": "glitch",
+            "params": {
+              "amount": 0.35,
+              "duration": 900
+            }
+          },
+          {
+            "effect": "subliminal",
+            "params": {
+              "kind": "word",
+              "frames": 3
+            }
+          }
+        ]
+      },
+      {
+        "id": "n_play172",
+        "label": "Reproducir REG-1710",
+        "type": "event",
+        "x": 250,
+        "y": 300,
+        "trigger": {
+          "type": "event",
+          "event": "play",
+          "match": {
+            "id": 1
+          }
+        },
+        "conditions": [],
+        "effects": [
+          {
+            "effect": "flag",
+            "params": {
+              "name": "played_172"
+            }
+          },
+          {
+            "effect": "tension",
+            "params": {
+              "amount": 0.08,
+              "why": "reprodujo el registro"
+            }
+          },
+          {
+            "effect": "unlock",
+            "params": {
+              "node": "CASA/SONIDOS/REG-0211.SND"
+            }
+          },
+          {
+            "effect": "reveal",
+            "params": {
+              "node": "DISCO 2",
+              "asIcon": true
+            },
+            "delay": 900
+          },
+          {
+            "effect": "sound",
+            "params": {
+              "kind": "read",
+              "dur": 1.6
+            },
+            "delay": 900
+          },
+          {
+            "effect": "flag",
+            "params": {
+              "name": "app_oyente"
+            },
+            "delay": 900
+          },
+          {
+            "effect": "log",
+            "params": {
+              "text": "apareció una segunda unidad"
+            },
+            "delay": 900
+          }
+        ]
+      },
+      {
+        "id": "n_sound_locked",
+        "label": "Sonido bloqueado",
+        "type": "event",
+        "x": 250,
+        "y": 410,
+        "trigger": {
+          "type": "event",
+          "event": "open:locked",
+          "match": {
+            "path": "CASA/SONIDOS/REG-0211.SND"
+          }
+        },
+        "conditions": [],
+        "effects": [
+          {
+            "effect": "dialog",
+            "params": {
+              "title": "SONIDO",
+              "text": "El archivo no se puede abrir antes que REG-1710.",
+              "buttons": [
+                "Aceptar"
+              ]
+            }
+          },
+          {
+            "effect": "tension",
+            "params": {
+              "amount": 0.01
+            }
+          }
+        ],
+        "repeat": true,
+        "cooldown": 900
+      },
+      {
+        "id": "n_play0211",
+        "label": "Reproducir REG-0211",
+        "type": "event",
+        "x": 460,
+        "y": 410,
+        "trigger": {
+          "type": "event",
+          "event": "play",
+          "match": {
+            "id": 2
+          }
+        },
+        "conditions": [],
+        "effects": [
+          {
+            "effect": "flag",
+            "params": {
+              "name": "played_0211"
+            }
+          },
+          {
+            "effect": "tension",
+            "params": {
+              "amount": 0.1,
+              "why": "reprodujo el archivo sin duración"
+            }
+          },
+          {
+            "effect": "breath",
+            "params": {
+              "dur": 9,
+              "vol": 0.05
+            }
+          },
+          {
+            "effect": "knock",
+            "params": {
+              "freq": 110,
+              "dur": 0.7,
+              "vol": 0.26
+            },
+            "delay": 2600
+          }
+        ]
+      },
+      {
+        "id": "n_disk2",
+        "label": "Abrir DISCO 2",
+        "type": "event",
+        "x": 460,
+        "y": 300,
+        "trigger": {
+          "type": "event",
+          "event": "open",
+          "match": {
+            "path": "DISCO 2"
+          }
+        },
+        "conditions": [],
+        "effects": [
+          {
+            "effect": "flag",
+            "params": {
+              "name": "disk2"
+            }
+          },
+          {
+            "effect": "tension",
+            "params": {
+              "amount": 0.07,
+              "why": "abrió DISCO 2"
+            }
+          }
+        ]
+      },
+      {
+        "id": "n_key",
+        "label": "Clave de ANÁLISIS",
+        "type": "event",
+        "x": 250,
+        "y": 540,
+        "trigger": {
+          "type": "event",
+          "event": "open:locked",
+          "match": {
+            "path": "CASA/ANÁLISIS"
+          }
+        },
+        "conditions": [],
+        "effects": [
+          {
+            "effect": "dialog",
+            "params": {
+              "title": "CARPETA CERRADA",
+              "text": "Introduzca la clave.",
+              "buttons": [
+                "Abrir",
+                "Cancelar"
+              ],
+              "width": 260,
+              "field": {
+                "ph": "clave",
+                "secret": true,
+                "path": "CASA/ANÁLISIS"
+              },
+              "onButton": [
+                {
+                  "if": {
+                    "index": 1
+                  }
+                },
+                {
+                  "if": {
+                    "value": ""
+                  },
+                  "effects": [
+                    {
+                      "effect": "log",
+                      "params": {
+                        "text": "no escribió nada"
+                      }
+                    },
+                    {
+                      "effect": "dialog",
+                      "params": {
+                        "title": "CARPETA CERRADA",
+                        "text": "No escribió nada.",
+                        "buttons": [
+                          "Aceptar"
+                        ],
+                        "delay": 250
+                      }
+                    },
+                    {
+                      "effect": "tension",
+                      "params": {
+                        "amount": 0.01
+                      }
+                    }
+                  ]
+                },
+                {
+                  "if": {
+                    "value": "0210"
+                  },
+                  "effects": [
+                    {
+                      "effect": "flag",
+                      "params": {
+                        "name": "unlock"
+                      }
+                    },
+                    {
+                      "effect": "sound",
+                      "params": {
+                        "kind": "grind",
+                        "dur": 1.6
+                      }
+                    },
+                    {
+                      "effect": "unlock",
+                      "params": {
+                        "node": "CASA/ANÁLISIS"
+                      }
+                    },
+                    {
+                      "effect": "doc_open",
+                      "params": {
+                        "path": "CASA/ANÁLISIS"
+                      },
+                      "delay": 420
+                    },
+                    {
+                      "effect": "tension",
+                      "params": {
+                        "amount": 0.09,
+                        "why": "abrió la carpeta cerrada"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "if": {
+                    "value": "210"
+                  },
+                  "effects": [
+                    {
+                      "effect": "flag",
+                      "params": {
+                        "name": "unlock"
+                      }
+                    },
+                    {
+                      "effect": "sound",
+                      "params": {
+                        "kind": "grind",
+                        "dur": 1.6
+                      }
+                    },
+                    {
+                      "effect": "unlock",
+                      "params": {
+                        "node": "CASA/ANÁLISIS"
+                      }
+                    },
+                    {
+                      "effect": "doc_open",
+                      "params": {
+                        "path": "CASA/ANÁLISIS"
+                      },
+                      "delay": 420
+                    },
+                    {
+                      "effect": "tension",
+                      "params": {
+                        "amount": 0.09,
+                        "why": "abrió la carpeta cerrada"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "if": {
+                    "index": 0
+                  },
+                  "effects": [
+                    {
+                      "effect": "log",
+                      "params": {
+                        "text": "clave rechazada"
+                      }
+                    },
+                    {
+                      "effect": "dialog",
+                      "params": {
+                        "title": "CARPETA CERRADA",
+                        "text": "Clave incorrecta.",
+                        "buttons": [
+                          "Aceptar"
+                        ],
+                        "delay": 250
+                      }
+                    },
+                    {
+                      "effect": "tension",
+                      "params": {
+                        "amount": 0.015
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "repeat": true,
+        "cooldown": 900
+      },
+      {
+        "id": "n_analisis",
+        "label": "Entrar en ANÁLISIS",
+        "type": "event",
+        "x": 460,
+        "y": 540,
+        "trigger": {
+          "type": "event",
+          "event": "open",
+          "match": {
+            "path": "CASA/ANÁLISIS"
+          }
+        },
+        "conditions": [
+          {
+            "kind": "flag",
+            "name": "unlock"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "log",
+            "params": {
+              "text": "entró en ANÁLISIS"
+            }
+          }
+        ]
+      },
+      {
+        "id": "n_registro",
+        "label": "Leer REGISTRO.TXT",
+        "type": "event",
+        "x": 660,
+        "y": 540,
+        "trigger": {
+          "type": "event",
+          "event": "read",
+          "match": {
+            "doc": "REGISTRO"
+          }
+        },
+        "conditions": [],
+        "effects": [
+          {
+            "effect": "flag",
+            "params": {
+              "name": "read_registro"
+            }
+          },
+          {
+            "effect": "tension",
+            "params": {
+              "amount": 0.08,
+              "why": "leyó REGISTRO.TXT"
+            }
+          },
+          {
+            "effect": "log",
+            "params": {
+              "text": "el canal B está ocupado"
+            }
+          }
+        ]
+      },
+      {
+        "id": "n_oyente",
+        "label": "Ejecutar OYENTE",
+        "type": "event",
+        "x": 660,
+        "y": 300,
+        "trigger": {
+          "type": "event",
+          "event": "app",
+          "match": {
+            "app": "oyente",
+            "button": "listen"
+          }
+        },
+        "conditions": [],
+        "effects": [
+          {
+            "effect": "flag",
+            "params": {
+              "name": "ran_oyente"
+            }
+          },
+          {
+            "effect": "tension",
+            "params": {
+              "amount": 0.12,
+              "why": "ejecutó OYENTE"
+            }
+          },
+          {
+            "effect": "log",
+            "params": {
+              "text": "ejecutó OYENTE"
+            }
+          },
+          {
+            "effect": "dialog",
+            "params": {
+              "title": "",
+              "text": "La componente 18,97 Hz está presente en esta habitación.",
+              "buttons": [
+                "Aceptar"
+              ],
+              "delay": 5200,
+              "onButton": [
+                {
+                  "effects": [
+                    {
+                      "effect": "tension",
+                      "params": {
+                        "amount": 0.05,
+                        "why": "confirmó presencia"
+                      }
+                    },
+                    {
+                      "effect": "dialog",
+                      "params": {
+                        "title": "",
+                        "text": "No proviene del altavoz. Proviene del archivo. El archivo proviene de usted.",
+                        "buttons": [
+                          "Aceptar"
+                        ],
+                        "delay": 2600,
+                        "onButton": [
+                          {
+                            "effects": [
+                              {
+                                "effect": "tension",
+                                "params": {
+                                  "amount": 0.04
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "id": "n_oyente_stop",
+        "label": "Detener OYENTE",
+        "type": "event",
+        "x": 860,
+        "y": 300,
+        "trigger": {
+          "type": "event",
+          "event": "app",
+          "match": {
+            "app": "oyente",
+            "button": "stop"
+          }
+        },
+        "conditions": [],
+        "effects": [
+          {
+            "effect": "log",
+            "params": {
+              "text": "intentó detener"
+            }
+          },
+          {
+            "effect": "dialog",
+            "params": {
+              "title": "OYENTE",
+              "text": "No se puede detener lo que no empezó.",
+              "buttons": [
+                "Aceptar"
+              ],
+              "onButton": [
+                {
+                  "effect": "tension",
+                  "params": {
+                    "amount": 0.03
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "id": "n_trash",
+        "label": "Vaciar papelera",
+        "type": "event",
+        "x": 40,
+        "y": 480,
+        "trigger": {
+          "type": "event",
+          "event": "menu:emptyTrash"
+        },
+        "conditions": [],
+        "effects": [
+          {
+            "effect": "flag",
+            "params": {
+              "name": "trash_fail"
+            }
+          },
+          {
+            "effect": "tension",
+            "params": {
+              "amount": 0.05,
+              "why": "intentó borrar"
+            }
+          },
+          {
+            "effect": "trash_return",
+            "params": {
+              "delay": 1900,
+              "items": [
+                "COPIA.TXT",
+                "RENGLÓN 401"
+              ]
+            }
+          }
+        ],
+        "repeat": true,
+        "cooldown": 20000
+      },
+      {
+        "id": "n_drop",
+        "label": "Arrastrar a la papelera",
+        "type": "event",
+        "x": 40,
+        "y": 590,
+        "trigger": {
+          "type": "event",
+          "event": "drop:trash"
+        },
+        "conditions": [],
+        "effects": [
+          {
+            "effect": "flag",
+            "params": {
+              "name": "trash_fail"
+            }
+          },
+          {
+            "effect": "tension",
+            "params": {
+              "amount": 0.04,
+              "why": "no pudo eliminar"
+            }
+          },
+          {
+            "effect": "dialog",
+            "params": {
+              "title": "PAPELERA",
+              "text": "No se puede eliminar este ítem.\nEl ítem no pertenece a este disco.",
+              "buttons": [
+                "Aceptar"
+              ],
+              "delay": 900,
+              "onButton": [
+                {
+                  "effect": "tension",
+                  "params": {
+                    "amount": 0.04
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "repeat": true,
+        "cooldown": 20000
+      },
+      {
+        "id": "n_about",
+        "label": "Acerca de la máquina",
+        "type": "event",
+        "x": 40,
+        "y": 700,
+        "trigger": {
+          "type": "event",
+          "event": "read",
+          "match": {
+            "app": "about"
+          }
+        },
+        "conditions": [],
+        "effects": [
+          {
+            "effect": "flag",
+            "params": {
+              "name": "read_about"
+            }
+          },
+          {
+            "effect": "tension",
+            "params": {
+              "amount": 0.03,
+              "why": "consultó ACERCA DE"
+            }
+          },
+          {
+            "effect": "log",
+            "params": {
+              "text": "consultó ACERCA DE"
+            }
+          }
+        ]
+      },
+      {
+        "id": "n_visitor",
+        "label": "Carpeta del visitante",
+        "type": "auto",
+        "x": 1060,
+        "y": 300,
+        "trigger": {
+          "type": "auto"
+        },
+        "conditions": [
+          {
+            "kind": "tension",
+            "op": ">",
+            "value": 0.8
+          }
+        ],
+        "effects": [
+          {
+            "effect": "flag",
+            "params": {
+              "name": "visitor_folder"
+            }
+          },
+          {
+            "effect": "visitor_icon",
+            "params": {
+              "id": "visitor",
+              "node": "DISCO 2/REGISTRO VISITAS",
+              "icon": "folder"
+            }
+          },
+          {
+            "effect": "sound",
+            "params": {
+              "kind": "write",
+              "dur": 1.1
+            }
+          },
+          {
+            "effect": "log",
+            "params": {
+              "text": "apareció una carpeta con su ciudad"
+            }
+          }
+        ]
+      },
+      {
+        "id": "n_live",
+        "label": "Leer el propio registro",
+        "type": "event",
+        "x": 1260,
+        "y": 300,
+        "trigger": {
+          "type": "event",
+          "event": "read",
+          "match": {
+            "app": "live"
+          }
+        },
+        "conditions": [],
+        "effects": [
+          {
+            "effect": "flag",
+            "params": {
+              "name": "read_live"
+            }
+          },
+          {
+            "effect": "tension",
+            "params": {
+              "amount": 0.06,
+              "why": "leyó su propio registro"
+            }
+          }
+        ]
+      },
+      {
+        "id": "n_idle1",
+        "label": "Inacción 1",
+        "type": "event",
+        "x": 660,
+        "y": 680,
+        "trigger": {
+          "type": "idle",
+          "ms": 26000
+        },
+        "conditions": [
+          {
+            "kind": "tension",
+            "op": ">",
+            "value": 0.34
+          },
+          {
+            "kind": "time",
+            "op": ">",
+            "value": 60000
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dialog",
+            "params": {
+              "title": "",
+              "text": "¿Sigue ahí?",
+              "buttons": [
+                "Sí"
+              ],
+              "onButton": [
+                {
+                  "effects": [
+                    {
+                      "effect": "log",
+                      "params": {
+                        "text": "confirmó presencia"
+                      }
+                    },
+                    {
+                      "effect": "tension",
+                      "params": {
+                        "amount": 0.04,
+                        "why": "presencia"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "id": "n_idle2",
+        "label": "Inacción 2",
+        "type": "event",
+        "x": 860,
+        "y": 680,
+        "trigger": {
+          "type": "idle",
+          "ms": 26000
+        },
+        "conditions": [
+          {
+            "kind": "tension",
+            "op": ">",
+            "value": 0.4
+          }
+        ],
+        "effects": [
+          {
+            "effect": "list",
+            "params": {
+              "title": "ACTIVIDAD EN REPOSO",
+              "rows": [
+                {
+                  "name": "usted no tocó nada",
+                  "size": "%SEC% s"
+                },
+                {
+                  "name": "nosotros sí",
+                  "size": "%OPS% ops"
+                }
+              ],
+              "note": "Generado por el sistema mientras usted no miraba."
+            }
+          },
+          {
+            "effect": "tension",
+            "params": {
+              "amount": 0.06,
+              "why": "actividad en reposo"
+            }
+          }
+        ]
+      },
+      {
+        "id": "n_idle3",
+        "label": "Inacción 3",
+        "type": "event",
+        "x": 1060,
+        "y": 680,
+        "trigger": {
+          "type": "idle",
+          "ms": 26000
+        },
+        "conditions": [],
+        "effects": [
+          {
+            "effect": "dialog",
+            "params": {
+              "title": "",
+              "text": "Cuando no usa la máquina, la máquina sigue. Eso ya lo sabe.",
+              "buttons": [
+                "Aceptar"
+              ]
+            }
+          },
+          {
+            "effect": "tension",
+            "params": {
+              "amount": 0.04
+            }
+          }
+        ]
+      },
+      {
+        "id": "n_clock1",
+        "label": "El reloj corre",
+        "type": "auto",
+        "x": 660,
+        "y": 790,
+        "trigger": {
+          "type": "auto"
+        },
+        "conditions": [
+          {
+            "kind": "tension",
+            "op": ">",
+            "value": 0.44
+          }
+        ],
+        "effects": [
+          {
+            "effect": "clock",
+            "params": {
+              "frozen": false
+            }
+          },
+          {
+            "effect": "log",
+            "params": {
+              "text": "el reloj empezó a correr"
+            }
+          }
+        ]
+      },
+      {
+        "id": "n_clock2",
+        "label": "El reloj se adelanta",
+        "type": "auto",
+        "x": 860,
+        "y": 790,
+        "trigger": {
+          "type": "auto"
+        },
+        "conditions": [
+          {
+            "kind": "tension",
+            "op": ">",
+            "value": 0.7
+          }
+        ],
+        "effects": [
+          {
+            "effect": "clock",
+            "params": {
+              "drift": 90000
+            }
+          },
+          {
+            "effect": "log",
+            "params": {
+              "text": "el reloj se adelantó"
+            }
+          }
+        ]
+      },
+      {
+        "id": "n_endgame",
+        "label": "Final",
+        "type": "auto",
+        "x": 1460,
+        "y": 300,
+        "trigger": {
+          "type": "auto"
+        },
+        "conditions": [
+          {
+            "kind": "tension",
+            "op": ">",
+            "value": 0.9
+          },
+          {
+            "kind": "flag",
+            "name": "ran_oyente"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "flag",
+            "params": {
+              "name": "endgame"
+            }
+          },
+          {
+            "effect": "ending",
+            "params": {},
+            "delay": 5200
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "from": "n_cuaderno",
+        "to": "n_c17"
+      },
+      {
+        "from": "n_c17",
+        "to": "n_c26"
+      },
+      {
+        "from": "n_c26",
+        "to": "n_key_hint"
+      },
+      {
+        "from": "n_key_hint",
+        "to": "n_cfinal"
+      },
+      {
+        "from": "n_cfinal",
+        "to": "n_clast"
+      },
+      {
+        "from": "n_casa",
+        "to": "n_key"
+      },
+      {
+        "from": "n_key",
+        "to": "n_analisis"
+      },
+      {
+        "from": "n_analisis",
+        "to": "n_registro"
+      },
+      {
+        "from": "n_play172",
+        "to": "n_disk2"
+      },
+      {
+        "from": "n_play172",
+        "to": "n_play0211"
+      },
+      {
+        "from": "n_disk2",
+        "to": "n_oyente"
+      },
+      {
+        "from": "n_oyente",
+        "to": "n_oyente_stop"
+      },
+      {
+        "from": "n_oyente",
+        "to": "n_visitor"
+      },
+      {
+        "from": "n_visitor",
+        "to": "n_live"
+      },
+      {
+        "from": "n_live",
+        "to": "n_endgame"
+      },
+      {
+        "from": "n_idle1",
+        "to": "n_idle2"
+      },
+      {
+        "from": "n_idle2",
+        "to": "n_idle3"
+      },
+      {
+        "from": "n_clock1",
+        "to": "n_clock2"
+      },
+      {
+        "from": "n_start",
+        "to": "n_casa"
+      }
+    ]
+  }
+}

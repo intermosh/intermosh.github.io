@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>vesper128</title>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/game.css">
+</head>
+<body class="game">
+
+  <div id="stage">
+    <canvas id="view" width="512" height="342"></canvas>
+    <canvas id="bloom" class="layer" width="512" height="342"></canvas>
+    <div id="roll" class="layer"></div>
+    <div id="vignette" class="layer"></div>
+    <div id="glass" class="layer"></div>
+  </div>
+
+  <div id="fatal"></div>
+
+  <noscript>
+    <div id="fatal" style="display:block">Esta máquina necesita JavaScript.</div>
+  </noscript>
+
+  <script type="module" src="js/game/main.js"></script>
+</body>
+</html>
