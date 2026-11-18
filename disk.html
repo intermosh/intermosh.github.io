@@ -234,13 +234,31 @@ function buildHologram(){
   calRing.position.set(CX, CY, 0);
   reticle.add(calRing);
 
-  // rejilla base tenue
-  const grid = new THREE.GridHelper(1.2, 12, BLUE, PANEL);
-  grid.rotation.x = Math.PI/2; grid.position.z = 0.008;
-  grid.material.transparent = true; grid.material.opacity = 0.22;
-  grid.material.blending = THREE.AdditiveBlending; grid.material.depthWrite = false;
-  reg(grid.material, 0.22);
-  root.add(grid);
+  // Base circular: doble anillo en el plano de la etiqueta, sin rejilla.
+  const orbitalBase = new THREE.Group();
+  orbitalBase.position.set(CX, CY, 0.008);
+  root.add(orbitalBase);
+  orbitalBase.add(glowSegments(circleSegs(0.49), {
+    color: BLUE, core: 0.48, halo: 0.09, coreW: 1.2, haloW: 3.5
+  }));
+  orbitalBase.add(glowSegments(circleSegs(0.455), {
+    color: BLUE_BRIGHT, core: 0.55, halo: 0.10, coreW: 1.2, haloW: 3.5
+  }));
+
+  // Segmento orbital grueso; comparte centro con ambos anillos.
+  const orbitMarker = new THREE.Group();
+  const markerArc = [];
+  const orbitRadius = (0.49 + 0.455) / 2;
+  for (let i = 0; i < 12; i++) {
+    const a = (-0.12 + i * 0.02), b = a + 0.02;
+    markerArc.push(Math.cos(a)*orbitRadius, Math.sin(a)*orbitRadius, 0,
+      Math.cos(b)*orbitRadius, Math.sin(b)*orbitRadius, 0);
+  }
+  orbitMarker.add(glowSegments(markerArc, {
+    color: BLUE_BRIGHT, core: 0.95, halo: 0.16, coreW: 5, haloW: 8
+  }));
+  orbitMarker.position.z = 0.003;
+  orbitalBase.add(orbitMarker);
 
   // trazas guía del logo al holograma (como el circuito de la etiqueta)
   const beamSegs = [];
@@ -371,6 +389,7 @@ function buildHologram(){
     floppy.position.y = Math.sin(t*1.3)*S*0.05;
     ring1.rotation.z += dt*0.7; ring2.rotation.x += dt*0.4;
     calRing.rotation.z -= dt*0.12;
+    orbitMarker.rotation.z -= dt * 0.65; // órbita continua, independiente de FPS
 
     const arr = pGeo.attributes.position.array;
     for(let i=0;i<N;i++){ arr[i*3+1] += spd[i]*dt; if(arr[i*3+1] > 0.5) arr[i*3+1] = -0.5; }
@@ -380,7 +399,15 @@ function buildHologram(){
     scan.material.opacity = 0.35 + Math.sin(t*6)*0.15;
   }
 
-  return { root, holo, hitbox, update, setOn:(v)=>{ bootT = v ? 0 : -1; }, isOn:()=> bootT >= 0 };
+  return { root, holo, hitbox, update,
+    setOn:(v)=>{
+      bootT = v ? 0 : -1;
+      root.visible = v; // incluye anillos, marco, etiqueta y trazas
+      holo.visible = v;
+      if (v) holo.scale.setScalar(0.001); // rematerializar en la NUEVA pose
+    },
+    isOn:()=> bootT >= 0
+  };
 }
 
 /* ============================================================
@@ -402,6 +429,8 @@ async function start(){
   const mindarThree = new MindARThree({
     container: $('#container'),
     imageTargetSrc: markerSrc,
+    missTolerance: 1,      // ocultar tras confirmar pérdida, sin persistencia prolongada
+    warmupTolerance: 2,    // confirmar tracking antes de volver a mostrar
     uiLoading: 'no', uiScanning: 'no', uiError: 'no',  // sin UI de texto de MindAR
   });
   const { renderer, scene, camera } = mindarThree;
@@ -417,8 +446,19 @@ async function start(){
   anchor.group.add(holo.root);
   holo.setOn(false);
 
-  anchor.onTargetFound = () => { holo.setOn(true); scanbar.style.display = 'none'; };
-  anchor.onTargetLost  = () => { holo.setOn(false); scanbar.style.display = 'block'; };
+  anchor.onTargetFound = () => {
+    // MindAR actualiza la pose del anchor antes del siguiente render.
+    holo.setOn(true);
+    scanbar.style.display = 'none';
+    // Se elimina físicamente: no reaparece al perder o recuperar el marcador.
+    document.getElementById('hint')?.remove();
+  };
+  anchor.onTargetLost = () => {
+    holo.setOn(false);
+    // No basta con saltar render(): el canvas conservaría el último fotograma.
+    renderer.clear(true, true, true);
+    scanbar.style.display = 'block';
+  };
 
   // tap / click sobre el holograma → Bandcamp (solo si está materializado)
   const onTap = (e) => {
@@ -473,5 +513,5 @@ start().catch(err => {
   scanbar.style.height = '1px';
 });
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5c58be41ca926be',t:'MTc5NDk4OTkyNw=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a5c58be41ca926be',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
