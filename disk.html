@@ -92,6 +92,9 @@
 <script type="module">
 import * as THREE from 'three';
 import { MindARThree } from 'mindar-image-three';
+import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
+import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
+import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 const BANDCAMP_URL = 'https://cinematronic.bandcamp.com';
 
@@ -107,6 +110,23 @@ const $ = (s) => document.querySelector(s);
 const scanbar = $('#scanbar');
 
 function openBandcamp(){ window.open(BANDCAMP_URL, '_blank', 'noopener'); }
+
+/* ============================================================
+   OPTIMIZACIÓN FPS — análisis previo:
+   - SAB/SharedArrayBuffer: requiere COOP+COEP (no disponible en hosts
+     estáticos) y MindAR no lo usa (su worker comunica por postMessage).
+     El cuello de botella real es el CV de tfjs en el hilo principal,
+     que escala con la resolución del stream de cámara.
+   - Por eso: cámara 640x480, pixelRatio capado, sin render cuando no
+     hay target, y glow con fat-lines (sin bloom/postprocesado).
+   ============================================================ */
+let rendererRef = null;
+const allLineMats = [];
+function updateLineRes(){
+  if (!rendererRef) return;
+  const s = rendererRef.getDrawingBufferSize(new THREE.Vector2());
+  for (const m of allLineMats) m.resolution.set(s.x, s.y);
+}
 
 /* ============================================================
    HOLOGRAMA — wireframe azul, industrial, sin bloom ni fancy
@@ -133,9 +153,7 @@ function makeCircuitTexture(){
 
 function buildHologram(){
   // MindAR normaliza el target: ancho = 1, alto = 875/1200 = 0.729, origen = centro.
-  // El anchor ya trae la escala a píxeles de cámara: aquí todo va en unidades 0..1.
-  const TH = 875 / 1200;                 // alto normalizado del target
-  // centro del logo dentro de la etiqueta (medido en label_target.png 1200x875)
+  // Centro del logo dentro de la etiqueta (medido en label_target.png 1200x875)
   const CX = (585 - 600) / 1200;         // -0.0125
   const CY = (437.5 - 735) / 1200;       // -0.2479 (abajo del centro)
 
@@ -144,54 +162,104 @@ function buildHologram(){
   holo.position.set(CX, CY, 0.30);
   root.add(holo);
 
-  const lineMat  = new THREE.LineBasicMaterial({ color: BLUE_BRIGHT, transparent: true, opacity: 0.95 });
-  const wireMat  = new THREE.MeshBasicMaterial({ color: BLUE, wireframe: true, transparent: true, opacity: 0.38 });
-  const faintMat = new THREE.LineBasicMaterial({ color: BLUE, transparent: true, opacity: 0.35 });
+  const flickMats = [];                  // materiales que parpadean con boot/glitch
+  const reg = (m, base) => { flickMats.push({ m, base }); return m; };
+
+  function lineRes(){
+    if (rendererRef) { const s = rendererRef.getDrawingBufferSize(new THREE.Vector2()); return [s.x, s.y]; }
+    return [innerWidth, innerHeight];
+  }
+
+  // Línea con glow sutil: halo ancho semitransparente + núcleo fino.
+  // Fat-lines (LineSegments2) = glow sin bloom ni postprocesado (barato en móviles).
+  function glowSegments(segs, { color = BLUE_BRIGHT, core = 0.95, halo = 0.22, coreW = 2, haloW = 5 } = {}){
+    const g = new THREE.Group();
+    const geo = new LineSegmentsGeometry();
+    geo.setPositions(segs);
+    const [rx, ry] = lineRes();
+    const mk = (w, base) => {
+      const m = new LineMaterial({ color, linewidth: w, transparent: true, opacity: base,
+        blending: THREE.AdditiveBlending, depthWrite: false });
+      m.resolution.set(rx, ry);
+      allLineMats.push(m);
+      reg(m, base);
+      return new LineSegments2(geo, m);
+    };
+    g.add(mk(haloW, halo));
+    g.add(mk(coreW, core));
+    return g;
+  }
+
+  // segmentos desde un EdgesGeometry
+  function edgesSegs(geo){
+    const pt = geo.attributes.position, a = [];
+    for (let i = 0; i < pt.count; i++) a.push(pt.getX(i), pt.getY(i), pt.getZ(i));
+    return a;
+  }
+
+  // círculo como segmentos
+  function circleSegs(r){
+    const a = [], N = 72;
+    for (let i = 0; i < N; i++){
+      const t1 = i/N*Math.PI*2, t2 = (i+1)/N*Math.PI*2;
+      a.push(Math.cos(t1)*r, Math.sin(t1)*r, 0, Math.cos(t2)*r, Math.sin(t2)*r, 0);
+    }
+    return a;
+  }
+
+  // elipse punteada (segmentos con huecos, sin dashed)
+  function dashedEllipseSegs(rx, ry){
+    const a = [], N = 64;
+    for (let i = 0; i < N; i++){
+      if (i % 3 === 2) continue;                       // hueco
+      const t1 = i/N*Math.PI*2, t2 = (i+1)/N*Math.PI*2;
+      a.push(Math.cos(t1)*rx, Math.sin(t1)*ry, 0, Math.cos(t2)*rx, Math.sin(t2)*ry, 0);
+    }
+    return a;
+  }
+
+  const wireMat = new THREE.MeshBasicMaterial({ color: BLUE, wireframe: true, transparent: true, opacity: 0.38 });
+  reg(wireMat, 0.38);
 
   /* --- retícula impresa sobre el logo (marcas de registro) --- */
   const reticle = new THREE.Group(); reticle.position.z = 0.012; root.add(reticle);
-  // logo: x 165..1010, y 655..815 px → semianchos normalizados
-  const RW = 0.352, RH = 0.0667, L = 0.05, T = 0.005;
+  const RW = 0.352, RH = 0.0667, L = 0.05;            // semianchos del logo
+  const bracketSegs = [];
   [[-RW,-RH,1,1],[RW,-RH,-1,1],[-RW,RH,1,-1],[RW,RH,-1,-1]].forEach(([x,y,sx,sy])=>{
-    const hbar = new THREE.Mesh(new THREE.BoxGeometry(L, T, 0.002), new THREE.MeshBasicMaterial({ color: BLUE, transparent: true }));
-    hbar.position.set(CX + x + sx*L/2, CY + y, 0); reticle.add(hbar);
-    const vbar = new THREE.Mesh(new THREE.BoxGeometry(T, L, 0.002), new THREE.MeshBasicMaterial({ color: BLUE, transparent: true }));
-    vbar.position.set(CX + x, CY + y + sy*L/2, 0); reticle.add(vbar);
+    bracketSegs.push(CX+x, CY+y, 0, CX+x+sx*L, CY+y, 0);
+    bracketSegs.push(CX+x, CY+y, 0, CX+x, CY+y+sy*L, 0);
   });
-  // anillo de calibración
-  const ringPts = [];
-  for(let i=0;i<=96;i++){ const a=i/96*Math.PI*2; ringPts.push(new THREE.Vector3(Math.cos(a)*0.48, Math.sin(a)*0.16, 0)); }
-  const ring = new THREE.Line(new THREE.BufferGeometry().setFromPoints(ringPts),
-    new THREE.LineDashedMaterial({ color: BLUE, dashSize: 0.022, gapSize: 0.014, transparent: true, opacity: 0.6 }));
-  ring.position.set(CX, CY, 0);
-  ring.computeLineDistances(); reticle.add(ring);
+  reticle.add(glowSegments(bracketSegs, { color: BLUE, core: 0.9, halo: 0.2 }));
+  const calRing = glowSegments(dashedEllipseSegs(0.48, 0.16), { color: BLUE, core: 0.55, halo: 0.12 });
+  calRing.position.set(CX, CY, 0);
+  reticle.add(calRing);
 
-  // rejilla base tenue sobre el target
+  // rejilla base tenue
   const grid = new THREE.GridHelper(1.2, 12, BLUE, PANEL);
   grid.rotation.x = Math.PI/2; grid.position.z = 0.008;
   grid.material.transparent = true; grid.material.opacity = 0.22;
+  grid.material.blending = THREE.AdditiveBlending; grid.material.depthWrite = false;
+  reg(grid.material, 0.22);
   root.add(grid);
 
   // trazas guía del logo al holograma (como el circuito de la etiqueta)
-  const beamMat = new THREE.LineBasicMaterial({ color: BLUE, transparent: true, opacity: 0.30 });
+  const beamSegs = [];
   [[-0.30,-0.05],[0.30,-0.05],[-0.30,0.05],[0.30,0.05]].forEach(([x,y])=>{
-    const g = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(CX+x, CY+y, 0.01),
-      new THREE.Vector3(CX+x*0.55, CY+y*0.55, 0.30)]);
-    root.add(new THREE.Line(g, beamMat));
+    beamSegs.push(CX+x, CY+y, 0.01, CX+x*0.55, CY+y*0.55, 0.30);
   });
+  root.add(glowSegments(beamSegs, { color: BLUE, core: 0.30, halo: 0.08 }));
 
   /* --- disquete 3.5" wireframe --- */
   const floppy = new THREE.Group(); holo.add(floppy);
   const S = 0.45;                                     // lado del disquete
   const bodyGeo = new THREE.BoxGeometry(S, S, S*0.10);
   floppy.add(new THREE.Mesh(bodyGeo, wireMat));
-  floppy.add(new THREE.LineSegments(new THREE.EdgesGeometry(bodyGeo), lineMat));
+  floppy.add(glowSegments(edgesSegs(new THREE.EdgesGeometry(bodyGeo)), { color: BLUE_BRIGHT, core: 0.95, halo: 0.22 }));
   // shutter metálico
   const shutGeo = new THREE.BoxGeometry(S*0.54, S*0.36, S*0.11);
   const shut = new THREE.Mesh(shutGeo, wireMat); shut.position.set(S*0.11, S*0.29, 0); floppy.add(shut);
-  const shutL = new THREE.LineSegments(new THREE.EdgesGeometry(shutGeo), lineMat);
-  shutL.position.copy(shut.position); floppy.add(shutL);
+  const shutEdges = glowSegments(edgesSegs(new THREE.EdgesGeometry(shutGeo)), { color: BLUE_BRIGHT, core: 0.9, halo: 0.2 });
+  shutEdges.position.copy(shut.position); floppy.add(shutEdges);
   // etiqueta con trazas PCB
   const label = new THREE.Mesh(new THREE.PlaneGeometry(S*0.82, S*0.43),
     new THREE.MeshBasicMaterial({ map: makeCircuitTexture(), transparent: true, opacity: 0.55, depthWrite: false }));
@@ -201,12 +269,61 @@ function buildHologram(){
   hub.position.set(-S*0.29, S*0.29, 0); floppy.add(hub);
 
   /* --- anillos giroscópicos --- */
-  function circleLine(r, mat){
-    const pts=[]; for(let i=0;i<=96;i++){ const a=i/96*Math.PI*2; pts.push(new THREE.Vector3(Math.cos(a)*r, Math.sin(a)*r, 0)); }
-    return new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), mat);
+  const ring1 = glowSegments(circleSegs(S*0.85), { color: BLUE_BRIGHT, core: 0.9, halo: 0.2 });
+  ring1.rotation.x = Math.PI/2.4; holo.add(ring1);
+  const ring2 = glowSegments(circleSegs(S*1.00), { color: BLUE, core: 0.5, halo: 0.12 });
+  ring2.rotation.y = Math.PI/2.6; holo.add(ring2);
+
+  /* --- etiqueta vectorial OPEN BANDCAMP (inferior derecha del marco) --- */
+  // tipografía de trazos (vectores, sin raster): glifos en caja 0.62 x 1.0
+  const GLYPHS = {
+    O: [[[0.08,0],[0.5,0],[0.62,0.18],[0.62,0.82],[0.5,1],[0.08,1],[0,0.82],[0,0.18],[0.08,0]]],
+    P: [[[0,0],[0,1],[0.42,1],[0.6,0.8],[0.6,0.58],[0.42,0.38],[0,0.38]]],
+    E: [[[0.58,0],[0,0],[0,1],[0.58,1]], [[0,0.5],[0.42,0.5]]],
+    N: [[[0,0],[0,1],[0.62,0],[0.62,1]]],
+    B: [[[0,0],[0,1],[0.4,1],[0.58,0.82],[0.58,0.62],[0.4,0.5],[0.56,0.36],[0.56,0.16],[0.38,0],[0,0]]],
+    A: [[[0,0],[0.31,1],[0.62,0]], [[0.13,0.36],[0.49,0.36]]],
+    D: [[[0,0],[0,1],[0.34,1],[0.6,0.74],[0.6,0.26],[0.34,0],[0,0]]],
+    C: [[[0.56,0.14],[0.36,0],[0.1,0.16],[0.02,0.5],[0.1,0.84],[0.36,1],[0.56,0.86]]],
+    M: [[[0,0],[0,1],[0.31,0.42],[0.62,1],[0.62,0]]],
+  };
+  function textSegs(text, fontH){
+    const adv = fontH * 0.8, segs = [];
+    let x = 0;
+    for (const ch of text){
+      const g = GLYPHS[ch];
+      if (g) for (const poly of g)
+        for (let i = 1; i < poly.length; i++)
+          segs.push(x + poly[i-1][0]*fontH, poly[i-1][1]*fontH, 0, x + poly[i][0]*fontH, poly[i][1]*fontH, 0);
+      x += adv;
+    }
+    return { segs, width: x - adv + fontH*0.62 };
   }
-  const ring1 = circleLine(S*0.85, lineMat); ring1.rotation.x = Math.PI/2.4; holo.add(ring1);
-  const ring2 = circleLine(S*1.00, faintMat); ring2.rotation.y = Math.PI/2.6; holo.add(ring2);
+  function buildTag(){
+    const tag = new THREE.Group();
+    const fontH = 0.026;
+    const { segs, width } = textSegs('OPEN BANDCAMP', fontH);
+    const ox = 0.05, oy = -0.285;                    // origen (izq. inferior del texto)
+    const pad = 0.018;
+    const x0 = ox - pad, y0 = oy - pad, x1 = ox + width + pad, y1 = oy + fontH + pad;
+    const cx = S*0.5, cy = -S*0.5;                   // esquina inferior derecha del disquete
+    const frameSegs = [
+      x0,y0,0, x1,y0,0,  x1,y0,0, x1,y1,0,  x1,y1,0, x0,y1,0,  x0,y1,0, x0,y0,0,
+      // línea guía desde la esquina del disquete al marco
+      cx, cy, 0, 0.10, y1, 0,
+      // marcador cuadrado en la esquina
+      cx-0.012, cy-0.012, 0, cx+0.012, cy-0.012, 0,
+      cx+0.012, cy-0.012, 0, cx+0.012, cy+0.012, 0,
+      cx+0.012, cy+0.012, 0, cx-0.012, cy+0.012, 0,
+      cx-0.012, cy+0.012, 0, cx-0.012, cy-0.012, 0,
+    ];
+    tag.add(glowSegments(frameSegs, { color: BLUE, core: 0.55, halo: 0.12 }));
+    const textG = glowSegments(segs, { color: BLUE_BRIGHT, core: 0.9, halo: 0.2 });
+    textG.position.set(ox, oy, 0);
+    tag.add(textG);
+    return tag;
+  }
+  holo.add(buildTag());
 
   /* --- partículas --- */
   const N = 150, pos = new Float32Array(N*3), spd = new Float32Array(N);
@@ -215,17 +332,17 @@ function buildHologram(){
     spd[i]=0.05+Math.random()*0.12;
   }
   const pGeo = new THREE.BufferGeometry(); pGeo.setAttribute('position', new THREE.BufferAttribute(pos,3));
-  holo.add(new THREE.Points(pGeo, new THREE.PointsMaterial({ color: BLUE_BRIGHT, size: S*0.018, transparent: true, opacity: 0.75, depthWrite: false })));
+  holo.add(new THREE.Points(pGeo, new THREE.PointsMaterial({ color: BLUE_BRIGHT, size: S*0.018, transparent: true, opacity: 0.75, depthWrite: false, blending: THREE.AdditiveBlending })));
 
   /* --- plano de escaneo --- */
   const scan = new THREE.Mesh(new THREE.PlaneGeometry(S*1.35, S*0.035),
-    new THREE.MeshBasicMaterial({ color: BLUE_BRIGHT, transparent: true, opacity: 0.5, depthWrite: false }));
+    new THREE.MeshBasicMaterial({ color: BLUE_BRIGHT, transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending }));
   holo.add(scan);
 
-  /* --- hitbox clickeable que cubre todo el holograma --- */
-  const hitbox = new THREE.Mesh(new THREE.BoxGeometry(S*1.7, S*1.9, S*0.9),
+  /* --- hitbox clickeable: cubre disquete + etiqueta --- */
+  const hitbox = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.95, 0.4),
     new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
-  hitbox.position.set(0, 0, 0); hitbox.name='hitbox'; holo.add(hitbox);
+  hitbox.position.set(0.08, -0.02, 0); hitbox.name='hitbox'; holo.add(hitbox);
 
   let bootT = -1;
   const clock = { t: 0 };
@@ -242,7 +359,7 @@ function buildHologram(){
       let flick = 0.82 + Math.random()*0.18;
       if(Math.random() < 0.045) flick = 0.15;
       if(bootT < 0.9 && Math.random() < 0.25) flick = 0.25;
-      wireMat.opacity = 0.38*flick; lineMat.opacity = 0.95*flick; faintMat.opacity = 0.35*flick;
+      for (const f of flickMats) f.m.opacity = f.base * flick;
       floppy.position.x = (Math.random() < 0.05) ? (Math.random()-0.5)*S*0.05 : 0;
       holo.visible = true;
     } else {
@@ -253,8 +370,7 @@ function buildHologram(){
     floppy.rotation.x = Math.sin(t*0.7)*0.12;
     floppy.position.y = Math.sin(t*1.3)*S*0.05;
     ring1.rotation.z += dt*0.7; ring2.rotation.x += dt*0.4;
-    ring.rotation.z -= dt*0.12;
-    reticle.children.forEach(m=>{ if(m.material && m.material.opacity !== undefined) m.material.opacity = 0.7 + Math.sin(t*3)*0.3; });
+    calRing.rotation.z -= dt*0.12;
 
     const arr = pGeo.attributes.position.array;
     for(let i=0;i<N;i++){ arr[i*3+1] += spd[i]*dt; if(arr[i*3+1] > 0.5) arr[i*3+1] = -0.5; }
@@ -289,12 +405,13 @@ async function start(){
     uiLoading: 'no', uiScanning: 'no', uiError: 'no',  // sin UI de texto de MindAR
   });
   const { renderer, scene, camera } = mindarThree;
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-  // unidades = px del target (1200x875): alejar planos cercanos/lejanos
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)); // cap: menos fill-rate en móviles low-cost
+  // el anchor de MindAR escala a px de cámara (~1200): planos amplios
   camera.near = 1;
   camera.far = 20000;
   camera.updateProjectionMatrix();
 
+  rendererRef = renderer;
   const holo = buildHologram();
   const anchor = mindarThree.addAnchor(0);
   anchor.group.add(holo.root);
@@ -317,16 +434,35 @@ async function start(){
   // en window: el div del CSS renderer de MindAR cubre el canvas WebGL e intercepta el tap
   addEventListener('pointerdown', onTap);
 
-  await mindarThree.start();
+  // Optimización FPS: MindAR procesa a la resolución nativa del stream.
+  // 640x480 = ~4x menos píxeles para detector+tracker (el costo dominante en tfjs).
+  const md = navigator.mediaDevices;
+  const origGUM = md && md.getUserMedia ? md.getUserMedia.bind(md) : null;
+  if (origGUM) {
+    md.getUserMedia = (constraints) => {
+      if (constraints && constraints.video && typeof constraints.video === 'object') {
+        constraints.video.width = { ideal: 640 };
+        constraints.video.height = { ideal: 480 };
+      }
+      return origGUM(constraints);
+    };
+  }
+  try { await mindarThree.start(); }
+  finally { if (origGUM) md.getUserMedia = origGUM; }
   // MindAR reescribe near/far en su resize(): los volvemos a fijar
   const fixPlanes = () => { camera.near = 1; camera.far = 20000; camera.updateProjectionMatrix(); };
   fixPlanes();
   addEventListener('resize', fixPlanes);
+  updateLineRes();
+  addEventListener('resize', updateLineRes);
 
   const clock = new THREE.Clock();
   renderer.setAnimationLoop(() => {
-    holo.update(clock.getDelta());
-    renderer.render(scene, camera);
+    const dt = clock.getDelta();
+    if (anchor.group.visible) {          // sin target: no renderizar (ahorro GPU/batería)
+      holo.update(dt);
+      renderer.render(scene, camera);
+    }
   });
 }
 
@@ -337,5 +473,5 @@ start().catch(err => {
   scanbar.style.height = '1px';
 });
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5c5659a384426be',t:'MTc5NDk4ODM1OA=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a5c5659a384426be',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5c58be41ca926be',t:'MTc5NDk4OTkyNw=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a5c58be41ca926be',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
